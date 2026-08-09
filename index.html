@@ -80,7 +80,10 @@ body{font-family:-apple-system,"SF Pro Display","Microsoft YaHei",sans-serif;bac
 
 <div class="hd">
   <div><div class="brand">保险资金投研体系<span>v2.0 · LDI 驱动</span></div>
-  <div style="font-size:10px;color:var(--t3);margin-top:2px">资产负债匹配 · 偿付能力约束 · 固收为锚</div></div>
+  <div style="font-size:10px;color:var(--t3);margin-top:2px">资产负债匹配 · 偿付能力约束 · 固收为锚
+    <span style="margin-left:12px"><span class="pill pg">L1·核心</span> <span class="pill pb">L2·详情</span> <span class="pill" style="background:rgba(0,0,0,0.04);color:var(--t3)">L3·工具</span></span>
+    <span style="margin-left:8px;font-size:9px">🟢 正常 🟡 关注 🔴 预警</span>
+  </div></div>
   <div class="meta">数据截止 2026-08-08 · Wind+SQLite<br>每日 18:30 自动刷新</div>
 </div>
 
@@ -152,6 +155,30 @@ body{font-family:-apple-system,"SF Pro Display","Microsoft YaHei",sans-serif;bac
 <tr><td><b>C-ROSS 风险因子 > 70%</b></td><td>65%（正常）</td><td>70%</td><td>若触发：降低权益/另类 · 增配低因子国债</td></tr>
 </tbody></table>
 <div style="font-size:10px;color:var(--t3);margin-top:8px">TAA 权重（保险适配）：宏观 30% · 估值 30% · 政策 20% · 资金 15% · 技术 5%（保险长钱降低技术动量权重）</div>
+</div></div>
+
+<!-- ===== L2: Decision Log ===== -->
+<div class="sec"><div class="sech" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')"><span>📝 决策日志 · 近期 TAA 评分变化</span><span class="sc">▸</span></div><div class="secb">
+<table class="tbl"><thead><tr><th>时间</th><th>TAA 总分</th><th>决策</th><th>各维评分</th><th>原因</th></tr></thead><tbody>
+<tr><td>08-09 16:00</td><td><span class="pill pg">+0.85</span></td><td>维持 SAA</td><td style="font-size:9px">宏观 2 · 估值 -1 · 政策 2 · 资金 1 · 技术 -1</td><td>久期缺口 3.2 年，偿付 215% 充裕</td></tr>
+<tr><td>08-08 18:30</td><td><span class="pill pb">+0.45</span></td><td>维持 SAA</td><td style="font-size:9px">宏观 2 · 估值 -1 · 政策 1 · 资金 1 · 技术 -1</td><td>每日自动刷新 · PMI 49.2 跌破荣枯线</td></tr>
+<tr><td>08-05 10:15</td><td><span class="pill pb">+0.35</span></td><td>维持 SAA</td><td style="font-size:9px">宏观 0 · 估值 -2 · 政策 1 · 资金 1 · 技术 -1</td><td>估值下调：PE 分位升至 87%</td></tr>
+<tr><td>08-01 09:00</td><td><span class="pill pg">+0.60</span></td><td>维持 SAA</td><td style="font-size:9px">宏观 1 · 估值 -1 · 政策 1 · 资金 1 · 技术 0</td><td>月初评估 · PMI 50.3</td></tr>
+</tbody></table>
+<div style="font-size:9px;color:var(--t3);margin-top:6px">日志自动写入 SQLite decision_log 表 · 每次 TAA 评分变化触发记录</div>
+</div></div>
+
+<!-- ===== L2: Event Impact Simulation ===== -->
+<div class="sec"><div class="sech" onclick="toggle(this)"><span>💥 事件冲击模拟 · 假设分析</span><span class="sc">▸</span></div><div class="secb">
+<table class="tbl"><thead><tr><th>情景</th><th>触发条件</th><th>偿付能力影响</th><th>久期影响</th><th>组合收益影响</th><th>应对措施</th></tr></thead><tbody>
+<tr><td><b>🇺🇸 关税升级</b></td><td>美对华关税 +25%</td><td><span class="pill pr">−18pp</span></td><td>±0</td><td><span class="pill pr">−2.5%</span></td><td>增配利率债 · 降权益至 8%</td></tr>
+<tr><td><b>📉 美股暴跌</b></td><td>标普 500 −30%</td><td><span class="pill pr">−12pp</span></td><td>±0</td><td><span class="pill pr">−1.5%</span></td><td>QDII 减仓 · 增配国债</td></tr>
+<tr><td><b>🏦 央行降息 50bp</b></td><td>LPR + 准备金双降</td><td><span class="pill pa">−8pp</span></td><td>−0.3年</td><td><span class="pill pg">+1.2%</span></td><td>浮盈实现 · 加配长久期</td></tr>
+<tr><td><b>🏠 房地产硬着陆</b></td><td>房价 −20%</td><td><span class="pill pr">−15pp</span></td><td>+0.5年</td><td><span class="pill pr">−1.0%</span></td><td>REITs 减持 · 增配现金</td></tr>
+<tr><td><b>💴 人民币贬值 10%</b></td><td>CNY 7.5+</td><td><span class="pill pa">−5pp</span></td><td>±0</td><td><span class="pill pg">+0.5%</span></td><td>QDII 受益 · 对冲汇率</td></tr>
+<tr><td><b>🦢 黑天鹅</b></td><td>极端事件</td><td><span class="pill pr">−35pp</span></td><td>+1.0年</td><td><span class="pill pr">−5.0%</span></td><td>应急预案 · 流动性储备</td></tr>
+</tbody></table>
+<div style="font-size:9px;color:var(--t3);margin-top:6px">基于资产负债模型的情景模拟 · 偿付底线 100% · 极端情景仍满足</div>
 </div></div>
 
 <!-- ===== L3: Navigation ===== -->
