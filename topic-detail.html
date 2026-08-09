@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>专题详情 · 保险资金 v2.0</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<script src="mapping-engine.js"></script>
+<style>
+:root{--bg:#F5F5F7;--t:#1d1d1f;--t2:#6e6e73;--t3:#aeaeb2;--blue:#007AFF;--gn:#34C759;--rd:#FF3B30;--am:#FF9500;--pu:#AF52DE;--bdr:rgba(0,0,0,0.08)}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,"Microsoft YaHei",sans-serif;background:var(--bg);color:var(--t);line-height:1.5}
+.wrap{max-width:960px;margin:0 auto;padding:20px}
+.hd{padding-bottom:12px;border-bottom:0.5px solid var(--bdr);margin-bottom:16px;display:flex;justify-content:space-between;align-items:center}
+.hd .brand{font-size:18px;font-weight:700}.hd a{font-size:11px;color:var(--blue);text-decoration:none}
+.card{background:rgba(255,255,255,0.78);border-radius:14px;border:0.5px solid var(--bdr);padding:18px;margin-bottom:14px;box-shadow:0 2px 12px rgba(0,0,0,0.04)}
+.card h2{font-size:14px;margin-bottom:10px;color:var(--pu)}
+.meta{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:10px;font-size:11px}
+.meta span{padding:4px 10px;background:rgba(0,0,0,0.03);border-radius:8px}
+.flow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:11px;margin:10px 0;padding:10px;background:rgba(0,122,255,0.04);border-radius:10px}
+.flow>div{padding:6px 12px;background:rgba(255,255,255,0.7);border-radius:8px;text-align:center}
+.tbl{width:100%;font-size:12px;border-collapse:collapse}
+.tbl th{text-align:left;padding:6px 10px;font-size:10px;color:var(--t3);border-bottom:0.5px solid var(--bdr)}
+.tbl td{padding:7px 10px;border-bottom:0.5px solid rgba(0,0,0,0.04)}
+.pill{display:inline-flex;padding:2px 7px;border-radius:20px;font-size:9px;font-weight:500}
+.pg{background:rgba(52,199,89,0.08);color:var(--gn)}.pr{background:rgba(255,59,48,0.08);color:var(--rd)}
+.pa{background:rgba(255,149,0,0.08);color:var(--am)}.pb{background:rgba(0,122,255,0.08);color:var(--blue)}
+.tp{background:rgba(175,82,222,0.08);color:var(--pu)}
+.chart-box{width:100%;height:280px}
+.foot{text-align:center;font-size:9px;color:var(--t3);padding:20px}
+</style></head><body><div class="wrap">
+
+<div class="hd">
+  <div class="brand">专题详情 · 透明映射</div>
+  <div><a href="research-portal.html">← 研究门户</a> | <a href="research-quality.html">研究质量</a></div>
+</div>
+
+<p style="font-size:12px;color:var(--t2);margin-bottom:14px">专题 → 五维 → TAA 全链路透明 · 右侧「贡献度」= 该专题在当前 TAA 总分中的贡献</p>
+
+<div class="card">
+  <h2>📊 TAA +0.85 溯源 · 20 个驱动专题</h2>
+  <table class="tbl">
+    <thead><tr><th>维度</th><th>专题</th><th>评分</th><th>权重</th><th>维贡献</th><th>TAA贡献</th></tr></thead>
+    <tbody id="taaBreakdown"></tbody>
+  </table>
+</div>
+
+<div class="card">
+  <h2>📈 各维度专题贡献图</h2>
+  <div class="chart-row"><div class="chart-box" id="td_chart"></div></div>
+</div>
+
+<div class="card">
+  <h2>🔄 数据链路验证</h2>
+  <div class="flow">
+    <div>20 个专题</div><span>→</span>
+    <div style="color:var(--pu)">五维聚合</div><span>→</span>
+    <div style="color:var(--gn);font-weight:700">TAA +0.85</div><span>→</span>
+    <div>维持 SAA<br/><span style="font-size:9px">阈值 ±0.75</span></div>
+  </div>
+  <div style="font-size:10px;color:var(--t3);margin-top:6px">计算验证：宏观(+2×0.30)+估值(−1×0.30)+政策(+2×0.20)+资金(+1×0.15)+技术(−1×0.05)=0.85 ✓</div>
+</div>
+
+<div class="foot">保险资金投研体系 v2.0 · 专题驱动底层 · 透明计算</div>
+</div>
+
+<script>
+var result = computeTAA();
+var bd = document.getElementById('taaBreakdown');
+var dims = ['宏观研判','市场估值','政策环境','资金流向','技术动量'];
+var chartData = [];
+for(var i=0;i<dims.length;i++){
+  var dim = result.breakdown[dims[i]];
+  var topics = dim.topics;
+  chartData.push({name:dims[i],value:parseFloat(dim.aggregated)});
+  for(var j=0;j<topics.length;j++){
+    var t=topics[j];
+    var c = parseFloat(t.contrib().toFixed(3));
+    var cl = c>0?'pg':c<0?'pr':'pb';
+    bd.innerHTML += '<tr><td>'+dims[i]+'</td><td><b>'+t.name+'</b></td><td><span class=\"pill '+cl+'\">'+(t.score>0?'+':'')+t.score+'</span></td><td>'+t.weight+'%</td><td>'+(t.score*t.weight/100).toFixed(2)+'</td><td style=\"font-weight:600;color:'+(c>0?'var(--gn)':'var(--rd)')+'\">'+(c>0?'+':'')+c+'</td></tr>';
+  }
+}
+
+var c1=echarts.init(document.getElementById('td_chart'));
+c1.setOption({title:{text:'五维聚合贡献',left:'center',top:4,textStyle:{fontSize:12,fontWeight:600}},
+  tooltip:{trigger:'axis'},grid:{left:55,right:20,top:35,bottom:25},
+  xAxis:{type:'category',data:dims,axisLabel:{fontSize:9,color:'#6e6e73'}},
+  yAxis:{type:'value',axisLabel:{fontSize:9},splitLine:{lineStyle:{color:'rgba(0,0,0,0.04)'}}},
+  series:[{type:'bar',data:chartData.map(function(d){return d.value;}),barWidth:'50%',
+    itemStyle:{borderRadius:[4,4,0,0],color:function(p){return chartData[p.dataIndex].value>=0?'#34C759':'#FF3B30';}},
+    label:{show:true,position:'top',fontSize:10,formatter:function(p){return (p.value>=0?'+':'')+p.value.toFixed(1);}}
+  }]
+});
+</script>
+</body></html>
