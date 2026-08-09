@@ -303,6 +303,30 @@ body {
 }
 .kpi-item .kv { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; }
 .kpi-item .kl { font-size: 10.5px; color: var(--text2); margin-top: 2px; font-weight: 500; }
+
+/* Deep-link bar */
+.deep-links {
+  display: flex; gap: 8px; flex-wrap: wrap;
+  margin-top: 12px; padding-top: 12px;
+  border-top: 0.5px solid var(--bdr);
+}
+.deep-link {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 6px 14px;
+  background: rgba(0,122,255,0.06);
+  border: 0.5px solid rgba(0,122,255,0.15);
+  border-radius: 20px;
+  font-size: 11px; font-weight: 500; color: var(--blue);
+  text-decoration: none;
+  transition: var(--transition);
+}
+.deep-link:hover {
+  background: rgba(0,122,255,0.12);
+  border-color: rgba(0,122,255,0.3);
+  transform: translateY(-1px);
+}
+.deep-link .dl-icon { font-size: 13px; }
+.deep-link .dl-label { font-size: 10px; color: var(--text2); margin-left: 2px; }
 </style></head><body>
 
 <!-- Sidebar -->
@@ -446,6 +470,8 @@ function renderOverview(){
   }
   h += '</tbody></table>';
   h += secEnd();
+  // Deep-link: SAA 配置 ↔ 专题全集 + CMA试算
+  h += '<div class="deep-links"><a class="deep-link" href="投研专题_数据驱动版.html"><span class="dl-icon">📊</span>专题全集<span class="dl-label">73项 × ⑨模块 · 配置层数据底座</span></a><a class="deep-link" href="交互式CMA试算.html"><span class="dl-icon">🎮</span>CMA 试算<span class="dl-label">拖动参数实时重算 MVO 有效前沿</span></a></div>';
   return h;
 }
 
@@ -512,6 +538,7 @@ function renderMacro(){
   }
   h += '</tbody></table>';
   h += secEnd();
+  h += '<div class="deep-links"><a class="deep-link" href="投研图表_深度专题.html"><span class="dl-icon">📈</span>深度图表<span class="dl-label">7 组 ECharts · GDP/PMI/M1-M2/CPI+PPI 全系列</span></a></div>';
   return h;
 }
 
@@ -589,6 +616,7 @@ function renderAlloc(){
   }
   h += '</tbody></table>';
   h += secEnd();
+  h += '<div class="deep-links"><a class="deep-link" href="TAA评分卡_联动看板.html"><span class="dl-icon">🎯</span>TAA 评分卡<span class="dl-label">五维联动仪表盘 · 加权总分 +0.34</span></a><a class="deep-link" href="交互式CMA试算.html"><span class="dl-icon">🎮</span>CMA 试算<span class="dl-label">调整参数 · 场景对比 · MVO 重算</span></a></div>';
   return h;
 }
 
@@ -654,6 +682,7 @@ function renderRisk(){
   h += '<tr><td>汇率风险</td><td>QDII 敞口</td><td>23%</td><td>≤20%</td><td><span class="pill pill-orange">略超</span></td></tr>';
   h += '</tbody></table>';
   h += secEnd();
+  h += '<div class="deep-links"><a class="deep-link" href="风险管理看板.html"><span class="dl-icon">🛡️</span>风险管理看板<span class="dl-label">VaR · 回撤路径 · 限额合规 · 4 组 ECharts</span></a></div>';
   return h;
 }
 
@@ -697,6 +726,7 @@ function renderPerf(){
   h += section('多周期绩效', true);
   h += '<div class="chart-row"><div class="chart-box" id="pc_periods"></div><div class="chart-box" id="pc_contrib"></div></div>';
   h += secEnd();
+  h += '<div class="deep-links"><a class="deep-link" href="绩效评估看板.html"><span class="dl-icon">📋</span>绩效评估看板<span class="dl-label">Brinson 归因 · 多周期收益 · 资产贡献分解</span></a></div>';
   return h;
 }
 
