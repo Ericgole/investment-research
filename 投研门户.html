@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=1280,initial-scale=1.0">
+<title>投研体系 · 统一门户</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<style>
+/* ========== macOS Design System ========== */
+:root {
+  --bg:           #F5F5F7;
+  --card-bg:      rgba(255,255,255,0.78);
+  --sidebar-bg:   rgba(245,245,247,0.85);
+  --text:         #1d1d1f;
+  --text2:        #6e6e73;
+  --text3:        #aeaeb2;
+  --blue:         #007AFF;
+  --blue-bg:      rgba(0,122,255,0.08);
+  --green:        #34C759;
+  --green-bg:     rgba(52,199,89,0.08);
+  --red:          #FF3B30;
+  --red-bg:       rgba(255,59,48,0.08);
+  --orange:       #FF9500;
+  --orange-bg:    rgba(255,149,0,0.08);
+  --teal:         #5AC8FA;
+  --teal-bg:      rgba(90,200,250,0.1);
+  --purple:       #AF52DE;
+  --purple-bg:    rgba(175,82,222,0.08);
+  --bdr:          rgba(0,0,0,0.08);
+  --shadow-sm:    0 2px 8px rgba(0,0,0,0.04);
+  --shadow-md:    0 4px 20px rgba(0,0,0,0.06);
+  --shadow-lg:    0 8px 40px rgba(0,0,0,0.08);
+  --radius-sm:    10px;
+  --radius-md:    14px;
+  --radius-lg:    20px;
+  --sidebar-w:    220px;
+  --transition:   all 0.25s cubic-bezier(0.25,0.1,0.25,1);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body { height:100%; overflow:hidden; }
+body {
+  font-family: -apple-system, "SF Pro Display", "SF Pro Text", "Helvetica Neue", "Microsoft YaHei", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  display: flex;
+}
+
+/* ========== Sidebar ========== */
+.sidebar {
+  width: var(--sidebar-w);
+  min-width: var(--sidebar-w);
+  height: 100vh;
+  background: rgba(242,242,247,0.72);
+  backdrop-filter: blur(40px) saturate(180%);
+  -webkit-backdrop-filter: blur(40px) saturate(180%);
+  border-right: 0.5px solid var(--bdr);
+  display: flex;
+  flex-direction: column;
+  padding: 12px 10px;
+  z-index: 100;
+}
+
+.side-hd {
+  padding: 8px 10px 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.side-icon {
+  width: 36px; height: 36px;
+  background: linear-gradient(135deg, #007AFF, #5856D6);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 16px; font-weight: 700;
+}
+.side-hd .st { font-size: 14px; font-weight: 600; color: var(--text); }
+.side-hd .sv { font-size: 10px; color: var(--text3); }
+
+.side-nav { flex:1; display:flex; flex-direction:column; gap: 2px; }
+.side-btn {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 12px;
+  border: none; background: transparent;
+  border-radius: 9px;
+  font-size: 12.5px; font-weight: 500;
+  color: var(--text2);
+  cursor: pointer; font-family: inherit;
+  transition: var(--transition);
+  text-align: left; width: 100%;
+  position: relative;
+}
+.side-btn:hover { background: rgba(0,0,0,0.05); color: var(--text); }
+.side-btn.active {
+  background: rgba(255,255,255,0.75);
+  box-shadow: var(--shadow-sm);
+  color: var(--blue);
+  font-weight: 600;
+}
+.side-btn .sb-icon { font-size: 16px; width: 22px; text-align: center; flex-shrink: 0; }
+.side-btn .sb-badge {
+  margin-left: auto; font-size: 10px; font-weight: 600;
+  padding: 2px 7px; border-radius: 20px;
+  background: var(--blue-bg); color: var(--blue);
+}
+.side-btn.active .sb-badge { background: var(--blue); color: #fff; }
+
+.side-ft {
+  padding: 10px 12px;
+  font-size: 10px; color: var(--text3);
+  border-top: 0.5px solid var(--bdr);
+  margin-top: 4px;
+}
+
+/* ========== Main ========== */
+.main-wrap {
+  flex: 1; height: 100vh;
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+
+/* Top bar */
+.topbar {
+  height: 52px; min-height: 52px;
+  display: flex; align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  background: rgba(255,255,255,0.55);
+  backdrop-filter: blur(30px) saturate(180%);
+  -webkit-backdrop-filter: blur(30px) saturate(180%);
+  border-bottom: 0.5px solid var(--bdr);
+  z-index: 50;
+}
+.traffic {
+  display: flex; gap: 7px;
+  padding: 4px 0;
+}
+.traffic span {
+  width: 12px; height: 12px; border-radius: 50%;
+  display: inline-block;
+}
+.traffic .tr       { background: #FF5F57; }
+.traffic .ty       { background: #FEBC2E; }
+.traffic .tg       { background: #28C840; }
+.topbar .tp-title  { font-size: 13px; font-weight: 600; color: var(--text); }
+.topbar .tp-meta   { display: flex; gap: 20px; font-size: 11px; color: var(--text2); }
+.topbar .tp-meta b { color: var(--text); margin-right: 2px; }
+
+/* Content */
+.content {
+  flex: 1; overflow-y: auto; overflow-x: hidden;
+  padding: 20px 24px 32px;
+  scroll-behavior: smooth;
+}
+.content::-webkit-scrollbar { width: 5px; }
+.content::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.12); border-radius: 10px; }
+
+.tab-pane { display: none; animation: fadeIn 0.3s ease; }
+.tab-pane.active { display: block; }
+
+@keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+
+/* ========== Cards ========== */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.mac-card {
+  background: var(--card-bg);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-radius: var(--radius-md);
+  border: 0.5px solid var(--bdr);
+  padding: 18px 20px;
+  cursor: pointer;
+  transition: var(--transition);
+  box-shadow: var(--shadow-sm);
+}
+.mac-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+  border-color: rgba(0,0,0,0.12);
+}
+.mac-card .mc-row1 {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  margin-bottom: 8px;
+}
+.mac-card .mc-title {
+  font-size: 12px; font-weight: 600; color: var(--text2);
+  text-transform: uppercase; letter-spacing: 0.5px;
+}
+.mac-card .mc-val {
+  font-size: 26px; font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.5px;
+}
+.mac-card .mc-desc { font-size: 11px; color: var(--text2); line-height: 1.6; }
+.mac-card .mc-tags { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 10px; }
+
+.pill {
+  display: inline-flex; align-items: center;
+  padding: 3px 10px; border-radius: 20px;
+  font-size: 10.5px; font-weight: 500;
+}
+.pill-green  { background: var(--green-bg); color: var(--green); }
+.pill-red    { background: var(--red-bg);   color: var(--red);   }
+.pill-orange { background: var(--orange-bg);color: var(--orange);}
+.pill-blue   { background: var(--blue-bg);  color: var(--blue);  }
+.pill-purple { background: var(--purple-bg); color: var(--purple);}
+.pill-teal   { background: var(--teal-bg);   color: var(--teal);  }
+
+/* ========== Section / Accordion ========== */
+.section {
+  background: var(--card-bg);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-radius: var(--radius-lg);
+  border: 0.5px solid var(--bdr);
+  margin-bottom: 14px;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+.sec-hd {
+  padding: 13px 22px;
+  display: flex; justify-content: space-between; align-items: center;
+  cursor: pointer; user-select: none;
+  transition: background 0.15s;
+}
+.sec-hd:hover { background: rgba(0,0,0,0.02); }
+.sec-hd .sh-title { font-size: 13px; font-weight: 600; color: var(--text); }
+.sec-hd .sh-chevron {
+  font-size: 11px; color: var(--text3);
+  transition: transform 0.3s ease;
+}
+.sec-hd.open .sh-chevron { transform: rotate(90deg); }
+
+.sec-bd { display: none; padding: 0 22px 18px; }
+.sec-bd.open { display: block; animation: fadeIn 0.25s ease; }
+
+/* Charts */
+.chart-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 8px 0; }
+.chart-box { width: 100%; height: 300px; }
+@media (max-width: 1000px) { .chart-row { grid-template-columns: 1fr; } }
+
+/* Table */
+.mac-tbl { width: 100%; font-size: 12px; border-collapse: separate; border-spacing: 0; }
+.mac-tbl th {
+  text-align: left; padding: 8px 14px; font-size: 10px; font-weight: 600;
+  color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px;
+  border-bottom: 0.5px solid var(--bdr);
+}
+.mac-tbl td {
+  padding: 9px 14px; border-bottom: 0.5px solid rgba(0,0,0,0.04);
+}
+.mac-tbl tr:hover td { background: rgba(0,0,0,0.015); }
+.mac-tbl tr:last-child td { border-bottom: none; }
+
+/* Score row */
+.score-row { display: flex; gap: 10px; flex-wrap: wrap; margin: 10px 0; }
+.score-item {
+  flex: 1; min-width: 80px;
+  background: rgba(0,0,0,0.02);
+  border-radius: var(--radius-sm);
+  padding: 12px 10px; text-align: center;
+}
+.score-item .si-val { font-size: 20px; font-weight: 700; }
+.score-item .si-lbl { font-size: 10px; color: var(--text2); margin-top: 2px; }
+
+/* Link cards */
+.link-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
+.link-card {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 14px 10px;
+  background: rgba(0,0,0,0.02);
+  border-radius: var(--radius-sm);
+  text-decoration: none; color: var(--text);
+  transition: var(--transition);
+  border: 0.5px solid transparent;
+}
+.link-card:hover { background: rgba(0,122,255,0.06); border-color: rgba(0,122,255,0.15); }
+.link-card .lk-icon { font-size: 26px; margin-bottom: 6px; }
+.link-card .lk-name { font-size: 12px; font-weight: 500; }
+.link-card .lk-desc { font-size: 10px; color: var(--text3); margin-top: 2px; }
+
+/* ========== Specific overrides ========== */
+.kpi-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 18px;
+}
+.kpi-item {
+  background: var(--card-bg);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-radius: var(--radius-md);
+  border: 0.5px solid var(--bdr);
+  padding: 16px 20px;
+  text-align: center;
+}
+.kpi-item .kv { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; }
+.kpi-item .kl { font-size: 10.5px; color: var(--text2); margin-top: 2px; font-weight: 500; }
+</style></head><body>
+
+<!-- Sidebar -->
+<div class="sidebar">
+  <div class="side-hd">
+    <div class="side-icon">投</div>
+    <div><div class="st">投研体系</div><div class="sv">v1.8 · 统一门户</div></div>
+  </div>
+  <div class="side-nav" id="sideNav">
+    <button class="side-btn active" data-tab="overview">
+      <span class="sb-icon">◉</span> 总览
+      <span class="sb-badge">核心</span>
+    </button>
+    <button class="side-btn" data-tab="macro">
+      <span class="sb-icon">⊡</span> 宏观研判
+    </button>
+    <button class="side-btn" data-tab="alloc">
+      <span class="sb-icon">◈</span> 资产配置
+    </button>
+    <button class="side-btn" data-tab="risk">
+      <span class="sb-icon">⊕</span> 风险监控
+    </button>
+    <button class="side-btn" data-tab="perf">
+      <span class="sb-icon">⊿</span> 绩效评估
+    </button>
+    <button class="side-btn" data-tab="tools">
+      <span class="sb-icon">⊞</span> 工具支撑
+    </button>
+  </div>
+  <div class="side-ft">Wind + SQLite · 37/73 实时<br/>GitHub Pages 在线部署</div>
+</div>
+
+<!-- Main -->
+<div class="main-wrap">
+  <div class="topbar">
+    <div class="traffic">
+      <span class="tr"></span><span class="ty"></span><span class="tg"></span>
+    </div>
+    <div class="tp-title" id="pageTitle">总览 — 投研体系 v1.8</div>
+    <div class="tp-meta">
+      <span>TAA <b style="color:var(--green)">+0.34</b></span>
+      <span>覆盖 <b>37/73</b></span>
+      <span>SAA <b>+14.0%</b></span>
+      <span>2026-08-09</span>
+    </div>
+  </div>
+  <div class="content" id="content"></div>
+</div>
+
+<script>
+// ===== Data =====
+var DATA = {
+  taa: {政策:2,估值:-1,技术:-1,资金:1,宏观:0},
+  pe: {沪深300:{pe:14.4,pct:95},中证500:{pe:35.2,pct:90},创业板:{pe:42.2,pct:65},科创50:{pe:196,pct:98},上证50:{pe:11.7,pct:90}},
+  macro: {gdp:4.3,pmi:49.2,cpi:1.0,m1m2:-4.0,sr:7.4,ex:23.9,ip:5.3,fa:-5.7,rs:1.0},
+  saa: {ret:14.0,vol:9.5,sharpe:1.48,calmar:1.64,maxdd:-8.5,var99:-4.82,excess:2.0},
+  alloc: {信用债:27,利率债:9,现金:10,沪深300:3,创业板:9,标普500:23,黄金:21}
+};
+
+// ===== Tab Switching =====
+var titles = { overview:'总览 — 投研体系 v1.8', macro:'宏观研判 — 三周期共振', alloc:'资产配置 — SAA + TAA', risk:'风险监控 — 五类风险 · 三级限额', perf:'绩效评估 — Brinson归因 · 多周期', tools:'工具支撑 — 数据管线 · 外部看板' };
+
+document.querySelectorAll('.side-btn').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    var tab = this.dataset.tab;
+    document.querySelectorAll('.side-btn').forEach(function(b){ b.classList.remove('active'); });
+    this.classList.add('active');
+    document.getElementById('pageTitle').textContent = titles[tab] || tab;
+    document.getElementById('content').innerHTML = renderTab(tab);
+    if(tab==='overview') setTimeout(initOverviewCharts,200);
+    if(tab==='macro') setTimeout(initMacroCharts,200);
+    if(tab==='alloc') setTimeout(initAllocCharts,200);
+    if(tab==='risk') setTimeout(initRiskCharts,200);
+    if(tab==='perf') setTimeout(initPerfCharts,200);
+  });
+});
+
+function renderTab(t){
+  var r = {overview:renderOverview,macro:renderMacro,alloc:renderAlloc,risk:renderRisk,perf:renderPerf,tools:renderTools};
+  return r[t]();
+}
+
+// ===== Helpers =====
+function toggleSec(el){ el.classList.toggle('open'); }
+function macCard(title, val, desc, cls, label, vc){
+  var vColor = vc || (cls==='pill-green'?'var(--green)':cls==='pill-red'?'var(--red)':cls==='pill-orange'?'var(--orange)':'var(--blue)');
+  return '<div class="mac-card"><div class="mc-row1"><span class="mc-title">'+title+'</span><span class="mc-val" style="color:'+vColor+'">'+val+'</span></div><div class="mc-desc">'+desc+'</div><div class="mc-tags"><span class="pill '+cls+'">'+label+'</span></div></div>';
+}
+function section(title, open){
+  var o = open ? ' open' : '';
+  return '<div class="section"><div class="sec-hd'+o+'" onclick="toggleSec(this)"><span class="sh-title">'+title+'</span><span class="sh-chevron">▸</span></div><div class="sec-bd'+o+'">';
+}
+function secEnd(){ return '</div></div>'; }
+
+// ===== OVERVIEW =====
+function renderOverview(){
+  var dims = Object.keys(DATA.taa);
+  var total = 0;
+  for(var i=0;i<dims.length;i++) total += DATA.taa[dims[i]] * [20,25,15,15,25][i]/100;
+  var action = total>=0.75?'增配权益':total<=-0.75?'减配权益':'维持SAA';
+  var totalColor = total>=0.5?'var(--green)':total<=-0.5?'var(--red)':'var(--orange)';
+
+  var h = '';
+  // KPI Strip
+  h += '<div class="kpi-strip">';
+  h += '<div class="kpi-item"><div class="kv" style="color:'+totalColor+'">'+total.toFixed(2)+'</div><div class="kl">TAA 加权总分</div></div>';
+  h += '<div class="kpi-item"><div class="kv" style="color:var(--orange)">87%</div><div class="kl">PE 5Y 均分位</div></div>';
+  h += '<div class="kpi-item"><div class="kv" style="color:var(--green)">'+DATA.saa.ret+'%</div><div class="kl">SAA 年化收益</div></div>';
+  h += '<div class="kpi-item"><div class="kv" style="color:var(--green)">1.48</div><div class="kl">夏普比率</div></div>';
+  h += '</div>';
+
+  // Cards
+  h += '<div class="card-grid">';
+  h += macCard('TAA 评分', total.toFixed(2), '加权总分 · 阈值 ±0.75 · 建议: '+action,
+    total>=0.5?'pill-green':total<=-0.5?'pill-red':'pill-orange', action, totalColor);
+  h += macCard('市场估值', '87%分位', '沪深300 PE '+DATA.pe['沪深300'].pe+'x (95%分位) · 科创50 196x (98%)',
+    'pill-red', '偏贵', 'var(--red)');
+  h += macCard('风险概览', '正常', 'VaR99 −4.82% · MaxDD −8.5% · 三项限额全通过',
+    'pill-green', '全部合规', 'var(--green)');
+  h += macCard('组合绩效', '+'+DATA.saa.ret+'%', '夏普 1.48 · 超额 +2.0% vs 基准 · MTD +1.9%',
+    'pill-green', '优秀', 'var(--green)');
+  h += '</div>';
+
+  // Framework
+  h += section('框架总览 · 七章闭环', true);
+  h += '<div class="chart-row"><div class="chart-box" id="ov_fw"></div><div class="chart-box" id="ov_cov"></div></div>';
+  h += secEnd();
+
+  // SAA table
+  h += section('SAA 配置概览');
+  h += '<table class="mac-tbl"><thead><tr><th>资产</th><th>权重</th><th>1Y 收益</th><th>TAA</th><th>建议</th></tr></thead><tbody>';
+  var aa = [
+    {n:'标普500 ETF',w:23,r:'+23.9%',s:0.50,a:'维持标配'},{n:'信用债',w:27,r:'+2.4%',s:0.20,a:'维持标配'},
+    {n:'黄金 ETF',w:21,r:'+20.8%',s:0.50,a:'维持标配'},{n:'创业板 ETF',w:9,r:'+48.1%',s:0.40,a:'维持标配'},
+    {n:'沪深300',w:3,r:'+13.1%',s:-0.50,a:'维持标配'},{n:'利率债',w:9,r:'+1.9%',s:0.40,a:'维持标配'},
+    {n:'现金/货基',w:10,r:'+3.0%',s:0,a:'维持标配'}
+  ];
+  for(var i=0;i<aa.length;i++){
+    var a=aa[i]; var cls=a.s>=0.3?'pill-green':a.s<=-0.3?'pill-red':'pill-orange';
+    h += '<tr><td><b>'+a.n+'</b></td><td>'+a.w+'%</td><td>'+a.r+'</td><td><span class="pill '+cls+'">'+(a.s>0?'+':'')+a.s.toFixed(2)+'</span></td><td>'+a.a+'</td></tr>';
+  }
+  h += '</tbody></table>';
+  h += secEnd();
+  return h;
+}
+
+function initOverviewCharts(){
+  // Treemap
+  var c1 = echarts.init(document.getElementById('ov_fw'));
+  c1.setOption({
+    title:{text:'投研体系 · 四层模型',left:'center',top:6,textStyle:{fontSize:12,fontWeight:600,color:'#1d1d1f'}},
+    series:[{type:'treemap',data:[
+      {name:'研判层',value:30,children:[{name:'宏观',value:10},{name:'政策',value:10},{name:'比价',value:10}]},
+      {name:'配置层',value:25,children:[{name:'SAA',value:15},{name:'TAA',value:10}]},
+      {name:'监控层',value:25,children:[{name:'风险',value:15},{name:'绩效',value:10}]},
+      {name:'支撑层',value:20,children:[{name:'数据',value:10},{name:'专题',value:5},{name:'复盘',value:5}]}
+    ],label:{fontSize:11,fontWeight:500},itemStyle:{borderColor:'#fff',borderWidth:2,borderRadius:4},
+    levels:[{},{colorSaturation:[0.25,0.7],color:['#007AFF','#34C759','#FF9500','#AF52DE']}]}]
+  });
+
+  // Coverage bar - macOS style
+  var c2 = echarts.init(document.getElementById('ov_cov'));
+  c2.setOption({
+    title:{text:'数据覆盖率',left:'center',top:6,textStyle:{fontSize:12,fontWeight:600,color:'#1d1d1f'}},
+    tooltip:{trigger:'axis'},
+    grid:{left:50,right:20,top:40,bottom:20},
+    xAxis:{type:'category',data:['技术','宏观','估值','资金','政策'],axisLabel:{fontSize:10,color:'#6e6e73'},axisLine:{show:false},axisTick:{show:false}},
+    yAxis:{type:'value',max:100,axisLabel:{fontSize:10,color:'#6e6e73'},splitLine:{lineStyle:{color:'rgba(0,0,0,0.05)'}}},
+    series:[{type:'bar',data:[80,61,62,29,0],barWidth:'60%',
+      itemStyle:{borderRadius:[6,6,0,0],
+        color:function(p){var v=[80,61,62,29,0][p.dataIndex];return v>=60?'#34C759':v>=30?'#007AFF':'#FF3B30';}}
+    }]
+  });
+}
+
+// ===== MACRO =====
+function renderMacro(){
+  var h = '<div class="card-grid">';
+  var d = DATA.macro;
+  h += macCard('GDP 增速', '4.3%', 'Q2 当季同比 · 5Y 分位 20% · 低于目标 5%', 'pill-red', '偏弱', 'var(--red)');
+  h += macCard('制造业 PMI', '49.2', '新订单 48.5(收缩) · 就业 49.0 · 7月急转', 'pill-red', '收缩', 'var(--red)');
+  h += macCard('CPI 通胀', '1.0%', '低通胀环境 · 实际利率 2.0%偏高 · 有降息空间', 'pill-green', '宽松', 'var(--green)');
+  h += macCard('M1−M2 剪刀差', '−4.0pp', '资金沉淀严重 · 历史极低水平 · 企业活期<4%', 'pill-red', '偏空', 'var(--red)');
+  h += macCard('10Y 国债', '1.71%', '低利率环境 · DR007 偏松 · 信用利差仅 0.4bp', 'pill-green', '宽松', 'var(--green)');
+  h += macCard('人民币汇率', '6.80', '升值通道(7月7.30) · DXY 97 · 弱美元利好', 'pill-green', '偏多', 'var(--green)');
+  h += '</div>';
+
+  h += section('三周期共振 · 深度图表', true);
+  h += '<div class="chart-row"><div class="chart-box" id="mc_gdp"></div><div class="chart-box" id="mc_pmi"></div></div>';
+  h += '<div class="chart-row"><div class="chart-box" id="mc_m1m2"></div><div class="chart-box" id="mc_cpi"></div></div>';
+  h += secEnd();
+
+  h += section('宏观指标详表');
+  h += '<table class="mac-tbl"><thead><tr><th>指标</th><th>当前值</th><th>上月</th><th>趋势</th><th>判断</th></tr></thead><tbody>';
+  var rows = [
+    ['GDP 当季同比','4.3%','5.0%','↓','pill-red','放缓'],
+    ['制造业 PMI','49.2','50.3','↓','pill-red','收缩'],
+    ['CPI 同比','1.0%','1.1%','→','pill-green','低通胀'],
+    ['社融存量同比','7.4%','7.7%','↓','pill-red','下行'],
+    ['工业增加值','5.3%','4.5%','↑','pill-green','稳定'],
+    ['出口当月同比','23.9%','27.0%','↓','pill-orange','高位'],
+    ['固投累计同比','−5.7%','−3.2%','↓','pill-red','萎缩'],
+    ['社零当月同比','1.0%','2.1%','↓','pill-orange','疲弱']
+  ];
+  for(var i=0;i<rows.length;i++){
+    h += '<tr><td>'+rows[i][0]+'</td><td><b>'+rows[i][1]+'</b></td><td>'+rows[i][2]+'</td><td>'+rows[i][3]+'</td><td><span class="pill '+rows[i][4]+'">'+rows[i][5]+'</span></td></tr>';
+  }
+  h += '</tbody></table>';
+  h += secEnd();
+  return h;
+}
+
+function initMacroCharts(){
+  var gdp = echarts.init(document.getElementById('mc_gdp'));
+  gdp.setOption({title:{text:'GDP 增速 (季度)',left:'center',top:6,textStyle:{fontSize:12,fontWeight:600}},
+    grid:{left:50,right:20,top:40,bottom:25},
+    xAxis:{type:'category',data:['Q1','Q2','Q3E'],axisLabel:{fontSize:10,color:'#6e6e73'},axisLine:{show:false},axisTick:{show:false}},
+    yAxis:{type:'value',axisLabel:{fontSize:10,color:'#6e6e73'},splitLine:{lineStyle:{color:'rgba(0,0,0,0.05)'}}},
+    series:[{type:'bar',data:[5.0,4.3,4.2],barWidth:'55%',
+      itemStyle:{borderRadius:[5,5,0,0],color:function(p){return p.value>=5?'#34C759':'#FF3B30';}},
+      markLine:{silent:true,symbol:'none',
+        data:[{yAxis:5,label:{formatter:'目标 5%',fontSize:10,color:'#6e6e73'},lineStyle:{color:'rgba(0,0,0,0.2)',type:'dashed'}}]}}]
+  });
+
+  var pmi = echarts.init(document.getElementById('mc_pmi'));
+  pmi.setOption({title:{text:'PMI (近12月)',left:'center',top:6,textStyle:{fontSize:12,fontWeight:600}},
+    grid:{left:50,right:20,top:40,bottom:25},
+    xAxis:{type:'category',data:['S','O','N','D','J','F','M','A','M','J','J','A'],axisLabel:{fontSize:10,color:'#6e6e73'},axisLine:{show:false},axisTick:{show:false}},
+    yAxis:{type:'value',min:47,max:52,axisLabel:{fontSize:10,color:'#6e6e73'},splitLine:{lineStyle:{color:'rgba(0,0,0,0.05)'}}},
+    series:[{type:'line',data:[50.1,50.3,50.4,50.2,50.0,50.5,51.0,50.8,50.3,50.3,49.2,49.2],
+      lineStyle:{width:2.5,color:'#007AFF'},symbol:'circle',symbolSize:7,
+      itemStyle:{color:'#007AFF'},
+      markLine:{silent:true,symbol:'none',data:[{yAxis:50,lineStyle:{color:'rgba(0,0,0,0.15)',type:'dashed'}}]}}]
+  });
+
+  var m1m2 = echarts.init(document.getElementById('mc_m1m2'));
+  m1m2.setOption({title:{text:'M1−M2 剪刀差',left:'center',top:6,textStyle:{fontSize:12,fontWeight:600}},
+    grid:{left:50,right:20,top:40,bottom:25},
+    xAxis:{type:'category',data:['J','F','M','A','M','J','J'],axisLabel:{fontSize:10,color:'#6e6e73'},axisLine:{show:false},axisTick:{show:false}},
+    yAxis:{type:'value',axisLabel:{fontSize:10,color:'#6e6e73'},splitLine:{lineStyle:{color:'rgba(0,0,0,0.05)'}}},
+    series:[{type:'bar',data:[-3.8,-3.9,-3.8,-3.9,-4.0,-4.0,-4.0],barWidth:'60%',
+      itemStyle:{color:'#FF3B30',borderRadius:[5,5,0,0]},
+      markLine:{silent:true,symbol:'none',data:[{yAxis:0,lineStyle:{color:'rgba(0,0,0,0.15)',type:'dashed'}}]}}]
+  });
+
+  var cpi = echarts.init(document.getElementById('mc_cpi'));
+  cpi.setOption({title:{text:'CPI + PPI 同比',left:'center',top:6,textStyle:{fontSize:12,fontWeight:600}},
+    legend:{bottom:0,data:['CPI','PPI'],textStyle:{fontSize:10,color:'#6e6e73'},itemWidth:8,itemHeight:8},
+    grid:{left:50,right:20,top:40,bottom:30},
+    xAxis:{type:'category',data:['J','F','M','A','M','J','J'],axisLabel:{fontSize:10,color:'#6e6e73'},axisLine:{show:false},axisTick:{show:false}},
+    yAxis:{type:'value',axisLabel:{fontSize:10,color:'#6e6e73'},splitLine:{lineStyle:{color:'rgba(0,0,0,0.05)'}}},
+    series:[
+      {name:'CPI',type:'line',data:[1.2,0.9,1.0,0.8,0.8,1.1,1.0],lineStyle:{width:2.5,color:'#34C759'},symbol:'circle',symbolSize:6,itemStyle:{color:'#34C759'}},
+      {name:'PPI',type:'line',data:[-0.5,-0.2,0.5,0.8,1.2,1.5,2.0],lineStyle:{width:2.5,color:'#FF3B30'},symbol:'circle',symbolSize:6,itemStyle:{color:'#FF3B30'}}
+    ]
+  });
+}
+
+// ===== ALLOC =====
+function renderAlloc(){
+  var h = '<div class="card-grid">';
+  h += macCard('SAA 年化收益', '+14.0%', '超目标 10% · 夏普 1.48 · Calmar 1.64', 'pill-green', '优秀', 'var(--green)');
+  h += macCard('TAA 加权总分', '+0.34', '阈值 ±0.75 · 未触发偏离 · 维持全线标配', 'pill-blue', '维持', 'var(--blue)');
+  h += macCard('PE 均分位', '87%', '沪深300 95% · 科创50 98% · 中证500 90%', 'pill-red', '偏贵', 'var(--red)');
+  h += macCard('标普500 核心', '23%', 'SAA 最大配置 · TAA +0.50 · CNY升值侵蚀7pp', 'pill-blue', '核心', 'var(--blue)');
+  h += '</div>';
+
+  h += section('SAA 配置明细', true);
+  h += '<div class="chart-row"><div class="chart-box" id="ac_pie"></div><div class="chart-box" id="ac_risk"></div></div>';
+  h += secEnd();
+
+  h += section('TAA 五维评分 · 可展开查阅各维度专题');
+  h += '<table class="mac-tbl"><thead><tr><th>维度</th><th>权重</th><th>评分</th><th>贡献</th><th>核心判断</th></tr></thead><tbody>';
+  var dims = [
+    {n:'政策环境',s:2,w:20,d:'大基金三期 + AI 政策 + 货币宽松',cls:'pill-green'},
+    {n:'市场估值',s:-1,w:25,d:'PE 87% 分位 · ERP 5.3% · 信用利差 0.4bp',cls:'pill-red'},
+    {n:'技术动量',s:-1,w:15,d:'均线空头排列 · ADX 20.4 · 反弹量不足',cls:'pill-red'},
+    {n:'资金流向',s:1,w:15,d:'公募超配科技 19.3% · 两融持续去杠杆',cls:'pill-green'},
+    {n:'宏观研判',s:0,w:25,d:'内需弱 + 低利率 + 弱美元多方对冲',cls:'pill-orange'}
+  ];
+  for(var i=0;i<dims.length;i++){
+    var d=dims[i];
+    h += '<tr><td><b>'+d.n+'</b></td><td>'+d.w+'%</td><td><span class="pill '+d.cls+'">'+(d.s>0?'+':'')+d.s+'</span></td><td>'+(d.s*d.w/100).toFixed(2)+'</td><td style="font-size:11px;color:var(--text2)">'+d.d+'</td></tr>';
+  }
+  h += '</tbody></table>';
+  h += secEnd();
+  return h;
+}
+
+function initAllocCharts(){
+  var alloc = DATA.alloc;
+  var names = Object.keys(alloc), vals = names.map(function(n){return alloc[n];});
+  var colors = ['#007AFF','#34C759','#FF9500','#FF3B30','#AF52DE','#5AC8FA','#aeaeb2'];
+
+  var c1 = echarts.init(document.getElementById('ac_pie'));
+  c1.setOption({title:{text:'SAA 配置权重',left:'center',top:6,textStyle:{fontSize:12,fontWeight:600}},
+    tooltip:{formatter:'{b}: {c}%'},
+    series:[{type:'pie',radius:['38%','68%'],center:['50%','55%'],
+      data:names.map(function(n,i){return {name:n,value:vals[i],itemStyle:{color:colors[i]}};}),
+      label:{fontSize:10,fontWeight:500,color:'#6e6e73',formatter:'{b}\n{c}%'}
+    }]
+  });
+
+  var c2 = echarts.init(document.getElementById('ac_risk'));
+  c2.setOption({title:{text:'资产风险收益散点图',left:'center',top:6,textStyle:{fontSize:12,fontWeight:600}},
+    tooltip:{trigger:'item'},
+    grid:{left:55,right:25,top:40,bottom:25},
+    xAxis:{type:'value',name:'年化波动 %',axisLabel:{fontSize:10,color:'#6e6e73'},splitLine:{lineStyle:{color:'rgba(0,0,0,0.05)'}}},
+    yAxis:{type:'value',name:'年化收益 %',axisLabel:{fontSize:10,color:'#6e6e73'},splitLine:{lineStyle:{color:'rgba(0,0,0,0.05)'}}},
+    series:[{type:'scatter',
+      data:[
+        {value:[21.5,4.1],name:'沪深300'},{value:[30.9,13.0],name:'创业板'},
+        {value:[17.1,13.0],name:'标普500'},{value:[15.6,8.5],name:'黄金'},
+        {value:[4.7,2.5],name:'信用债'},{value:[3.6,1.9],name:'利率债'},{value:[0.5,3.0],name:'现金'}
+      ],
+      symbolSize:function(v){return v[0]<10?14:v[0]<20?20:28;},
+      itemStyle:{color:'#007AFF',shadowBlur:8,shadowColor:'rgba(0,122,255,0.2)'},
+      label:{show:true,formatter:function(p){return p.name;},fontSize:10,color:'#6e6e73',position:'right',distance:10}
+    }]
+  });
+}
+
+// ===== RISK =====
+function renderRisk(){
+  var h = '<div class="kpi-strip">';
+  h += '<div class="kpi-item"><div class="kv" style="color:var(--green)">−4.82%</div><div class="kl">VaR (99%, 10日)</div></div>';
+  h += '<div class="kpi-item"><div class="kv" style="color:var(--green)">−8.5%</div><div class="kl">最大回撤</div></div>';
+  h += '<div class="kpi-item"><div class="kv" style="color:var(--green)">35%</div><div class="kl">权益总仓位</div></div>';
+  h += '<div class="kpi-item"><div class="kv" style="color:var(--orange)">23%</div><div class="kl">外汇敞口</div></div>';
+  h += '</div>';
+
+  h += '<div class="card-grid">';
+  h += macCard('VaR(99%, 10日)', '−4.82%', '限额 ≤ 8% · 历史模拟法 · 500天窗口 · 通过', 'pill-green', '合规', 'var(--green)');
+  h += macCard('最大回撤', '−8.5%', '限额 ≤ 30% · 当前距峰值不远 · 明显余裕', 'pill-green', '合规', 'var(--green)');
+  h += macCard('权益仓位', '35%', '限额 ≤ 60% · 信用债 27% + 黄金 21% + 债现 19%', 'pill-green', '合规', 'var(--green)');
+  h += macCard('外汇敞口', '23%', '限额 ≤ 20% · 标普500 QDII 略超 3pp · 关注 CNY 升值', 'pill-orange', '注意', 'var(--orange)');
+  h += '</div>';
+
+  h += section('风险监控图表', true);
+  h += '<div class="chart-row"><div class="chart-box" id="rc_dd"></div><div class="chart-box" id="rc_limit"></div></div>';
+  h += secEnd();
+
+  h += section('五类风险详表');
+  h += '<table class="mac-tbl"><thead><tr><th>风险类型</th><th>核心指标</th><th>当前值</th><th>预警线</th><th>状态</th></tr></thead><tbody>';
+  h += '<tr><td>市场风险</td><td>VaR / 最大回撤</td><td>−4.82% / −8.5%</td><td>≤8% / ≤30%</td><td><span class="pill pill-green">正常</span></td></tr>';
+  h += '<tr><td>信用风险</td><td>AA−AAA 利差</td><td>0.4bp</td><td>监控反弹</td><td><span class="pill pill-orange">极低</span></td></tr>';
+  h += '<tr><td>流动性风险</td><td>高流资产占比</td><td>19% (利率债+现金)</td><td>≥15%</td><td><span class="pill pill-green">正常</span></td></tr>';
+  h += '<tr><td>操作风险</td><td>交易留痕</td><td>—</td><td>—</td><td><span class="pill pill-blue">人工</span></td></tr>';
+  h += '<tr><td>汇率风险</td><td>QDII 敞口</td><td>23%</td><td>≤20%</td><td><span class="pill pill-orange">略超</span></td></tr>';
+  h += '</tbody></table>';
+  h += secEnd();
+  return h;
+}
+
+function initRiskCharts(){
+  var c1 = echarts.init(document.getElementById('rc_dd'));
+  var dd = [-0.5,-1.2,-0.8,-2.1,-3.5,-5.0,-4.2,-3.8,-2.5,-1.8,-5.5,-7.2,-8.5,-7.0,-5.5,-4.2,-2.8,-1.5,-0.5,-0.2];
+  c1.setOption({title:{text:'组合回撤路径',left:'center',top:6,textStyle:{fontSize:12,fontWeight:600}},
+    grid:{left:50,right:20,top:40,bottom:25},
+    xAxis:{data:dd.map(function(_,i){return i+1;}),axisLabel:{fontSize:10,color:'#6e6e73'},axisLine:{show:false},axisTick:{show:false}},
+    yAxis:{max:0,axisLabel:{fontSize:10,color:'#6e6e73',formatter:'{value}%'},splitLine:{lineStyle:{color:'rgba(0,0,0,0.05)'}}},
+    series:[{type:'line',data:dd,lineStyle:{width:2,color:'#FF3B30'},symbol:'none',
+      areaStyle:{color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:'rgba(255,59,48,0.15)'},{offset:1,color:'rgba(255,59,48,0)'}]}},
+      markLine:{silent:true,symbol:'none',
+        data:[{yAxis:-15,label:{formatter:'预警',fontSize:10,color:'#FF9500'},lineStyle:{color:'#FF9500',type:'dashed'}},
+              {yAxis:-30,label:{formatter:'硬限',fontSize:10,color:'#FF3B30'},lineStyle:{color:'#FF3B30',type:'dashed'}}]}}]
+  });
+
+  var c2 = echarts.init(document.getElementById('rc_limit'));
+  c2.setOption({title:{text:'限额合规检查',left:'center',top:6,textStyle:{fontSize:12,fontWeight:600}},
+    grid:{left:50,right:20,top:40,bottom:25},
+    xAxis:{type:'category',data:['VaR','权益仓位','单仓','外汇'],axisLabel:{fontSize:10,color:'#6e6e73'},axisLine:{show:false},axisTick:{show:false}},
+    yAxis:{type:'value',axisLabel:{fontSize:10,color:'#6e6e73'},splitLine:{lineStyle:{color:'rgba(0,0,0,0.05)'}}},
+    series:[
+      {type:'bar',data:[4.82,35,27,23],barGap:'20%',barWidth:'35%',
+        itemStyle:{borderRadius:[5,5,0,0],color:function(p){return [true,true,false,false][p.dataIndex]?'#34C759':'#FF9500';}}},
+      {type:'bar',data:[8,60,10,20],barWidth:'35%',
+        itemStyle:{color:'rgba(0,0,0,0.06)',borderRadius:[5,5,0,0]}}
+    ]
+  });
+}
+
+// ===== PERF =====
+function renderPerf(){
+  var h = '<div class="card-grid">';
+  h += macCard('年化收益', '+14.0%', '超 SAA 目标 10% · MTD +1.9% · QTD +3.5%', 'pill-green', '优秀', 'var(--green)');
+  h += macCard('夏普比率', '1.48', 'Calmar 1.64 · 超额 +2.0% vs 基准 60%HS300+40%债', 'pill-green', '优秀', 'var(--green)');
+  h += macCard('资产贡献 TOP', '标普500 +4.6%', '黄金 +4.2% · 创业板 +2.5% · 沪深300 -0.2%', 'pill-blue', '分散有效', 'var(--blue)');
+  h += macCard('近3月超额', '+2.0%', 'vs 基准 60%沪深300 + 40%中债综合', 'pill-green', '持续跑赢', 'var(--green)');
+  h += '</div>';
+
+  h += section('多周期绩效', true);
+  h += '<div class="chart-row"><div class="chart-box" id="pc_periods"></div><div class="chart-box" id="pc_contrib"></div></div>';
+  h += secEnd();
+  return h;
+}
+
+function initPerfCharts(){
+  var c1 = echarts.init(document.getElementById('pc_periods'));
+  c1.setOption({title:{text:'多周期收益 vs 基准',left:'center',top:6,textStyle:{fontSize:12,fontWeight:600}},
+    legend:{bottom:0,data:['SAA组合','基准'],textStyle:{fontSize:10,color:'#6e6e73'},itemWidth:8,itemHeight:8},
+    grid:{left:50,right:20,top:40,bottom:30},
+    xAxis:{type:'category',data:['MTD','QTD','YTD','1Y'],axisLabel:{fontSize:10,color:'#6e6e73'},axisLine:{show:false},axisTick:{show:false}},
+    yAxis:{type:'value',axisLabel:{fontSize:10,color:'#6e6e73',formatter:'{value}%'},splitLine:{lineStyle:{color:'rgba(0,0,0,0.05)'}}},
+    series:[
+      {name:'SAA组合',type:'bar',data:[1.9,3.5,8.2,15.1],barWidth:'35%',barGap:'20%',itemStyle:{color:'#007AFF',borderRadius:[5,5,0,0]}},
+      {name:'基准',type:'bar',data:[0.8,1.5,4.0,8.3],barWidth:'35%',itemStyle:{color:'rgba(0,0,0,0.12)',borderRadius:[5,5,0,0]}}
+    ]
+  });
+
+  var c2 = echarts.init(document.getElementById('pc_contrib'));
+  c2.setOption({title:{text:'资产收益贡献',left:'center',top:6,textStyle:{fontSize:12,fontWeight:600}},
+    grid:{left:50,right:20,top:40,bottom:25},
+    xAxis:{type:'category',data:['标普500','黄金','创业板','沪深300'],axisLabel:{fontSize:10,color:'#6e6e73'},axisLine:{show:false},axisTick:{show:false}},
+    yAxis:{type:'value',axisLabel:{fontSize:10,color:'#6e6e73',formatter:'{value}%'},splitLine:{lineStyle:{color:'rgba(0,0,0,0.05)'}}},
+    series:[{type:'bar',data:[4.6,4.2,2.5,-0.2],barWidth:'50%',
+      itemStyle:{borderRadius:[5,5,0,0],color:function(p){return p.value>=0?'#007AFF':'#FF3B30';}},
+      markLine:{silent:true,symbol:'none',data:[{yAxis:0,lineStyle:{color:'rgba(0,0,0,0.15)',type:'dashed'}}]}
+    }]
+  });
+}
+
+// ===== TOOLS =====
+function renderTools(){
+  var h = '<div class="card-grid">';
+  h += macCard('数据刷新管线', '9步/15秒', '每日 18:30 自动 · Windows Task Scheduler', 'pill-green', '运行中', 'var(--green)');
+  h += macCard('Wind 万得', '7 MCP 服务', '指数 PE/PB · 基金持仓 · 经济 EDB · 公告', 'pill-blue', '已接入', 'var(--blue)');
+  h += macCard('SQLite 数据库', '12表/36K行', 'K线 2010−2026 · 宏观 199月 · 多源融合', 'pill-green', '就绪', 'var(--green)');
+  h += macCard('GitHub Pages', '在线部署', 'ericgole.github.io · 7看板 · 移动适配', 'pill-blue', '在线', 'var(--blue)');
+  h += '</div>';
+
+  h += section('外部看板入口', true);
+  h += '<div class="link-grid">';
+  var links = [
+    {n:'专题全集',u:'投研专题_数据驱动版.html',d:'73专题 × ⑨模块',i:'📊'},
+    {n:'TAA评分卡',u:'TAA评分卡_联动看板.html',d:'五维联动',i:'🎯'},
+    {n:'深度图表',u:'投研图表_深度专题.html',d:'7组 ECharts',i:'📈'},
+    {n:'风险管理',u:'风险管理看板.html',d:'VaR/回撤',i:'🛡️'},
+    {n:'绩效评估',u:'绩效评估看板.html',d:'归因/多周期',i:'📋'},
+    {n:'事件日历',u:'关键事件日历.html',d:'8−12月节点',i:'📅'},
+    {n:'交互试算',u:'交互式CMA试算.html',d:'CMA/TAA/场景',i:'🎮'},
+  ];
+  for(var i=0;i<links.length;i++){
+    var l=links[i];
+    h += '<a href="'+l.u+'" class="link-card"><div class="lk-icon">'+l.i+'</div><div class="lk-name">'+l.n+'</div><div class="lk-desc">'+l.d+'</div></a>';
+  }
+  h += '</div>';
+  h += secEnd();
+
+  h += section('数据管线架构');
+  h += '<div style="font-size:11px;line-height:2;color:var(--text2);padding:8px 0">';
+  h += '<b>刷新链路 (9步/15秒):</b> compute_indicators.py → wind_refresh.py → fill_pe.py → compute_risk.py → compute_perf.py → build_final.py → build_dashboard.py → build_charts.py → 推送 GitHub<br/>';
+  h += '<b>自动化:</b> Windows Task Scheduler · 每日 18:30 执行 · 日频数据次日更新<br/>';
+  h += '<b>数据源:</b> SQLite (local, 12 tables, 36K rows) + Wind 万得 (7 MCP services) + Parser (cma_*)<br/>';
+  h += '<b>输出:</b> 7 个 HTML 看板 · GitHub Pages 部署 · localhost:8899 本地预览</div>';
+  h += secEnd();
+
+  return h;
+}
+
+// ===== Init =====
+document.getElementById('content').innerHTML = renderOverview();
+setTimeout(initOverviewCharts, 200);
+</script>
+</body></html>
