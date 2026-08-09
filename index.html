@@ -1,51 +1,46 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>投研体系看板</title>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>投研体系看板 v1.8</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:-apple-system,"Microsoft YaHei",sans-serif;background:#f0f2f5;color:#1a1a1a;display:flex;justify-content:center;align-items:center;min-height:100vh}
-.container{text-align:center;max-width:600px;padding:40px}
-h1{font-size:22px;color:#042C53;margin-bottom:8px}
-.sub{font-size:13px;color:#888780;margin-bottom:32px}
-.cards{display:flex;gap:16px;flex-wrap:wrap;justify-content:center}
-.card{flex:1;min-width:160px;background:#fff;border-radius:12px;padding:24px 16px;text-align:center;border:0.5px solid #E8ECF1;text-decoration:none;transition:all .2s}
-.card:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,0.08)}
-.card .icon{font-size:32px;margin-bottom:8px}
-.card .title{font-size:14px;font-weight:500;color:#042C53}
-.card .desc{font-size:11px;color:#888780;margin-top:4px}
-.footer{font-size:11px;color:#B4B2A9;margin-top:40px}
+body{font-family:-apple-system,"Microsoft YaHei",sans-serif;background:#f0f2f5;color:#1a1a1a}
+.header{background:linear-gradient(135deg,#042C53,#185FA5);color:#fff;padding:24px}
+.header h1{font-size:18px;font-weight:500}.header p{font-size:12px;color:#85B7EB;margin-top:4px}
+.container{max-width:900px;margin:0 auto;padding:20px}
+.stats{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap}
+.stat{flex:1;min-width:100px;background:#fff;border-radius:10px;padding:12px;text-align:center;border:0.5px solid #E8ECF1}
+.stat .sv{font-size:20px;font-weight:600;color:#042C53}.stat .sl{font-size:10px;color:#888780;margin-top:2px}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+.card{background:#fff;border-radius:12px;padding:20px;text-align:center;border:0.5px solid #E8ECF1;text-decoration:none;transition:all .2s;display:block}
+.card:hover{transform:translateY(-2px);box-shadow:0 4px 16px rgba(0,0,0,0.08)}
+.card .icon{font-size:28px;margin-bottom:6px}.card .title{font-size:14px;font-weight:500;color:#042C53}.card .desc{font-size:11px;color:#888780;margin-top:3px}
+.footer{text-align:center;font-size:11px;color:#B4B2A9;padding:24px}
+@media(max-width:600px){.cards{grid-template-columns:1fr 1fr}.header h1{font-size:15px}}
 </style>
 </head>
 <body>
-<div class="container">
-<h1>投研体系看板</h1>
-<p class="sub">73专题 · 5维度 · 24项DB/Wind实时计算 · 每日18:30自动刷新</p>
-<div class="cards">
-<a class="card" href="投研专题_数据驱动版.html">
-<div class="icon">📊</div>
-<div class="title">专题全集</div>
-<div class="desc">73专题×⑨模块</div>
-</a>
-<a class="card" href="TAA评分卡_联动看板.html">
-<div class="icon">🎯</div>
-<div class="title">TAA评分卡</div>
-<div class="desc">五维联动仪表盘</div>
-</a>
-<a class="card" href="投研图表_深度专题.html">
-<div class="icon">📈</div>
-<div class="title">深度图表</div>
-<div class="desc">7组ECharts</div>
-</a>
-<a class="card" href="风险管理看板.html">
-<div class="icon">🛡️</div>
-<div class="title">风险管理</div>
-<div class="desc">VaR/回撤/限额</div>
-</a>
+<div class="header">
+<h1>投研体系看板 v1.8</h1>
+<p>七章全闭环 · 34/73实时(47%) · 每日18:30自动刷新 · Wind+SQLite双源驱动</p>
 </div>
-<p class="footer">数据来源: Wind万得 + SQLite本地 · 投研体系 v1.4 · 2026-08-08</p>
+<div class="container">
+<div class="stats">
+<div class="stat"><div class="sv">34</div><div class="sl">DB/Wind实时</div></div>
+<div class="stat"><div class="sv" style="color:#3B6D11">+14.0%</div><div class="sl">SAA年化收益</div></div>
+<div class="stat"><div class="sv" style="color:#185FA5">+0.34</div><div class="sl">TAA加权总分</div></div>
+<div class="stat"><div class="sv">1.48</div><div class="sl">夏普比率</div></div>
+</div>
+<div class="cards">
+<a class="card" href="投研专题_数据驱动版.html"><div class="icon">📊</div><div class="title">专题全集</div><div class="desc">73专题×⑨模块</div></a>
+<a class="card" href="TAA评分卡_联动看板.html"><div class="icon">🎯</div><div class="title">TAA评分卡</div><div class="desc">五维联动仪表盘</div></a>
+<a class="card" href="投研图表_深度专题.html"><div class="icon">📈</div><div class="title">深度图表</div><div class="desc">7组ECharts实时</div></a>
+<a class="card" href="风险管理看板.html"><div class="icon">🛡️</div><div class="title">风险管理</div><div class="desc">VaR/回撤/限额</div></a>
+<a class="card" href="绩效评估看板.html"><div class="icon">📋</div><div class="title">绩效评估</div><div class="desc">多周期/归因</div></a>
+<a class="card" href="关键事件日历.html"><div class="icon">📅</div><div class="title">事件日历</div><div class="desc">8-12月关键节点</div></a>
+</div>
+<p class="footer">投研体系 v1.8 · 数据来源: Wind万得 + SQLite · GitHub Pages部署</p>
 </div>
 </body>
 </html>
