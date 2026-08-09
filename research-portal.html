@@ -24,7 +24,7 @@ body{font-family:-apple-system,"SF Pro Display","Microsoft YaHei",sans-serif;bac
 .kpi-box .kv{font-size:28px;font-weight:700;letter-spacing:-0.5px}
 .kpi-box .kl{font-size:11px;font-weight:500;color:var(--t2);margin-top:2px}
 .kpi-box .ksb{font-size:9px;color:var(--t3);margin-top:2px}
-@media(max-width:700px){.kpi{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:700px){.kpi{grid-template-columns:repeat(2,1fr)}}.modules[style*="repeat(5,"]{@media(max-width:1000px){grid-template-columns:repeat(3,1fr)!important}}@media(max-width:600px){.modules[style*="repeat(5,"]{grid-template-columns:repeat(2,1fr)!important}}
 
 /* Module Grid */
 .modules{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px}
@@ -85,6 +85,153 @@ body{font-family:-apple-system,"SF Pro Display","Microsoft YaHei",sans-serif;bac
   <a href="关键事件日历.html">📅 事件日历</a>
 </div>
 
+<!-- SECTION 1: Research Headlines -->
+<div style="font-size:12px;font-weight:600;color:var(--t);margin:16px 0 10px">📰 研究头条</div>
+<div class="modules" style="grid-template-columns:repeat(4,1fr);gap:10px">
+  <div class="mod-card" style="padding:14px 16px;border-left:3px solid var(--rd)">
+    <div class="mi" style="font-size:22px;margin-bottom:2px">🔥</div>
+    <div class="mn" style="font-size:13px">PMI 急跌至 49.2</div>
+    <div class="md">7 月 PMI 跌破荣枯线，新订单 48.5 两个月降 2.7pp</div>
+    <div class="mt"><span class="tag tr">TAA: -0.15</span><span class="tag" style="background:rgba(0,0,0,0.04);color:var(--t3)">估值↓</span></div>
+  </div>
+  <div class="mod-card" style="padding:14px 16px;border-left:3px solid var(--am)">
+    <div class="mi" style="font-size:22px;margin-bottom:2px">📊</div>
+    <div class="mn" style="font-size:13px">出口 +23.9% 抢出口</div>
+    <div class="md">H1 贸易顺差创新高，但关税窗口期可持续性存疑</div>
+    <div class="mt"><span class="tag ta">TAA: +0.10</span><span class="tag" style="background:rgba(0,0,0,0.04);color:var(--t3)">宏观↑</span></div>
+  </div>
+  <div class="mod-card" style="padding:14px 16px;border-left:3px solid var(--gn)">
+    <div class="mi" style="font-size:22px;margin-bottom:2px">💡</div>
+    <div class="mn" style="font-size:13px">M1-M2 剪刀差改善</div>
+    <div class="md">-4.0pp → 连续 36 月改善，历史规律领先 A 股 6 月</div>
+    <div class="mt"><span class="tag tg">TAA: +0.10</span><span class="tag" style="background:rgba(0,0,0,0.04);color:var(--t3)">资金↑</span></div>
+  </div>
+  <div class="mod-card" style="padding:14px 16px;border-left:3px solid var(--pu)">
+    <div class="mi" style="font-size:22px;margin-bottom:2px">🏛️</div>
+    <div class="mn" style="font-size:13px">大基金三期落地</div>
+    <div class="md">产业政策持续发力，半导体/装备制造逆势扩张</div>
+    <div class="mt"><span class="tag tp">TAA: +0.20</span><span class="tag" style="background:rgba(0,0,0,0.04);color:var(--t3)">政策↑</span></div>
+  </div>
+</div>
+
+<!-- SECTION 2: Key Topics This Week -->
+<div style="font-size:12px;font-weight:600;color:var(--t);margin:16px 0 10px">🔍 本周重点专题 · TAA 贡献度排序</div>
+<div class="modules" style="grid-template-columns:repeat(5,1fr);gap:8px">
+  <div class="mod-card" style="padding:12px 14px;text-align:center">
+    <div style="font-size:20px;margin-bottom:2px">📊</div>
+    <div class="mn" style="font-size:11px">GDP 季度分解</div>
+    <div class="md" style="font-size:9px">Q2 4.3% · 25% 分位</div>
+    <div class="mt" style="justify-content:center"><span class="tag tr">-0.15</span></div>
+  </div>
+  <div class="mod-card" style="padding:12px 14px;text-align:center">
+    <div style="font-size:20px;margin-bottom:2px">📈</div>
+    <div class="mn" style="font-size:11px">PMI 分项解读</div>
+    <div class="md" style="font-size:9px">49.2 · 新订单 48.5</div>
+    <div class="mt" style="justify-content:center"><span class="tag tr">-0.15</span></div>
+  </div>
+  <div class="mod-card" style="padding:12px 14px;text-align:center">
+    <div style="font-size:20px;margin-bottom:2px">💹</div>
+    <div class="mn" style="font-size:11px">PE/PB 分位</div>
+    <div class="md" style="font-size:9px">HS300 95% · 科创 98%</div>
+    <div class="mt" style="justify-content:center"><span class="tag tr">-0.25</span></div>
+  </div>
+  <div class="mod-card" style="padding:12px 14px;text-align:center">
+    <div style="font-size:20px;margin-bottom:2px">💵</div>
+    <div class="mn" style="font-size:11px">M1-M2 剪刀差</div>
+    <div class="md" style="font-size:9px">-4.0pp · 改善中</div>
+    <div class="mt" style="justify-content:center"><span class="tag tg">+0.15</span></div>
+  </div>
+  <div class="mod-card" style="padding:12px 14px;text-align:center">
+    <div style="font-size:20px;margin-bottom:2px">📉</div>
+    <div class="mn" style="font-size:11px">收益率曲线</div>
+    <div class="md" style="font-size:9px">10Y 1.71% · 极低</div>
+    <div class="mt" style="justify-content:center"><span class="tag ta">+0.05</span></div>
+  </div>
+</div>
+
+<!-- SECTION 3: Signal Converter -->
+<div style="font-size:12px;font-weight:600;color:var(--t);margin:16px 0 10px">🔄 研究 → 决策信号转换器</div>
+<div class="modules" style="grid-template-columns:repeat(5,1fr);gap:8px">
+  <div class="mod-card" style="padding:12px;text-align:center">
+    <div style="font-size:14px;font-weight:700;color:var(--t)">75 项专题</div>
+    <div style="font-size:9px;color:var(--t3)">原始信号</div>
+    <div class="mt" style="justify-content:center"><span class="tag" style="background:rgba(0,0,0,0.04);color:var(--t3)">研究层</span></div>
+  </div>
+  <div style="display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--t3)">→</div>
+  <div class="mod-card" style="padding:12px;text-align:center">
+    <div style="font-size:14px;font-weight:700;color:var(--pu)">五维评分</div>
+    <div style="font-size:9px;color:var(--t3)">宏观+2 估值-1 政策+2</div>
+    <div class="mt" style="justify-content:center"><span class="tag tp">TAA层</span></div>
+  </div>
+  <div style="display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--t3)">→</div>
+  <div class="mod-card" style="padding:12px;text-align:center">
+    <div style="font-size:14px;font-weight:700;color:var(--gn)">TAA +0.85</div>
+    <div style="font-size:9px;color:var(--t3)">加权总分 · 不触发</div>
+    <div class="mt" style="justify-content:center"><span class="tag tg">决策层</span></div>
+  </div>
+</div>
+<div style="font-size:10px;color:var(--t3);margin:4px 0 0;text-align:center">
+  <a href="decision.html" style="color:var(--blue);text-decoration:none;font-weight:500">→ 打开决策仪表盘查看完整方案 ←</a>
+</div>
+
+<!-- SECTION 4: Topic Matrix -->
+<div style="font-size:12px;font-weight:600;color:var(--t);margin:16px 0 10px">📚 专题矩阵概览 · 点击筛选</div>
+<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;font-size:10px">
+  <button onclick="filterMatrix('all')" class="mbtn active" style="padding:4px 12px;border:0.5px solid var(--bdr);border-radius:20px;cursor:pointer;background:rgba(0,122,255,0.08);color:var(--blue);font-weight:500">全部</button>
+  <button onclick="filterMatrix('保险')" class="mbtn" style="padding:4px 12px;border:0.5px solid var(--bdr);border-radius:20px;cursor:pointer;color:var(--t2);background:rgba(255,255,255,0.5)">🛡 保险专属</button>
+  <button onclick="filterMatrix('宏观')" class="mbtn" style="padding:4px 12px;border:0.5px solid var(--bdr);border-radius:20px;cursor:pointer;color:var(--t2);background:rgba(255,255,255,0.5)">📊 宏观研判</button>
+  <button onclick="filterMatrix('估值')" class="mbtn" style="padding:4px 12px;border:0.5px solid var(--bdr);border-radius:20px;cursor:pointer;color:var(--t2);background:rgba(255,255,255,0.5)">💰 市场估值</button>
+  <button onclick="filterMatrix('技术')" class="mbtn" style="padding:4px 12px;border:0.5px solid var(--bdr);border-radius:20px;cursor:pointer;color:var(--t2);background:rgba(255,255,255,0.5)">📈 技术动量</button>
+  <button onclick="filterMatrix('资金')" class="mbtn" style="padding:4px 12px;border:0.5px solid var(--bdr);border-radius:20px;cursor:pointer;color:var(--t2);background:rgba(255,255,255,0.5)">💵 资金流向</button>
+</div>
+<div class="modules" id="topicMatrix" style="grid-template-columns:repeat(5,1fr);gap:8px">
+  <div class="mod-card cat-保险" style="padding:10px 12px;text-align:center">
+    <div class="mn" style="font-size:11px">久期缺口</div><div class="md" style="font-size:9px">3.2 年 · -1</div>
+  </div>
+  <div class="mod-card cat-保险" style="padding:10px 12px;text-align:center">
+    <div class="mn" style="font-size:11px">C-ROSS II</div><div class="md" style="font-size:9px">215% · +0.5</div>
+  </div>
+  <div class="mod-card cat-宏观" style="padding:10px 12px;text-align:center">
+    <div class="mn" style="font-size:11px">GDP 分解</div><div class="md" style="font-size:9px">4.3% · -0.5</div>
+  </div>
+  <div class="mod-card cat-宏观" style="padding:10px 12px;text-align:center">
+    <div class="mn" style="font-size:11px">PMI 解读</div><div class="md" style="font-size:9px">49.2 · -0.5</div>
+  </div>
+  <div class="mod-card cat-宏观" style="padding:10px 12px;text-align:center">
+    <div class="mn" style="font-size:11px">CPI 通胀</div><div class="md" style="font-size:9px">1.0% · +0.5</div>
+  </div>
+  <div class="mod-card cat-宏观" style="padding:10px 12px;text-align:center">
+    <div class="mn" style="font-size:11px">M1-M2</div><div class="md" style="font-size:9px">-4.0pp · -1</div>
+  </div>
+  <div class="mod-card cat-宏观" style="padding:10px 12px;text-align:center">
+    <div class="mn" style="font-size:11px">社融结构</div><div class="md" style="font-size:9px">7.4% · -0.5</div>
+  </div>
+  <div class="mod-card cat-估值" style="padding:10px 12px;text-align:center">
+    <div class="mn" style="font-size:11px">PE 分位</div><div class="md" style="font-size:9px">87% · -1</div>
+  </div>
+  <div class="mod-card cat-估值" style="padding:10px 12px;text-align:center">
+    <div class="mn" style="font-size:11px">ERP 溢价</div><div class="md" style="font-size:9px">5.3% · +0.5</div>
+  </div>
+  <div class="mod-card cat-估值" style="padding:10px 12px;text-align:center">
+    <div class="mn" style="font-size:11px">股债比价</div><div class="md" style="font-size:9px">强偏股 · +1</div>
+  </div>
+  <div class="mod-card cat-技术" style="padding:10px 12px;text-align:center">
+    <div class="mn" style="font-size:11px">均线系统</div><div class="md" style="font-size:9px">空头 · -1</div>
+  </div>
+  <div class="mod-card cat-技术" style="padding:10px 12px;text-align:center">
+    <div class="mn" style="font-size:11px">MACD</div><div class="md" style="font-size:9px">底背离 · +0.5</div>
+  </div>
+  <div class="mod-card cat-技术" style="padding:10px 12px;text-align:center">
+    <div class="mn" style="font-size:11px">ADX</div><div class="md" style="font-size:9px">20.4 · 0</div>
+  </div>
+  <div class="mod-card cat-资金" style="padding:10px 12px;text-align:center">
+    <div class="mn" style="font-size:11px">公募仓位</div><div class="md" style="font-size:9px">88% · -0.5</div>
+  </div>
+  <div class="mod-card cat-资金" style="padding:10px 12px;text-align:center">
+    <div class="mn" style="font-size:11px">行业超低配</div><div class="md" style="font-size:9px">超配 +1</div>
+  </div>
+</div>
+
 <!-- Module Grid -->
 <div class="modules">
   <a class="mod-card" href="投研门户.html" style="border-left:3px solid var(--blue)">
@@ -121,5 +268,16 @@ body{font-family:-apple-system,"SF Pro Display","Microsoft YaHei",sans-serif;bac
 
 <div class="foot">保险资金投研体系 v2.0 · 研究门户 · GitHub Pages · 2026-08-09</div>
 </div>
+
+<script>
+function filterMatrix(cat){
+  document.querySelectorAll(".mbtn").forEach(function(b){b.classList.remove("active")});
+  event.target.classList.add("active");
+  document.querySelectorAll("#topicMatrix > div").forEach(function(d){
+    d.style.display = (cat==="all" || d.classList.contains("cat-"+cat)) ? "block" : "none";
+  });
+}
+</script>
+
 </body>
 </html>
