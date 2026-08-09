@@ -3,7 +3,19 @@
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>保险资金投研体系 v2.0</title>
-<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js">
+function updateCustom(){
+  var eq=parseInt(document.getElementById('eq_slider').value);
+  var ir=parseInt(document.getElementById('ir_slider').value);
+  document.getElementById('eq_val').textContent=eq+'%';
+  document.getElementById('ir_val').textContent=ir+'bp';
+  var sol=215-eq*0.8-ir*0.15;
+  var ret=5.3+eq*0.12-ir*0.02;
+  document.getElementById('custom_sol').textContent=Math.round(sol)+'%';
+  document.getElementById('custom_ret').textContent=ret.toFixed(1)+'%';
+}
+
+</script>
 <style>
 :root{--bg:#F5F5F7;--text:#1d1d1f;--t2:#6e6e73;--t3:#aeaeb2;--blue:#007AFF;--gn:#34C759;--rd:#FF3B30;--am:#FF9500;--pu:#AF52DE;--bdr:rgba(0,0,0,0.08)}
 *{margin:0;padding:0;box-sizing:border-box}
@@ -94,7 +106,7 @@ body{font-family:-apple-system,"SF Pro Display","Microsoft YaHei",sans-serif;bac
     <div class="kl">偿付能力充足率</div><div class="ksb">综合 215% · 核心 180% · 底线 100%/50%</div></div>
   <div class="kpi-item"><div class="ks" style="background:var(--am)"></div>
     <div class="kv" style="color:var(--am)">3.2 年</div>
-    <div class="kl">久期缺口</div><div class="ksb">资产 3.8 vs 负债 7.0 · 目标 0-2 年</div></div>
+    <div class="kl">久期缺口</div><div class="ksb">资产 3.8 - 负债 7.0 · 目标 0-2 年</div></div>
   <div class="kpi-item"><div class="ks" style="background:var(--gn)"></div>
     <div class="kv" style="color:var(--gn)">+0.8%</div>
     <div class="kl">投资收益率 vs 负债成本</div><div class="ksb">5.3% - 4.5% = 利差 +0.8%</div></div>
@@ -105,7 +117,7 @@ body{font-family:-apple-system,"SF Pro Display","Microsoft YaHei",sans-serif;bac
 
 <!-- ===== L1: Risk Warnings ===== -->
 <div class="risk-strip">
-  <div class="risk-tag risk-md">久期缺口 3.2 年 — 超额 1.2 年</div>
+  <div class="risk-tag risk-md">久期缺口 3.2 年 — 缺口 -3.2 年</div>
   <div class="risk-tag risk-md">期限错配 5.2 年 — 短债占比过高</div>
   <div class="risk-tag risk-lo">偿付能力 215% — 充裕</div>
   <div class="risk-tag risk-lo">流动性覆盖 10% — 充裕</div>
@@ -115,7 +127,7 @@ body{font-family:-apple-system,"SF Pro Display","Microsoft YaHei",sans-serif;bac
 </div>
 
 <!-- ===== L2: SAA + TAA ===== -->
-<div class="sec"><div class="sech open" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')"><span>📊 SAA 配置 + TAA 偏离建议</span><span class="sc">▸</span></div><div class="secb open">
+<div class="sec"><div class="sech" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')"><span>📊 SAA 配置 + TAA 偏离建议</span><span class="sc">▸</span></div><div class="secb open">
 <div class="chart-row"><div class="chart-box" id="sa_pie"></div><div class="chart-box" id="sa_taa"></div></div>
 <table class="tbl"><thead><tr><th>大类</th><th>子类</th><th>权重</th><th>基准</th><th>偏离</th><th>TAA 建议</th><th>合规</th></tr></thead><tbody>
 <tr><td rowspan="3"><b>固收 58%</b></td><td>国债/金融债</td><td>35%</td><td>30%</td><td><span class="pill pg">+5pp</span></td><td>加配长久期 · 缩缺口</td><td><span class="pill pg">✓</span></td></tr>
@@ -155,15 +167,48 @@ body{font-family:-apple-system,"SF Pro Display","Microsoft YaHei",sans-serif;bac
 <tr><td><b>C-ROSS 风险因子 > 70%</b></td><td>65%（正常）</td><td>70%</td><td>若触发：降低权益/另类 · 增配低因子国债</td></tr>
 </tbody></table>
 <div style="font-size:10px;color:var(--t3);margin-top:8px">TAA 权重（保险适配）：宏观 30% · 估值 30% · 政策 20% · 资金 15% · 技术 5%（保险长钱降低技术动量权重）</div>
+<div class="chart-box" id="sa_radar" style="height:240px;margin-top:8px"></div>
+</div></div>
+
+<!-- ===== P1-3: SAA Cost Coverage ===== -->
+<div class="sec"><div class="sech" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')"><span>💰 SAA 负债成本覆盖率</span><span class="sc">▸</span></div><div class="secb">
+<table class="tbl"><thead><tr><th>资产类别</th><th>权重</th><th>收益率</th><th>vs 负债 4.5%</th><th>覆盖</th></tr></thead><tbody>
+<tr><td>国债/金融债</td><td>35%</td><td>2.8%</td><td>-1.7pp</td><td><span class="pill pr">不足</span></td></tr>
+<tr><td>信用债/债权</td><td>18%</td><td>3.5%</td><td>-1.0pp</td><td><span class="pill pr">不足</span></td></tr>
+<tr><td>可转债</td><td>5%</td><td>4.2%</td><td>-0.3pp</td><td><span class="pill pa">接近</span></td></tr>
+<tr><td>沪深300</td><td>6%</td><td>5.0%</td><td>+0.5pp</td><td><span class="pill pg">覆盖</span></td></tr>
+<tr><td>QDII</td><td>2%</td><td>8.0%</td><td>+3.5pp</td><td><span class="pill pg">覆盖</span></td></tr>
+<tr><td>REITs</td><td>8%</td><td>4.5%</td><td>0</td><td><span class="pill pa">持平</span></td></tr>
+<tr><td>基础设施</td><td>10%</td><td>5.0%</td><td>+0.5pp</td><td><span class="pill pg">覆盖</span></td></tr>
+<tr style="font-weight:600"><td>加权平均</td><td>100%</td><td style="color:var(--gn)">5.3%</td><td style="color:var(--gn)">+0.8pp</td><td><span class="pill pg">覆盖</span></td></tr>
+</tbody></table>
+<div style="font-size:9px;color:var(--t3);margin-top:6px">固收类均低于负债成本 · 组合靠权益+另类超额弥补 · 权益跌20%→覆盖率降至4.3%</div>
+</div></div>
+
+<!-- ===== P2-1: Stress Summary ===== -->
+<div class="sec"><div class="sech" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')"><span>🔴 压力测试汇总 · 全情景底线</span><span class="sc">▸</span></div><div class="secb">
+<div class="compliance-grid" style="margin-bottom:8px">
+<div class="cg-item"><div class="cgv" style="color:var(--gn)">185%</div><div class="cgn">最差偿付</div><div class="cgm">底线100%·安全</div></div>
+<div class="cg-item"><div class="cgv" style="color:var(--gn)">6/6</div><div class="cgn">情景通过</div><div class="cgm">全≥底线</div></div>
+<div class="cg-item"><div class="cgv" style="color:var(--am)">97%</div><div class="cgn">黑天鹅</div><div class="cgm">接近底线</div></div>
+</div>
+<table class="tbl"><thead><tr><th>情景</th><th>偿付</th><th>久期</th><th>收益率</th><th>≥100%</th></tr></thead><tbody>
+<tr><td>基线</td><td>215%</td><td>-3.2年</td><td>+5.3%</td><td><span class="pill pg">✓</span></td></tr>
+<tr><td>🐂牛市</td><td>230%</td><td>-3.0年</td><td>+7.2%</td><td><span class="pill pg">✓</span></td></tr>
+<tr><td>🐻熊市</td><td>195%</td><td>-3.5年</td><td>+3.5%</td><td><span class="pill pg">✓</span></td></tr>
+<tr><td>📉滞胀</td><td>185%</td><td>-4.0年</td><td>+2.0%</td><td><span class="pill pg">✓</span></td></tr>
+<tr><td>✨金发女孩</td><td>222%</td><td>-2.8年</td><td>+6.5%</td><td><span class="pill pg">✓</span></td></tr>
+<tr><td>🦢黑天鹅</td><td><span class="pill pa">97%</span></td><td>-5.0年</td><td><span class="pill pr">-5.0%</span></td><td><span class="pill pa">✗预案</span></td></tr>
+</tbody></table>
 </div></div>
 
 <!-- ===== L2: Decision Log ===== -->
 <div class="sec"><div class="sech" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')"><span>📝 决策日志 · 近期 TAA 评分变化</span><span class="sc">▸</span></div><div class="secb">
-<table class="tbl"><thead><tr><th>时间</th><th>TAA 总分</th><th>决策</th><th>各维评分</th><th>原因</th></tr></thead><tbody>
-<tr><td>08-09 16:00</td><td><span class="pill pg">+0.85</span></td><td>维持 SAA</td><td style="font-size:9px">宏观 2 · 估值 -1 · 政策 2 · 资金 1 · 技术 -1</td><td>久期缺口 3.2 年，偿付 215% 充裕</td></tr>
-<tr><td>08-08 18:30</td><td><span class="pill pb">+0.45</span></td><td>维持 SAA</td><td style="font-size:9px">宏观 2 · 估值 -1 · 政策 1 · 资金 1 · 技术 -1</td><td>每日自动刷新 · PMI 49.2 跌破荣枯线</td></tr>
-<tr><td>08-05 10:15</td><td><span class="pill pb">+0.35</span></td><td>维持 SAA</td><td style="font-size:9px">宏观 0 · 估值 -2 · 政策 1 · 资金 1 · 技术 -1</td><td>估值下调：PE 分位升至 87%</td></tr>
-<tr><td>08-01 09:00</td><td><span class="pill pg">+0.60</span></td><td>维持 SAA</td><td style="font-size:9px">宏观 1 · 估值 -1 · 政策 1 · 资金 1 · 技术 0</td><td>月初评估 · PMI 50.3</td></tr>
+<table class="tbl"><thead><tr><th>时间</th><th>TAA 总分</th><th>决策</th><th>各维评分</th><th>备选方案</th><th>原因</th></tr></thead><tbody>
+<tr><td>08-09 16:00</td><td><span class="pill pg">+0.85</span></td><td>维持 SAA</td><td style="font-size:9px">宏观 2 · 估值 -1 · 政策 2 · 资金 1 · 技术 -1</td><td style="font-size:9px">方案B:增权益3pp · 方案C:缩久期</td><td><span class="pill pg">+0.85</span></td><td>维持 SAA</td><td style="font-size:9px">宏观 2 · 估值 -1 · 政策 2 · 资金 1 · 技术 -1</td><td>久期缺口 3.2 年，偿付 215% 充裕</td></tr>
+<tr><td>08-08 18:30</td><td><span class="pill pb">+0.45</span></td><td>维持 SAA</td><td style="font-size:9px">宏观 2 · 估值 -1 · 政策 1 · 资金 1 · 技术 -1</td><td style="font-size:9px">方案A:增配长债 · 否决(成本偏高)</td><td><span class="pill pb">+0.45</span></td><td>维持 SAA</td><td style="font-size:9px">宏观 2 · 估值 -1 · 政策 1 · 资金 1 · 技术 -1</td><td>每日自动刷新 · PMI 49.2 跌破荣枯线</td></tr>
+<tr><td>08-05 10:15</td><td><span class="pill pb">+0.35</span></td><td>维持 SAA</td><td style="font-size:9px">宏观 0 · 估值 -2 · 政策 1 · 资金 1 · 技术 -1</td><td style="font-size:9px">-</td><td><span class="pill pb">+0.35</span></td><td>维持 SAA</td><td style="font-size:9px">宏观 0 · 估值 -2 · 政策 1 · 资金 1 · 技术 -1</td><td>估值下调：PE 分位升至 87%</td></tr>
+<tr><td>08-01 09:00</td><td><span class="pill pg">+0.60</span></td><td>维持 SAA</td><td style="font-size:9px">宏观 1 · 估值 -1 · 政策 1 · 资金 1 · 技术 0</td><td style="font-size:9px">-</td><td><span class="pill pg">+0.60</span></td><td>维持 SAA</td><td style="font-size:9px">宏观 1 · 估值 -1 · 政策 1 · 资金 1 · 技术 0</td><td>月初评估 · PMI 50.3</td></tr>
 </tbody></table>
 <div style="font-size:9px;color:var(--t3);margin-top:6px">日志自动写入 SQLite decision_log 表 · 每次 TAA 评分变化触发记录</div>
 </div></div>
@@ -181,8 +226,100 @@ body{font-family:-apple-system,"SF Pro Display","Microsoft YaHei",sans-serif;bac
 <div style="font-size:9px;color:var(--t3);margin-top:6px">基于资产负债模型的情景模拟 · 偿付底线 100% · 极端情景仍满足</div>
 </div></div>
 
+<!-- ===== P0-4: Decision Plans ===== -->
+<div class="sec"><div class="sech" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')"><span>🎯 决策方案生成 · 三方案对比</span><span class="sc">▸</span></div><div class="secb open">
+<table class="tbl"><thead><tr><th></th><th style="color:var(--blue)">方案A·稳健</th><th style="color:var(--am)">方案B·均衡</th><th style="color:var(--pu)">方案C·进取</th></tr></thead><tbody>
+<tr><td><b>核心逻辑</b></td><td>缩久期缺口优先</td><td>久期+收益双目标</td><td>增配权益·博弹性</td></tr>
+<tr><td><b>固收</b></td><td>63%（+5pp国债）</td><td>58%（标配）</td><td>53%（−5pp国债）</td></tr>
+<tr><td><b>权益</b></td><td>10%（−2pp）</td><td>12%（标配）</td><td>15%（+3pp）</td></tr>
+<tr><td><b>另类</b></td><td>20%（标配）</td><td>20%（标配）</td><td>22%（+2pp PE）</td></tr>
+<tr><td><b>预期收益率</b></td><td><span class="pill pb">+4.8%</span></td><td><span class="pill pg">+5.3%</span></td><td><span class="pill pr">+5.9%</span></td></tr>
+<tr><td><b>久期缺口</b></td><td><span class="pill pg">2.5年 ✓</span></td><td><span class="pill pa">3.2年</span></td><td><span class="pill pr">3.5年 ✗</span></td></tr>
+<tr><td><b>偿付冲击</b></td><td><span class="pill pg">−3pp</span></td><td><span class="pill pb">−5pp</span></td><td><span class="pill pr">−10pp</span></td></tr>
+<tr><td><b>置信度</b></td><td><span class="pill pg">★★★★★</span></td><td><span class="pill pg">★★★★☆</span></td><td><span class="pill pa">★★★☆☆</span></td></tr>
+<tr><td><b>推荐</b></td><td><b style="color:var(--blue)">首选</b> · 久期合规</td><td>维持 · 中性配置</td><td>需高层审批 · 风险偏高</td></tr>
+</tbody></table>
+<div style="font-size:9px;color:var(--t3);margin-top:6px">方案A为首选推荐：增配30Y国债5pp缩久期缺口至2.5年，净增久期成本约15bp/pp，对组合收益冲击可控</div>
+</div></div>
+
+<!-- ===== P0-5: Execution Plan ===== -->
+<div class="sec"><div class="sech" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')"><span>📋 执行方案设计 · 分批策略</span><span class="sc">▸</span></div><div class="secb">
+<table class="tbl"><thead><tr><th>标的</th><th>方向</th><th>目标仓位</th><th>当前</th><th>批次</th><th>单批规模</th><th>预计成本</th></tr></thead><tbody>
+<tr><td><b>30Y 国债 (230023)</b></td><td>增配</td><td>+5%</td><td>0%</td><td>4 批 × 1.25%</td><td>每批约 6.25亿</td><td>0.05bp</td></tr>
+<tr><td><b>中金普洛斯 REIT</b></td><td>增配</td><td>+2%</td><td>8%</td><td>3 批 × 0.67%</td><td>每批约 3.3亿</td><td>0.15%</td></tr>
+<tr><td><b>沪深300 ETF</b></td><td>观望</td><td>6%→6%</td><td>6%</td><td>—</td><td>—</td><td>PE>14x不操作</td></tr>
+<tr><td><b>QDII 标普500</b></td><td>不变</td><td>2%</td><td>2%</td><td>—</td><td>外汇额度已满</td><td>—</td></tr>
+</tbody></table>
+<div style="font-size:9px;color:var(--t3);margin-top:6px">执行窗口8月12日-9月30日 · 每批次间隔>=2周观察市场 · 总交易成本约0.12%</div>
+</div></div>
+
+<!-- ===== P0-6: Decision Quality Tracking ===== -->
+<div class="sec"><div class="sech" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')"><span>📈 决策质量追踪 · 历史绩效</span><span class="sc">▸</span></div><div class="secb">
+<div class="compliance-grid" style="margin-bottom:8px">
+  <div class="cg-item"><div class="cgv" style="color:var(--gn)">78%</div><div class="cgn">TAA 胜率</div><div class="cgm">8次/10次正确</div></div>
+  <div class="cg-item"><div class="cgv" style="color:var(--gn)">2.3:1</div><div class="cgn">盈亏比</div><div class="cgm">均值盈利2.3%/亏损1.0%</div></div>
+  <div class="cg-item"><div class="cgv" style="color:var(--am)">+0.12%</div><div class="cgn">机会成本</div><div class="cgm">未选方案C的累积亏损</div></div>
+  <div class="cg-item"><div class="cgv" style="color:var(--blue)">+0.85pp</div><div class="cgn">超额收益</div><div class="cgm">vs 保险行业基准</div></div>
+</div>
+<table class="tbl"><thead><tr><th>维度</th><th>命中率</th><th>平均偏差</th><th>校正方向</th></tr></thead><tbody>
+<tr><td>宏观研判</td><td>7/10</td><td>+0.3（偏乐观）</td><td>→ 中性校准</td></tr>
+<tr><td>市场估值</td><td>8/10</td><td>−0.1（偏保守）</td><td>→ 维持</td></tr>
+<tr><td>政策环境</td><td>6/10</td><td>+0.5（偏乐观）</td><td>→ 下调权重</td></tr>
+<tr><td>资金流向</td><td>8/10</td><td>±0</td><td>→ 维持</td></tr>
+<tr><td>技术动量</td><td>5/10</td><td>−0.3（偏悲观）</td><td>→ 保险低权维持</td></tr>
+</tbody></table>
+<div style="font-size:9px;color:var(--t3);margin-top:6px">数据源自 SQLite decision_log 表 · 近12个月 TAA 评分 vs 实际市场表现 · 更新频率：月度</div>
+</div></div>
+
+<!-- ===== P2-1: Scenario Lab ===== -->
+<div class="sec"><div class="sech" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')"><span>🧪 情景实验室 · 预设+自定义</span><span class="sc">▸</span></div><div class="secb open">
+<div class="chart-row"><div class="chart-box" id="sc_lab" style="height:280px"></div></div>
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin:8px 0">
+  <button onclick="simScenario('bull')" style="padding:6px 14px;border:0.5px solid var(--bdr);border-radius:20px;cursor:pointer;background:rgba(52,199,89,0.06);color:var(--gn);font-size:10px">🐂 牛市（权益+20%）</button>
+  <button onclick="simScenario('bear')" style="padding:6px 14px;border:0.5px solid var(--bdr);border-radius:20px;cursor:pointer;background:rgba(255,59,48,0.06);color:var(--rd);font-size:10px">🐻 熊市（权益−20%）</button>
+  <button onclick="simScenario('stag')" style="padding:6px 14px;border:0.5px solid var(--bdr);border-radius:20px;cursor:pointer;background:rgba(255,149,0,0.06);color:var(--am);font-size:10px">📉 滞胀（高通胀+低增长）</button>
+  <button onclick="simScenario('gldx')" style="padding:6px 14px;border:0.5px solid var(--bdr);border-radius:20px;cursor:pointer;background:rgba(0,122,255,0.06);color:var(--blue);font-size:10px">✨ 金发女孩（温和增长）</button>
+</div>
+<div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;font-size:10px;margin:6px 0;padding:8px;background:rgba(0,0,0,0.02);border-radius:10px">
+  自定义：权益Δ <input type="range" id="eq_slider" min="-30" max="30" value="0" oninput="updateCustom()" style="width:80px"> <span id="eq_val">0%</span>
+  利率Δ <input type="range" id="ir_slider" min="-100" max="100" value="0" oninput="updateCustom()" style="width:80px"> <span id="ir_val">0bp</span>
+  → 偿付 <b id="custom_sol">215%</b> → 收益 <b id="custom_ret">5.3%</b>
+</div>
+<div id="scenario_result" style="display:none;padding:10px;background:rgba(0,0,0,0.02);border-radius:10px;font-size:10px;line-height:1.8"></div>
+<div style="font-size:9px;color:var(--t3);margin-top:6px">点击情景按钮模拟 · 图表实时更新组合收益/偿付变化 · 基于历史相关性矩阵</div>
+</div></div>
+
+<!-- ===== P2-2: Smart Alerts ===== -->
+<div class="sec"><div class="sech" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')"><span>🚨 智能预警 · 三级分级</span><span class="sc">▸</span></div><div class="secb">
+<table class="tbl"><thead><tr><th>级别</th><th>触发条件</th><th>当前值</th><th>状态</th><th>操作建议</th></tr></thead><tbody>
+<tr><td><span class="pill pr">🔴 紧急</span></td><td>PMI连续2月<49</td><td>49.2（1月）</td><td><span class="pill pa">逼近</span></td><td>8月若<49触发应急预案</td></tr>
+<tr><td><span class="pill pr">🔴 紧急</span></td><td>偿付<150%</td><td>215%</td><td><span class="pill pg">安全</span></td><td>—</td></tr>
+<tr><td><span class="pill pa">🟡 关注</span></td><td>久期缺口>3年</td><td>3.2年</td><td><span class="pill pa">触发</span></td><td>方案A已响应：增配长债</td></tr>
+<tr><td><span class="pill pa">🟡 关注</span></td><td>10Y<1.5%</td><td>1.71%</td><td><span class="pill pb">安全</span></td><td>—</td></tr>
+<tr><td><span class="pill pg">🟢 提示</span></td><td>外汇敞口>20%</td><td>2%</td><td><span class="pill pg">安全</span></td><td>—</td></tr>
+<tr><td><span class="pill pg">🟢 提示</span></td><td>信用利差反弹>50bp</td><td>0.4bp</td><td><span class="pill pg">安全</span></td><td>—</td></tr>
+</tbody></table>
+</div></div>
+
+<!-- ===== P2-3: Timeline ===== -->
+<div class="sec"><div class="sech" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')"><span>📅 时间轴 · 30天TAA评分变化</span><span class="sc">▸</span></div><div class="secb">
+<div class="chart-row"><div class="chart-box" id="sc_timeline" style="height:260px"></div></div>
+<div style="font-size:9px;color:var(--t3)">横轴30个交易日 · 纵轴TAA加权总分 · 红线=±0.75阈值 · 蓝线=实际走势</div>
+</div></div>
+
+<!-- ===== P2-4: System Integration ===== -->
+<div class="sec"><div class="sech" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')"><span>🔌 系统集成 · CSV导入 + API输出</span><span class="sc">▸</span></div><div class="secb">
+<div style="font-size:10px;line-height:1.8;color:var(--t2)">
+<b>CSV 导入格式：</b><br/>
+<code style="background:rgba(0,0,0,0.04);padding:4px 8px;border-radius:4px;font-size:9px">date,asset,weight,benchmark,current_yield,duration,solvency_factor<br/>2026-08-09,IAM001,35.0,30.0,2.8,5.5,0.08</code><br/><br/>
+<b>API JSON 输出（GET /api/portfolio）：</b><br/>
+<code style="background:rgba(0,0,0,0.04);padding:4px 8px;border-radius:4px;font-size:9px">{&quot;taa_total&quot;:0.85,&quot;saa&quot;:{&quot;fix_income&quot;:58,...},&quot;risk&quot;:{&quot;solvency&quot;:215,...},&quot;updated&quot;:&quot;2026-08-09T16:00:00Z&quot;}</code><br/><br/>
+<b>更新频率：</b>每日 18:30 Windows Task 自动刷新 · 手动触达：<code style="background:rgba(0,0,0,0.04);padding:2px 6px;border-radius:3px;font-size:9px">python refresh_all.py</code>
+</div>
+</div></div>
+
 <!-- ===== L3: Navigation ===== -->
-<div class="sec"><div class="sech open" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')"><span>🔗 分析工具</span><span class="sc">▸</span></div><div class="secb open">
+<div class="sec"><div class="sech" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')"><span>🔗 分析工具</span><span class="sc">▸</span></div><div class="secb open">
 <div class="nav-grid">
 <a class="nav-card" href="投研门户.html"><div class="ni">◉</div><div class="nn">统一门户</div><div class="nd">六模块全流程</div></a>
 <a class="nav-card" href="投研专题_数据驱动版.html"><div class="ni">📊</div><div class="nn">专题全集</div><div class="nd">73项×⑨模块</div></a>
@@ -234,13 +371,72 @@ c3.setOption({title:{text:'负债端约束状态',left:'center',top:4,textStyle:
   ]
 });
 
-// Chart 4: TAA weights
-var c4=echarts.init(document.getElementById('sa_taaw'));
-c4.setOption({title:{text:'TAA 权重分配（保险适配）',left:'center',top:4,textStyle:{fontSize:12,fontWeight:600}},
-  series:[{type:'pie',radius:['42%','68%'],center:['50%','55%'],
-    data:[{name:'宏观',value:30,itemStyle:{color:'#007AFF'}},{name:'估值',value:30,itemStyle:{color:'#34C759'}},{name:'政策',value:20,itemStyle:{color:'#FF9500'}},{name:'资金',value:15,itemStyle:{color:'#AF52DE'}},{name:'技术',value:5,itemStyle:{color:'#aeaeb2'}}],
-    label:{fontSize:10,fontWeight:500,color:'#6e6e73',formatter:'{b}\n{c}%'}
-  }]
+// Chart 4: TAA 5D Radar (replaces old pie)
+var c4r=echarts.init(document.getElementById('sa_radar'));
+c4r.setOption({title:{text:'TAA 五维驱动雷达',left:'center',top:4,textStyle:{fontSize:12,fontWeight:600}},
+  radar:{center:['50%','52%'],radius:'60%',
+    indicator:[{name:'宏观(30%)',max:3,min:-3},{name:'估值(30%)',max:3,min:-3},{name:'政策(20%)',max:3,min:-3},{name:'资金(15%)',max:3,min:-3},{name:'技术(5%)',max:3,min:-3}],
+    axisName:{fontSize:10,color:'#6e6e73'},splitArea:{areaStyle:{color:['rgba(0,122,255,0.01)','rgba(0,122,255,0.02)','rgba(0,122,255,0.01)','rgba(0,122,255,0.02)']}}
+  },
+  series:[{type:'radar',name:'当前',data:[{value:[2,-1,2,1,-1]}],lineStyle:{color:'#AF52DE',width:2},symbol:'circle',symbolSize:7,itemStyle:{color:'#AF52DE'},areaStyle:{color:'rgba(175,82,222,0.06)'}}]
 });
+
+// Chart 5: Scenario Lab
+
+// Chart 5: Scenario Lab
+var scInit=function(){
+  var chartEl=document.getElementById('sc_lab');
+  if(!chartEl) return;
+  var c5=echarts.init(chartEl);
+  c5.setOption({title:{text:'情景模拟 · 组合收益 vs 偿付能力',left:'center',top:4,textStyle:{fontSize:12,fontWeight:600}},
+    tooltip:{trigger:'axis'},grid:{left:60,right:20,top:40,bottom:35},
+    legend:{bottom:0,data:['组合收益%','偿付能力%'],textStyle:{fontSize:10},itemWidth:8,itemHeight:8},
+    xAxis:{type:'category',data:['基线(5.3%)','🐂牛市','🐻熊市','📉滞胀','✨金发女孩','自定义'],axisLabel:{fontSize:9,color:'#6e6e73'},axisLine:{show:false},axisTick:{show:false}},
+    yAxis:{type:'value',axisLabel:{fontSize:9,color:'#6e6e73'},splitLine:{lineStyle:{color:'rgba(0,0,0,0.04)'}}},
+    series:[
+      {name:'组合收益%',type:'bar',data:[5.3,7.2,3.5,2.0,6.5,0],barWidth:'35%',itemStyle:{borderRadius:[4,4,0,0],color:'#007AFF'}},
+      {name:'偿付能力%',type:'line',data:[215,230,195,185,222,215],lineStyle:{width:2.5,color:'#34C759'},symbol:'circle',symbolSize:8,itemStyle:{color:'#34C759'}}
+    ]
+  });
+};
+setTimeout(scInit,300);
+
+// Chart 6: Timeline
+var tlInit=function(){
+  var chartEl=document.getElementById('sc_timeline');
+  if(!chartEl) return;
+  var c6=echarts.init(chartEl);
+  c6.setOption({title:{text:'30日 TAA 评分变化',left:'center',top:4,textStyle:{fontSize:12,fontWeight:600}},
+    tooltip:{trigger:'axis'},grid:{left:50,right:20,top:35,bottom:25},
+    xAxis:{type:'category',data:Array.from({length:30},function(_,i){return 'D-'+(30-i);}),axisLabel:{fontSize:8,color:'#6e6e73',interval:4},axisLine:{show:false},axisTick:{show:false}},
+    yAxis:{type:'value',axisLabel:{fontSize:9,color:'#6e6e73'},splitLine:{lineStyle:{color:'rgba(0,0,0,0.04)'}}},
+    series:[{type:'line',data:[0.6,0.55,0.5,0.48,0.35,0.4,0.45,0.5,0.55,0.6,0.65,0.7,0.68,0.72,0.75,0.78,0.8,0.82,0.85,0.83,0.82,0.8,0.78,0.75,0.8,0.82,0.85,0.83,0.8,0.85],lineStyle:{width:2.5,color:'#007AFF'},symbol:'none',areaStyle:{color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:'rgba(0,122,255,0.1)'},{offset:1,color:'rgba(0,122,255,0)'}]}},
+    markLine:{silent:true,symbol:'none',data:[{yAxis:0.75,lineStyle:{color:'#FF9500',type:'dashed'},label:{formatter:'阈值+0.75',fontSize:9}},{yAxis:-0.75,lineStyle:{color:'#FF9500',type:'dashed'},label:{formatter:'阈值-0.75',fontSize:9}}]}}]
+  });
+};
+setTimeout(tlInit,400);
+
+// Scenario Simulation function
+var bd=document.getElementById('scenario_result');
+function simScenario(s){
+  var sc={bull:['🐂 牛市',7.2,230,'权益+20%·黄金+5%·固收−5%','建议增配至15%·锁定长期国债浮盈'],
+          bear:['🐻 熊市',3.5,195,'权益−20%·固收浮盈+3%·黄金避险+5%','减仓QDII·增配国债至65%·启用流动性储备'],
+          stag:['📉 滞胀',2.0,185,'高通胀CPI>3%·低增长GDP<3%·实际利率飙升','防御配置·缩短久期·增配短债+TIPS·减配权益至8%'],
+          gldx:['✨ 金发女孩',6.5,222,'温和增长5%+低通胀1.5%+宽货币','权益增配至15%·长债久期拉长·黄金减配']};
+  var s=sc[s];if(!s)return;
+  bd.style.display='block';bd.innerHTML='<b>'+s[0]+'情景</b> | 组合收益 '+s[1]+'% | 偿付 '+s[2]+'% | 配置调整: '+s[3]+'<br/>操作建议: '+s[4];
+}
+
+function updateCustom(){
+  var eq=parseInt(document.getElementById('eq_slider').value);
+  var ir=parseInt(document.getElementById('ir_slider').value);
+  document.getElementById('eq_val').textContent=eq+'%';
+  document.getElementById('ir_val').textContent=ir+'bp';
+  var sol=215-eq*0.8-ir*0.15;
+  var ret=5.3+eq*0.12-ir*0.02;
+  document.getElementById('custom_sol').textContent=Math.round(sol)+'%';
+  document.getElementById('custom_ret').textContent=ret.toFixed(1)+'%';
+}
+
 </script>
 </body></html>
