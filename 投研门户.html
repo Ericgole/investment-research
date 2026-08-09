@@ -417,9 +417,15 @@ function renderMacro(){
   h += secEnd();
 
   // 1.4 利率曲线
-  h += section('利率周期：10Y 国债 · 实际利率 · 期限结构');
+  h += section('利率周期：10Y 国债 · 实际利率 · 期限结构', true);
   h += '<div class="chart-row"><div class="chart-box" id="mc_y10"></div><div class="chart-box" id="mc_cpi_hist"></div></div>';
   h += '<div style="font-size:10px;color:var(--text3);padding:0 0 8px;">左：10Y 国债收益率 vs 15 年均值 | 右：CPI 通胀十五年月度序列（标注 3% 警戒线）</div>';
+  h += secEnd();
+
+  // 1.5 库存周期
+  h += section('库存周期：产成品库存 · PMI库存 · 补库/去库阶段定位', true);
+  h += '<div class="chart-row"><div class="chart-box" id="mc_inv"></div><div class="chart-box" id="mc_inv_pmi"></div></div>';
+  h += '<div style="font-size:10px;color:var(--text3);padding:0 0 8px;">左：工业企业产成品存货增速 15 年周期（标注补库/去库阶段）| 右：PMI 产成品库存 vs 新订单对比</div>';
   h += secEnd();
 
   // ========== SECTION 2: 分类指标 ==========
@@ -640,6 +646,67 @@ function initMacroCharts(){
   var cpiData = CHART.cpi || [];
   var c7=echarts.init(document.getElementById('mc_cpi_hist'));
   c7.setOption({title:{text:'CPI 同比(%)',left:'center',top:4,textStyle:{fontSize:12,fontWeight:600}},grid:{left:50,right:20,top:35,bottom:25},xAxis:{type:'category',data:mapDates(cpiData),axisLabel:{fontSize:9,color:'#6e6e73',interval:Math.floor(cpiData.length/12)},axisLine:{show:false},axisTick:{show:false}},yAxis:{type:'value',axisLabel:{fontSize:9,color:'#6e6e73'},splitLine:{lineStyle:{color:'rgba(0,0,0,0.04)'}}},series:[{type:'line',data:mapVals(cpiData),lineStyle:{width:1.5,color:'#FF9500'},symbol:'none',areaStyle:{color:'rgba(255,149,0,0.08)'},markLine:{silent:true,symbol:'none',data:[{yAxis:3,lineStyle:{color:'#FF3B30',type:'dashed'},label:{formatter:'警戒3%',fontSize:10}},{yAxis:0.72,lineStyle:{color:'rgba(0,0,0,0.15)',type:'dashed'},label:{formatter:'均值0.7%',fontSize:10}}]}}]});
+
+  // 8. Inventory cycle charts
+  var invPhases = [
+    {start:'2013',end:'2014',phase:'被动去库',color:'rgba(52,199,89,0.04)'},
+    {start:'2014',end:'2016',phase:'主动去库',color:'rgba(255,59,48,0.04)'},
+    {start:'2016',end:'2017',phase:'主动补库',color:'rgba(0,122,255,0.04)'},
+    {start:'2017',end:'2019',phase:'被动补库',color:'rgba(255,149,0,0.04)'},
+    {start:'2019',end:'2020',phase:'主动去库',color:'rgba(255,59,48,0.04)'},
+    {start:'2020',end:'2021',phase:'主动补库',color:'rgba(0,122,255,0.04)'},
+    {start:'2021',end:'2023',phase:'被动补库→主动去库',color:'rgba(255,149,0,0.04)'},
+    {start:'2023',end:'2024',phase:'主动去库深化',color:'rgba(255,59,48,0.04)'},
+    {start:'2024',end:'2025',phase:'被动去库',color:'rgba(52,199,89,0.04)'},
+    {start:'2025',end:'2026',phase:'补库初期（脆弱）',color:'rgba(0,122,255,0.06)'},
+  ];
+
+  var c8=echarts.init(document.getElementById('mc_inv'));
+  c8.setOption({
+    title:{text:'工业企业产成品存货增速 (%)',left:'center',top:4,textStyle:{fontSize:12,fontWeight:600}},
+    grid:{left:50,right:20,top:35,bottom:25},
+    xAxis:{type:'category',data:['2013','2014','2015','2016','2017','2018','2019','2020','2021','2022','2023','2024','2025','2026E'],axisLabel:{fontSize:9,color:'#6e6e73',rotate:30},axisLine:{show:false},axisTick:{show:false}},
+    yAxis:{type:'value',axisLabel:{fontSize:9,color:'#6e6e73'},splitLine:{lineStyle:{color:'rgba(0,0,0,0.04)'}}},
+    series:[
+      {type:'bar',data:[8.5,12.5,3.5,-0.2,10.5,7.5,2.0,7.5,17.0,9.5,2.7,3.3,5.0,4.5],barWidth:'55%',
+        itemStyle:{borderRadius:[4,4,0,0],color:function(p){
+          var v=[8.5,12.5,3.5,-0.2,10.5,7.5,2.0,7.5,17.0,9.5,2.7,3.3,5.0,4.5][p.dataIndex];
+          return v>=8?'#FF3B30':v>=4?'#007AFF':v>=0?'#34C759':'#FF3B30';
+        }},
+        markLine:{silent:true,symbol:'none',data:[
+          {yAxis:0,lineStyle:{color:'rgba(0,0,0,0.15)',type:'dashed'}},
+          {xAxis:'2024',lineStyle:{color:'#AF52DE',type:'dashed'},label:{formatter:'去库→补库转折',fontSize:9,color:'#AF52DE'}}
+        ]}
+      },
+      // Phase labels as annotation
+      {type:'line',data:[],markArea:{silent:true,
+        label:{fontSize:10,fontWeight:500,color:'rgba(0,0,0,0.18)'},
+        data:invPhases.map(function(p){
+          return [{xAxis:p.start},{xAxis:p.end},{itemStyle:invPhases.reduce(function(a,i){return i.start===p.start?{color:p.color}:a;},{}),label:{formatter:p.phase}}];
+        })
+      }}
+    ]
+  });
+
+  var c9=echarts.init(document.getElementById('mc_inv_pmi'));
+  c9.setOption({
+    title:{text:'PMI 库存 vs 新订单',left:'center',top:4,textStyle:{fontSize:12,fontWeight:600}},
+    legend:{bottom:0,data:['产成品库存','新订单'],textStyle:{fontSize:10,color:'#6e6e73'},itemWidth:8,itemHeight:8},
+    grid:{left:50,right:20,top:35,bottom:30},
+    xAxis:{type:'category',data:['J','F','M','A','M','J','J','A','S','O','N','D','J','F','M','A','M','J','J'],axisLabel:{fontSize:9,color:'#6e6e73'},axisLine:{show:false},axisTick:{show:false}},
+    yAxis:{type:'value',axisLabel:{fontSize:9,color:'#6e6e73'},splitLine:{lineStyle:{color:'rgba(0,0,0,0.04)'}}},
+    series:[
+      {name:'产成品库存',type:'line',data:[48.5,49.0,48.5,48.2,48.0,47.8,47.5,47.8,48.0,48.2,48.0,47.5,47.8,48.0,47.5,47.2,47.0,47.2,47.5],
+        lineStyle:{width:2,color:'#FF9500'},symbol:'circle',symbolSize:5,itemStyle:{color:'#FF9500'}},
+      {name:'新订单',type:'line',data:[50.5,51.0,51.2,50.8,50.5,50.3,49.2,50.0,50.5,50.8,50.3,50.0,49.8,50.5,51.2,50.3,50.5,50.3,48.5],
+        lineStyle:{width:2,color:'#007AFF'},symbol:'circle',symbolSize:5,itemStyle:{color:'#007AFF'}},
+      {type:'line',data:[],markArea:{silent:true,label:{fontSize:10,color:'rgba(0,0,0,0.15)'},data:[
+        [{xAxis:'J'},{xAxis:'N'},{itemStyle:{color:'rgba(52,199,89,0.04)'},label:{formatter:'补库'}}],
+        [{xAxis:'D'},{xAxis:'J'},{itemStyle:{color:'rgba(255,59,48,0.04)'},label:{formatter:'去库'}}],
+        [{xAxis:'F'},{xAxis:'J'},{itemStyle:{color:'rgba(0,122,255,0.04)'},label:{formatter:'补库 初'}}]
+      ]}}
+    ]
+  });
 }
 
 // ===== OVERVIEW =====
