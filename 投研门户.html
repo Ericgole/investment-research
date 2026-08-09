@@ -291,7 +291,7 @@ body {
 <script>
 // ===== Data =====
 var DATA = {
-  taa: {政策:2,估值:-1,技术:-1,资金:1,宏观:0},
+  taa: {宏观:2,估值:-1,政策:2,资金:1,技术:-1},
   pe: {沪深300:{pe:14.4,pct:95},中证500:{pe:35.2,pct:90},创业板:{pe:42.2,pct:65},科创50:{pe:196,pct:98},上证50:{pe:11.7,pct:90}},
   macro: {gdp:4.3,pmi:49.2,cpi:1.0,m1m2:-4.0,sr:7.4,ex:23.9,ip:5.3,fa:-5.7,rs:1.0},
   saa: {ret:5.3,vol:4.2,sharpe:1.26,calmar:1.30,maxdd:-4.5,var99:-2.82,excess:0.8},
@@ -714,8 +714,8 @@ function initMacroCharts(){
 function renderOverview(){
   var dims = Object.keys(DATA.taa);
   var total = 0;
-  for(var i=0;i<dims.length;i++) total += DATA.taa[dims[i]] * [20,25,15,15,25][i]/100;
-  var action = total>=0.75?'增配权益':total<=-0.75?'减配权益':'维持SAA';
+  for(var i=0;i<dims.length;i++) total += DATA.taa[dims[i]] * [30,30,20,15,5][i]/100;
+  var action = total>=0.75?'增配固收':total<=-0.75?'减配固收':'维持SAA';
   var h = '';
 
   // ===== 保险资金核心 KPI =====
@@ -791,7 +791,7 @@ function renderAlloc(){
   h += section('SAA 配置明细',true);h+='<div class="chart-row"><div class="chart-box" id="ac_pie"></div><div class="chart-box" id="ac_risk"></div></div>';h+=secEnd();
   h += section('TAA 五维评分 · 可展开查阅各维度专题');
   h += '<table class="mac-tbl"><thead><tr><th>维度</th><th>权重</th><th>评分</th><th>贡献</th><th>核心判断</th></tr></thead><tbody>';
-  var dims=[{n:'政策环境',s:2,w:20,d:'大基金三期 + AI 政策 + 货币宽松',cls:'pill-green'},{n:'市场估值',s:-1,w:25,d:'PE 87% 分位 · ERP 5.3% · 信用利差 0.4bp',cls:'pill-red'},{n:'技术动量',s:-1,w:15,d:'均线空头排列 · ADX 20.4 · 反弹量不足',cls:'pill-red'},{n:'资金流向',s:1,w:15,d:'公募超配科技 19.3% · 两融持续去杠杆',cls:'pill-green'},{n:'宏观研判',s:0,w:25,d:'内需弱 + 低利率 + 弱美元多方对冲',cls:'pill-orange'}];
+  var dims=[{n:'宏观研判',s:2,w:30,d:'内需弱 + 低利率 + 弱美元多方对冲 · 保险偏好固收',cls:'pill-green'},{n:'市场估值',s:-1,w:30,d:'PE 87% 分位 · ERP 5.3% · 信用利差 0.4bp · 维持低配权益',cls:'pill-red'},{n:'政策环境',s:2,w:20,d:'大基金三期 + AI 政策 + 货币宽松 · 利好长债+另类',cls:'pill-green'},{n:'资金流向',s:1,w:15,d:'保费稳定流入 · 存量再配置压力 · 低利率下固收需求旺',cls:'pill-green'},{n:'技术动量',s:-1,w:5,d:'均线空头排列 · ADX 20.4 · 保险长钱降低技术权重至 5%',cls:'pill-red'}];
   for(var i=0;i<dims.length;i++){var d=dims[i];h+='<tr><td><b>'+d.n+'</b></td><td>'+d.w+'%</td><td><span class="pill '+d.cls+'">'+(d.s>0?'+':'')+d.s+'</span></td><td>'+(d.s*d.w/100).toFixed(2)+'</td><td style="font-size:11px;color:var(--text2)">'+d.d+'</td></tr>';}
   h += '</tbody></table>';h += secEnd();
   h += '<div class="deep-links"><a class="deep-link" href="TAA评分卡_联动看板.html"><span class="dl-icon">🎯</span>TAA 评分卡<span class="dl-label">五维联动仪表盘 · 加权总分 +0.34</span></a><a class="deep-link" href="交互式CMA试算.html"><span class="dl-icon">🎮</span>CMA 试算<span class="dl-label">调整参数 · 场景对比 · MVO 重算</span></a></div>';
