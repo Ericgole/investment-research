@@ -581,7 +581,7 @@ function renderMacro(){
       current:'信用脉冲（社融同比 - GDP 名义增速）约 -1.5pp（偏弱，-3pp 是极端值）。结构变化：政府逆周期加杠杆（政府债占比 31%）弥补私人部门去杠杆（企业中长期贷款放缓）。M2 8.1% > 社融 7.4% 反映"资产荒"——银行有资金但找不到优质信贷资产。传导链条梗阻：央行降准→银行流动性充裕→LPR 不降（息差压力）→企业融资成本难降→投资回暖滞后。',
       outlook:'转正三条件：① PMI 连续 2 月 > 50（生产回暖→贷款需求恢复）、② 社融增速企稳 7.5%+、③ M1-M2 收窄至 -2pp。当前距条件 ③ 最近（差 2pp），条件 ① 最远（PMI 49.2）。基准情景：2026Q4-2027Q1 确立转向，权益市场提前 3-6 月反映。若三个条件同时触发，视为"强信用扩张"信号，建议增配权益至 SAA 上限。',
       stats:[{l:'剪刀差',v:'-4.0pp (改善中)'},{l:'最差',v:'-7.8pp (2023.1)'},{l:'社融增速',v:'7.4% (↓)'},{l:'信用脉冲',v:'-1.5pp'},{l:'距条件③',v:'差 2pp'},{l:'领先权益',v:'6-12 个月'}],
-      src:''},,{k:'社融-M2 剪刀差',v:'-0.6pp'},{k:'信号',v:'等待剪刀差转正'}],src:'SQLite+Wind'},
+      src:''},
     {id:'宏观11',name:'贷款利率: 传导链',score:'0.5',sig:'偏多',srcTag:'DB计算',
       backtest:'LPR 连 14 月不变（2025Q2-2026Q2），但实际利率（LPR-CPI）约 2.0%（均值 2.8%），处于中性偏高区间。历史上降息周期为 24-36 个月（2019-2020、2022-2023），当前自 2023 年以来已持续 36+ 个月，有再次降息的政策空间和必要性。',
       inds:[{k:'LPR 1Y',v:'3.0%（14月不变）'},{k:'实际利率',v:'2.0%（偏高）'},{k:'MLF',v:'2.5%'},{k:'降息空间',v:'50-100bp'}],src:'SQLite + 央行'},
@@ -600,6 +600,12 @@ function renderMacro(){
     {id:'宏观18',name:'宏观维度汇总',score:'0',sig:'中性偏弱',srcTag:'汇总',
       backtest:'综合 17 个专题评分：7 项偏空、6 项偏多、5 项中性。总体判断：经济增长动能偏弱（GDP/PMI/固投 3 项红灯），货币环境极度宽松（10Y/DR007/DXY 3 项绿灯），信用周期处于低位改善阶段（M1-M2/社融 2 项黄灯）。当前宏观组合对应"防御型配置"——债券>黄金>权益，等待 PMI 重回 50 或 CPI 回升至 2% 的右侧信号切换至"均衡型配置"。',
       inds:[{k:'偏空指标(7)',v:'GDP/PMI/固投/社零/M1-M2/社融/出口'},{k:'偏多指标(6)',v:'CPI/10Y/DR007/DXY/CNY/流动性'},{k:'中性指标(5)',v:'PPI-CPI/信用/利率/产出/贸易'},{k:'建议',v:'防御配置 · 等待右侧信号'}],src:'综合 17 个专题'},
+    {id:'保险1',name:'利率风险久期缺口(保险专属)',score:'-1',sig:'偏空',srcTag:'DB计算',
+      backtest:'久期缺口 3.2 年（资产 3.8-负债 7.0），超越目标上限 2 年。7 季度跟踪显示缺口从 3.8→3.2 年缓慢改善（每季缩 0.15 年）。利率下行 50bp 冲击测试：偿付从 215%→207%（-8pp），压力可控但再投资风险加大。建议增配 30Y 国债 10% 缩缺口至 2.5 年。',
+      inds:[{k:'久期缺口',v:'3.2 年(目标 0-2)'},{k:'资产久期',v:'3.8 年'},{k:'负债久期',v:'7.0 年'},{k:'利率↓50bp',v:'偿付 -8pp'}],src:'SQLite alm_metrics 7Q'},
+    {id:'保险2',name:'C-ROSS II 偿付能力敏感性(保险专属)',score:'0.5',sig:'偏多',srcTag:'DB计算',
+      backtest:'综合偿付 215%、核心偿付 180%，远超底线。权益每增 1%→偿付 -0.8%，当前权益 12% 最大可增至 43% 仍满足 120% 底线。压力测试(权益 -20%+利率 +50bp)=187% 通过。风险因子占用 65%，距上限 70% 仅 5% 缓冲。',
+      inds:[{k:'综合偿付',v:'215%'},{k:'核心偿付',v:'180%'},{k:'权益敏感',v:'+1%→-0.8%'},{k:'压力测试',v:'187%(通过)'},{k:'风险因子',v:'65%(上限 70%)'}],src:'SQLite alm_metrics'},
   ];
 
   for(var i=0;i<macroTopics.length;i++){
@@ -820,11 +826,12 @@ function renderRisk(){
   h += section('风险监控图表',true);h+='<div class="chart-row"><div class="chart-box" id="rc_dd"></div><div class="chart-box" id="rc_limit"></div></div>';h+=secEnd();
   h += section('五类风险详表');
   h += '<table class="mac-tbl"><thead><tr><th>风险类型</th><th>核心指标</th><th>当前值</th><th>预警线</th><th>状态</th></tr></thead><tbody>';
-  h += '<tr><td>市场风险</td><td>VaR / 最大回撤</td><td>−4.82% / −8.5%</td><td>≤8% / ≤30%</td><td><span class="pill pill-green">正常</span></td></tr>';
-  h += '<tr><td>信用风险</td><td>AA−AAA 利差</td><td>0.4bp</td><td>监控反弹</td><td><span class="pill pill-orange">极低</span></td></tr>';
-  h += '<tr><td>流动性风险</td><td>高流资产占比</td><td>19% (利率债+现金)</td><td>≥15%</td><td><span class="pill pill-green">正常</span></td></tr>';
-  h += '<tr><td>操作风险</td><td>交易留痕</td><td>—</td><td>—</td><td><span class="pill pill-blue">人工</span></td></tr>';
-  h += '<tr><td>汇率风险</td><td>QDII 敞口</td><td>23%</td><td>≤20%</td><td><span class="pill pill-orange">略超</span></td></tr>';
+  h += '<tr><td><b>市场风险</b></td><td>VaR(99%,10日)</td><td>−2.82%</td><td>≤5%</td><td><span class="pill pill-green">正常</span></td></tr>';
+  h += '<tr><td><b>利率风险</b></td><td>久期缺口</td><td>3.2 年</td><td>0-2 年</td><td><span class="pill pill-orange">超标</span></td></tr>';
+  h += '<tr><td><b>信用风险</b></td><td>AA-AAA 利差</td><td>0.4bp</td><td>监控反弹</td><td><span class="pill pill-orange">极低</span></td></tr>';
+  h += '<tr><td><b>流动性风险</b></td><td>流动资产占比</td><td>10%(货基+存款)</td><td>≥5%</td><td><span class="pill pill-green">充裕</span></td></tr>';
+  h += '<tr><td><b>集中度风险</b></td><td>单一行业/品种</td><td>国债 35%(最大)</td><td>≤50%</td><td><span class="pill pill-green">正常</span></td></tr>';
+  h += '<tr><td><b>偿付能力风险</b></td><td>C-ROSS II 充足率</td><td>215%</td><td>≥100%</td><td><span class="pill pill-green">充裕</span></td></tr>';
   h += '</tbody></table>';h += secEnd();
   h += '<div class="deep-links"><a class="deep-link" href="风险管理看板.html"><span class="dl-icon">🛡️</span>风险管理看板<span class="dl-label">VaR · 回撤路径 · 限额合规 · 4 组 ECharts</span></a></div>';
   return h;
@@ -838,18 +845,25 @@ function initRiskCharts(){
 // ===== PERF =====
 function renderPerf(){
   var h = '<div class="card-grid">';
-  h += macCard('年化收益','+14.0%','超 SAA 目标 10% · MTD +1.9% · QTD +3.5%','pill-green','优秀','var(--green)');
-  h += macCard('夏普比率','1.48','Calmar 1.64 · 超额 +2.0% vs 基准 60%HS300+40%债','pill-green','优秀','var(--green)');
-  h += macCard('资产贡献 TOP','标普500 +4.6%','黄金 +4.2% · 创业板 +2.5% · 沪深300 −0.2%','pill-blue','分散有效','var(--blue)');
-  h += macCard('近3月超额','+2.0%','vs 基准 60%沪深300 + 40%中债综合','pill-green','持续跑赢','var(--green)');
+  h += macCard('综合投资收益率','+5.3%','负债成本 4.5% · 利差 +0.8% · 覆盖倍数 1.18x','pill-green','覆盖','var(--green)');
+  h += macCard('夏普比率','1.26','Calmar 1.30 · 超额 +0.8% vs 基准 80%债20%股','pill-green','稳健','var(--green)');
+  h += macCard('Brinson 配置效应','+0.5%','固收超配 +5pp × 超额收益 = +0.5pp · 正向贡献','pill-blue','超配有效','var(--blue)');
+  h += macCard('Brinson 选择效应','+0.3%','30Y 国债选择 vs 基准 · 久期匹配优化','pill-blue','选择有效','var(--blue)');
   h += '</div>';
   h += section('多周期绩效',true);h+='<div class="chart-row"><div class="chart-box" id="pc_periods"></div><div class="chart-box" id="pc_contrib"></div></div>';h+=secEnd();
+  h += section('Brinson 归因分解 · 配置效应/选择效应/交互效应');
+  h += '<table class="mac-tbl"><thead><tr><th>归因项</th><th>贡献</th><th>说明</th><th>评价</th></tr></thead><tbody>';
+  h += '<tr><td><b>配置效应</b>(Allocation)</td><td><span class="pill pill-green">+0.5pp</span></td><td>固收超配 5pp(基准 53%→实际 58%)×固收超额 10bp</td><td>超配合规且盈利</td></tr>';
+  h += '<tr><td><b>选择效应</b>(Selection)</td><td><span class="pill pill-green">+0.3pp</span></td><td>30Y 国债选择优于基准指数 · 信用债品种选择贡献</td><td>品种选择有效</td></tr>';
+  h += '<tr><td><b>交互效应</b>(Interaction)</td><td><span class="pill pill-blue">+0.05pp</span></td><td>配置与选择的交互影响 · 可忽略</td><td>微小</td></tr>';
+  h += '<tr style="font-weight:600"><td>总超额收益</td><td><span class="pill pill-green">+0.85pp</span></td><td>vs 保险行业基准(80%债+20%股)</td><td>跑赢</td></tr>';
+  h += '</tbody></table>';h+=secEnd();
   h += '<div class="deep-links"><a class="deep-link" href="绩效评估看板.html"><span class="dl-icon">📋</span>绩效评估看板<span class="dl-label">Brinson 归因 · 多周期收益 · 资产贡献分解</span></a></div>';
   return h;
 }
 function initPerfCharts(){
-  echarts.init(document.getElementById('pc_periods')).setOption({title:{text:'多周期收益 vs 基准',left:'center',top:6,textStyle:{fontSize:12,fontWeight:600}},legend:{bottom:0,data:['SAA组合','基准'],textStyle:{fontSize:10,color:'#6e6e73'},itemWidth:8,itemHeight:8},grid:{left:50,right:20,top:40,bottom:30},xAxis:{type:'category',data:['MTD','QTD','YTD','1Y'],axisLabel:{fontSize:10,color:'#6e6e73'},axisLine:{show:false},axisTick:{show:false}},yAxis:{type:'value',axisLabel:{fontSize:10,color:'#6e6e73',formatter:'{value}%'},splitLine:{lineStyle:{color:'rgba(0,0,0,0.05)'}}},series:[{name:'SAA组合',type:'bar',data:[1.9,3.5,8.2,15.1],barWidth:'35%',barGap:'20%',itemStyle:{color:'#007AFF',borderRadius:[5,5,0,0]}},{name:'基准',type:'bar',data:[0.8,1.5,4.0,8.3],barWidth:'35%',itemStyle:{color:'rgba(0,0,0,0.12)',borderRadius:[5,5,0,0]}}]});
-  echarts.init(document.getElementById('pc_contrib')).setOption({title:{text:'资产收益贡献',left:'center',top:6,textStyle:{fontSize:12,fontWeight:600}},grid:{left:50,right:20,top:40,bottom:25},xAxis:{type:'category',data:['标普500','黄金','创业板','沪深300'],axisLabel:{fontSize:10,color:'#6e6e73'},axisLine:{show:false},axisTick:{show:false}},yAxis:{type:'value',axisLabel:{fontSize:10,color:'#6e6e73',formatter:'{value}%'},splitLine:{lineStyle:{color:'rgba(0,0,0,0.05)'}}},series:[{type:'bar',data:[4.6,4.2,2.5,-0.2],barWidth:'50%',itemStyle:{borderRadius:[5,5,0,0],color:function(p){return p.value>=0?'#007AFF':'#FF3B30';}},markLine:{silent:true,symbol:'none',data:[{yAxis:0,lineStyle:{color:'rgba(0,0,0,0.15)',type:'dashed'}}]}}]});
+  echarts.init(document.getElementById('pc_periods')).setOption({title:{text:'多周期收益 vs 基准(80%债+20%股)',left:'center',top:6,textStyle:{fontSize:12,fontWeight:600}},legend:{bottom:0,data:['保险组合','基准'],textStyle:{fontSize:10,color:'#6e6e73'},itemWidth:8,itemHeight:8},grid:{left:50,right:20,top:40,bottom:30},xAxis:{type:'category',data:['MTD','QTD','YTD','1Y'],axisLabel:{fontSize:10,color:'#6e6e73'},axisLine:{show:false},axisTick:{show:false}},yAxis:{type:'value',axisLabel:{fontSize:10,color:'#6e6e73',formatter:'{value}%'},splitLine:{lineStyle:{color:'rgba(0,0,0,0.05)'}}},series:[{name:'保险组合',type:'bar',data:[0.9,1.8,3.5,5.3],barWidth:'35%',barGap:'20%',itemStyle:{color:'#007AFF',borderRadius:[5,5,0,0]}},{name:'基准',type:'bar',data:[0.6,1.2,2.7,4.5],barWidth:'35%',itemStyle:{color:'rgba(0,0,0,0.12)',borderRadius:[5,5,0,0]}}]});
+  echarts.init(document.getElementById('pc_contrib')).setOption({title:{text:'大类资产收益贡献',left:'center',top:6,textStyle:{fontSize:12,fontWeight:600}},grid:{left:50,right:20,top:40,bottom:25},xAxis:{type:'category',data:['固收','权益','另类','流动'],axisLabel:{fontSize:10,color:'#6e6e73'},axisLine:{show:false},axisTick:{show:false}},yAxis:{type:'value',axisLabel:{fontSize:10,color:'#6e6e73',formatter:'{value}%'},splitLine:{lineStyle:{color:'rgba(0,0,0,0.05)'}}},series:[{type:'bar',data:[2.8,1.0,1.3,0.2],barWidth:'50%',itemStyle:{borderRadius:[5,5,0,0],color:function(p){return p.value>=0?'#007AFF':'#FF3B30';}},markLine:{silent:true,symbol:'none',data:[{yAxis:0,lineStyle:{color:'rgba(0,0,0,0.15)',type:'dashed'}}]}}]});
 }
 
 // ===== TOOLS =====
