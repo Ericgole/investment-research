@@ -294,7 +294,7 @@ var DATA = {
   taa: {政策:2,估值:-1,技术:-1,资金:1,宏观:0},
   pe: {沪深300:{pe:14.4,pct:95},中证500:{pe:35.2,pct:90},创业板:{pe:42.2,pct:65},科创50:{pe:196,pct:98},上证50:{pe:11.7,pct:90}},
   macro: {gdp:4.3,pmi:49.2,cpi:1.0,m1m2:-4.0,sr:7.4,ex:23.9,ip:5.3,fa:-5.7,rs:1.0},
-  saa: {ret:14.0,vol:9.5,sharpe:1.48,calmar:1.64,maxdd:-8.5,var99:-4.82,excess:2.0},
+  saa: {ret:5.3,vol:4.2,sharpe:1.26,calmar:1.30,maxdd:-4.5,var99:-2.82,excess:0.8},
   alloc: {信用债:27,利率债:9,现金:10,沪深300:3,创业板:9,标普500:23,黄金:21}
 };
 
@@ -742,10 +742,35 @@ function renderOverview(){
   h += section('框架总览 · 七章闭环', true);
   h += '<div class="chart-row"><div class="chart-box" id="ov_fw"></div><div class="chart-box" id="ov_cov"></div></div>';
   h += secEnd();
-  h += section('SAA 配置概览');
-  h += '<table class="mac-tbl"><thead><tr><th>资产</th><th>权重</th><th>1Y 收益</th><th>TAA</th><th>建议</th></tr></thead><tbody>';
-  var aa = [{n:'标普500 ETF',w:23,r:'+23.9%',s:0.50,a:'维持标配'},{n:'信用债',w:27,r:'+2.4%',s:0.20,a:'维持标配'},{n:'黄金 ETF',w:21,r:'+20.8%',s:0.50,a:'维持标配'},{n:'创业板 ETF',w:9,r:'+48.1%',s:0.40,a:'维持标配'},{n:'沪深300',w:3,r:'+13.1%',s:-0.50,a:'维持标配'},{n:'利率债',w:9,r:'+1.9%',s:0.40,a:'维持标配'},{n:'现金/货基',w:10,r:'+3.0%',s:0,a:'维持标配'}];
-  for(var i=0;i<aa.length;i++){var a=aa[i];var cls=a.s>=0.3?'pill-green':a.s<=-0.3?'pill-red':'pill-orange';h+='<tr><td><b>'+a.n+'</b></td><td>'+a.w+'%</td><td>'+a.r+'</td><td><span class="pill '+cls+'">'+(a.s>0?'+':'')+a.s.toFixed(2)+'</span></td><td>'+a.a+'</td></tr>';}
+  h += section('SAA 配置概览 · 保险资金五大类');
+  h += '<table class="mac-tbl"><thead><tr><th>大类</th><th>子类</th><th>权重</th><th>基准</th><th>偏离</th><th>说明</th></tr></thead><tbody>';
+  var sa = [
+    {cat:'固收类',sub:'国债/金融债',w:'35%',bm:'30%',d:'+5',note:'久期匹配核心 · 30Y国债加配'},
+    {cat:'固收类',sub:'信用债/债权计划',w:'18%',bm:'20%',d:'−2',note:'信用利差 0.4bp · 增配空间有限'},
+    {cat:'固收类',sub:'可转债/永续债',w:'5%',bm:'5%',d:'0',note:'条款博弈 · 弹性敞口'},
+    {cat:'权益类',sub:'沪深300/高股息',w:'6%',bm:'8%',d:'−2',note:'PE 87%分位 · 维持低配'},
+    {cat:'权益类',sub:'QDII/标普500',w:'2%',bm:'2%',d:'0',note:'外汇额度限制'},
+    {cat:'权益类',sub:'长期股权投资',w:'4%',bm:'5%',d:'−1',note:'大基金三期 · 战略协同'},
+    {cat:'另类',sub:'不动产/REITs',w:'8%',bm:'8%',d:'0',note:'保障性租赁住房 · 现金流稳定'},
+    {cat:'另类',sub:'基础设施债权',w:'10%',bm:'10%',d:'0',note:'锁定长期收益 · 利率下行受益'},
+    {cat:'另类',sub:'私募股权',w:'2%',bm:'2%',d:'0',note:'硬科技/新能源赛道'},
+    {cat:'流动',sub:'货基/存款',w:'10%',bm:'10%',d:'0',note:'偿付缓冲 · 流动性 ≥150%'},
+  ];
+  for(var i=0;i<sa.length;i++){var s=sa[i];var cl=s.d>0?'pill-green':s.d<0?'pill-red':'pill-blue';h+='<tr><td><b>'+s.cat+'</b></td><td>'+s.sub+'</td><td><b>'+s.w+'</b></td><td>'+s.bm+'</td><td><span class=\"pill '+cl+'\">'+(s.d>0?'+':'')+s.d+'pp</span></td><td style=\"font-size:10px;color:var(--text2)\">'+s.note+'</td></tr>';}
+  h += '</tbody></table>';h += secEnd();
+
+  // ===== LDI 匹配度 =====
+  h += section('资产负债匹配度');
+  h += '<table class="mac-tbl"><thead><tr><th>指标</th><th>当前</th><th>目标</th><th>状态</th><th>操作建议</th></tr></thead><tbody>';
+  var alm=[['久期缺口','3.2 年（资产 3.8-负债 7.0）','0-2 年','<span class=\"pill pill-orange\">偏离</span>','增配 30Y 国债 · 每 +1 年久期缩缺口 0.2 年'],['成本收益比','1.18x（5.3%/4.5%）','1.05-1.30x','<span class=\"pill pill-green\">正常</span>','维持 · 利差 0.8% 覆盖运营成本'],['偿付充足(综合)','215%','≥100%','<span class=\"pill pill-green\">充裕</span>','超额资本支撑权益增配 · 消耗 15pp/+1%权益'],['偿付充足(核心)','180%','≥50%','<span class=\"pill pill-green\">充裕</span>','流动性覆盖率 180% · 压力测试通过'],['流动性覆盖','10%（货基+存款）','≥5%','<span class=\"pill pill-green\">充裕</span>','180 天运营覆盖'],['期限错配','5.2 年（负债 7.0-资产短端 1.8）','<3 年','<span class=\"pill pill-orange\">偏高</span>','短债占比过高 · 需延长资产久期']];
+  for(var i=0;i<alm.length;i++){var a=alm[i];h+='<tr><td><b>'+a[0]+'</b></td><td>'+a[1]+'</td><td>'+a[2]+'</td><td>'+a[3]+'</td><td style=\"font-size:10px;color:var(--text2)\">'+a[4]+'</td></tr>';}
+  h += '</tbody></table>';h += secEnd();
+
+  // ===== 负债端约束 =====
+  h += section('负债端约束 · C-ROSS II 敏感度');
+  h += '<table class="mac-tbl"><thead><tr><th>约束项</th><th>当前值</th><th>预警阈值</th><th>硬限额</th><th>敏感度分析</th></tr></thead><tbody>';
+  var lc=[['利率下行 50bp','偿付 −8pp（至 207%）','−15pp','−25pp（底线 190%）','固收浮盈对冲 · 但再投资风险加大'],['权益下跌 20%','偿付 −25pp（至 190%）','−30pp','−40pp（底线 175%）','权益仓位 12% · 风险可控'],['信用违约 2%','偿付 −12pp（至 203%）','−15pp','−20pp（底线 195%）','信用债仓位 18% · 当前利差极低'],['退保率 +2pp','流动性 −30pp','−40pp','−60pp（底线 120%）','续期保费稳定 · 退保风险低'],['久期缺口扩大至 4 年','偿付 −5pp','−10pp','−15pp','加配 30Y 国债 10% → 缩缺口至 2.5 年'],['预定利率下调 25bp','负债成本 −0.15pp→4.35%','-','利差扩大至 0.95%','利好 · 存量保单锁定高利率']];
+  for(var i=0;i<lc.length;i++){var l=lc[i];h+='<tr><td><b>'+l[0]+'</b></td><td>'+l[1]+'</td><td>'+l[2]+'</td><td>'+l[3]+'</td><td style=\"font-size:10px;color:var(--text2)\">'+l[4]+'</td></tr>';}
   h += '</tbody></table>';h += secEnd();
   h += '<div class="deep-links"><a class="deep-link" href="投研专题_数据驱动版.html"><span class="dl-icon">📊</span>专题全集<span class="dl-label">73项 × ⑨模块 · 配置层数据底座</span></a><a class="deep-link" href="交互式CMA试算.html"><span class="dl-icon">🎮</span>CMA 试算<span class="dl-label">拖动参数实时重算 MVO 有效前沿</span></a></div>';
   return h;
