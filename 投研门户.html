@@ -208,6 +208,49 @@ body {
 .timeline .tl-dot { width:10px;height:10px;border-radius:50%;margin:0 auto 4px; }
 .timeline .tl-label { font-size:9px;color:var(--text3); }
 .timeline .tl-phase { font-size:10px;font-weight:600; }
+
+/* ===== Indicator grid (compact key metrics) ===== */
+.ind-grid { display:grid;grid-template-columns:repeat(4,1fr);gap:10px; }
+.ind-card {
+  background:var(--card-bg);backdrop-filter:blur(20px) saturate(180%);
+  -webkit-backdrop-filter:blur(20px) saturate(180%);
+  border-radius:var(--radius-sm);border:0.5px solid var(--bdr);
+  padding:14px 16px;text-align:center;transition:var(--transition);
+}
+.ind-card:hover { box-shadow:var(--shadow-sm);transform:translateY(-1px); }
+.ind-card .iv { font-size:24px;font-weight:700;letter-spacing:-0.5px;line-height:1.2; }
+.ind-card .in { font-size:11px;font-weight:600;color:var(--text2);margin:4px 0; }
+.ind-card .id { font-size:10px;color:var(--text3); }
+.ind-card .idr {
+  display:inline-flex;align-items:center;gap:3px;margin-top:6px;
+  font-size:10px;color:var(--blue);cursor:pointer;font-weight:500;
+}
+.ind-card .idr:hover { text-decoration:underline; }
+
+/* ===== Topic list (compact expandable) ===== */
+.topic-row {
+  display:flex;align-items:center;gap:10px;padding:8px 0;
+  border-bottom:0.5px solid rgba(0,0,0,0.04);cursor:pointer;
+  transition:background 0.15s;
+}
+.topic-row:hover { background:rgba(0,0,0,0.015); }
+.topic-row .tr-score { font-size:11px;font-weight:600;width:32px;text-align:center;flex-shrink:0; }
+.topic-row .tr-name { flex:1;font-size:12px;font-weight:500; }
+.topic-row .tr-signal { font-size:10px;flex-shrink:0; }
+.topic-row .tr-chevron { font-size:10px;color:var(--text3);flex-shrink:0;transition:transform 0.2s; }
+.topic-row.open .tr-chevron { transform:rotate(90deg); }
+.topic-detail {
+  display:none;padding:8px 16px 12px 42px;
+  font-size:11px;color:var(--text2);line-height:1.8;
+}
+.topic-detail.open { display:block;animation:fadeIn 0.2s ease; }
+.topic-detail .td-ind { display:flex;gap:8px;flex-wrap:wrap; }
+.topic-detail .td-ind span {
+  background:rgba(0,0,0,0.03);border-radius:6px;padding:2px 8px;font-size:10px;
+}
+.topic-detail .td-source { margin-top:6px;font-size:10px;color:var(--text3); }
+
+@media(max-width:800px){.ind-grid{grid-template-columns:repeat(2,1fr)}}
 </style></head><body>
 
 <div class="sidebar">
@@ -300,75 +343,36 @@ function secEnd(){ return '</div></div>'; }
 function renderMacro(){
   var h = '';
 
-  // --- CYCLE JUDGMENT HERO ---
-  h += '<div class="cycle-hero">';
+  // === COMPACT CYCLE HERO ===
+  h += '<div class="cycle-hero" style="padding:14px 20px;">';
   h += '<div class="ch-row">';
-  h += '<div class="ch-phase">🔄 周期相位：经济下行 + 政策宽松期</div>';
-  h += '<div class="ch-desc">';
-  h += '<b>GDP 4.3%</b>（目标5%）+ <b>PMI 49.2</b>（收缩）= 增长偏弱 · ';
-  h += '<b>CPI 1.0%</b>（低通胀）+ <b>10Y 1.71%</b>（历史低位）= 通缩压力 · ';
-  h += '<b>M1−M2 −4.0pp</b>（资金沉淀）= 信用传导不畅<br/>';
-  h += '<span style="color:var(--orange)">核心矛盾: 货币政策极度宽松 vs 实体经济需求不足</span>';
-  h += '</div>';
-  h += '</div>';
+  h += '<div class="ch-phase" style="font-size:13px;">🔄 周期相位：弱衰退 / 复苏初期</div>';
+  h += '<div class="ch-desc" style="font-size:11px;">';
+  h += 'GDP <b>4.3%</b>(目标5%) + PMI <b>49.2</b> = 增长偏弱 · ';
+  h += 'CPI <b>1.0%</b> = 低通胀 · M1-M2 <b>-4.0pp</b> = 信用紧缩 · ';
+  h += '10Y <b>1.71%</b> = 极度宽松 ';
+  h += '<span style="color:var(--orange)">| 核心矛盾: 流动性充裕 vs 实体需求不足</span>';
+  h += '</div></div>';
+  h += '<div class="ch-models" style="margin-top:8px;">';
+  h += '<div class="ch-model"><div class="cm-name">美林时钟</div><div class="cm-phase" style="color:var(--orange);font-size:11px;">弱衰退</div></div>';
+  h += '<div class="ch-model"><div class="cm-name">三周期</div><div class="cm-phase" style="color:var(--purple);font-size:11px;">↓经济 ↓信用 ↑利率</div></div>';
+  h += '<div class="ch-model"><div class="cm-name">资产映射</div><div class="cm-phase" style="color:var(--green);font-size:11px;">债 > 金 > 股</div></div>';
+  h += '<div class="ch-model"><div class="cm-name">政策力度</div><div class="cm-phase" style="color:var(--green);font-size:11px;">强烈宽松</div></div>';
+  h += '</div></div>';
 
-  // Model consensus row
-  h += '<div class="ch-models" style="margin-top:12px;">';
-  h += '<div class="ch-model">';
-  h += '<div class="cm-name">美林时钟</div>';
-  h += '<div class="cm-phase" style="color:var(--orange)">弱衰退 / 复苏初期</div>';
-  h += '<div class="cm-bar"><div class="cm-fill" style="width:35%;background:var(--orange)"></div></div>';
-  h += '<div style="font-size:9px;color:var(--text3);margin-top:2px">低增长 + 低通胀象限</div>';
-  h += '</div>';
+  // ===== SECTION 1: 周期研判 =====
+  h += section('① 周期研判 · 点击模型展开分析');
 
-  h += '<div class="ch-model">';
-  h += '<div class="cm-name">三周期模型</div>';
-  h += '<div class="cm-phase" style="color:var(--purple)">下行+紧信用+宽货币</div>';
-  h += '<div class="cm-bar"><div class="cm-fill" style="width:45%;background:var(--purple)"></div></div>';
-  h += '<div style="font-size:9px;color:var(--text3);margin-top:2px">经济↓ 信用↓ 利率↓</div>';
+  h += '<div class="ch-models" style="margin:0 0 12px;gap:8px;">';
+  h += '<div class="ch-model" onclick="expandCycle(\'merrill\')" id="btn-merrill" style="cursor:pointer;min-width:0;flex:1;background:rgba(0,122,255,0.04);border-color:rgba(0,122,255,0.2);"><div class="cm-phase" style="font-size:11px;">美林时钟</div><div style="font-size:9px;color:var(--text3)">增长 vs 通胀</div></div>';
+  h += '<div class="ch-model" onclick="expandCycle(\'three\')" id="btn-three" style="cursor:pointer;min-width:0;flex:1;"><div class="cm-phase" style="font-size:11px;">三周期共振</div><div style="font-size:9px;color:var(--text3)">经济·信用·利率</div></div>';
+  h += '<div class="ch-model" onclick="expandCycle(\'timeline\')" id="btn-timeline" style="cursor:pointer;min-width:0;flex:1;"><div class="cm-phase" style="font-size:11px;">演化时间轴</div><div style="font-size:9px;color:var(--text3)">2023→2026</div></div>';
   h += '</div>';
 
-  h += '<div class="ch-model">';
-  h += '<div class="cm-name">大类资产映射</div>';
-  h += '<div class="cm-phase" style="color:var(--green)">债券 > 黄金 > 股票</div>';
-  h += '<div class="cm-bar"><div class="cm-fill" style="width:60%;background:var(--green)"></div></div>';
-  h += '<div style="font-size:9px;color:var(--text3);margin-top:2px">防御 > 进攻 · 等待复苏信号</div>';
-  h += '</div>';
-
-  h += '<div class="ch-model">';
-  h += '<div class="cm-name">政策对冲力度</div>';
-  h += '<div class="cm-phase" style="color:var(--green)">强烈宽松</div>';
-  h += '<div class="cm-bar"><div class="cm-fill" style="width:85%;background:var(--green)"></div></div>';
-  h += '<div style="font-size:9px;color:var(--text3);margin-top:2px">大基金三期 + 降息可期</div>';
-  h += '</div>';
-  h += '</div>';
-  h += '</div>'; // end cycle-hero
-
-  // --- KEY INDICATOR CARDS ---
-  h += '<div class="card-grid">';
-  var d = DATA.macro;
-  h += macCard('GDP 增速', '4.3%', 'Q2 当季同比 · 低于目标 5% · 下行趋势(5.0→4.3)', 'pill-red', '偏弱', 'var(--red)');
-  h += macCard('制造业 PMI', '49.2', '新订单 48.5(收缩) · 就业 49.0 · 7 月急转', 'pill-red', '收缩', 'var(--red)');
-  h += macCard('CPI 通胀', '1.0%', '低通胀环境 · 实际利率偏高 · 有降息空间', 'pill-orange', '通缩压力', 'var(--orange)');
-  h += macCard('M1−M2 剪刀差', '−4.0pp', '资金沉淀严重 · 历史极低 · 信贷传导失效', 'pill-red', '偏空', 'var(--red)');
-  h += macCard('10Y 国债', '1.71%', '低利率环境 · DR007 偏松 · 信用利差 0.4bp', 'pill-green', '宽松', 'var(--green)');
-  h += macCard('人民币汇率', '6.80', '升值通道(7月 7.30) · DXY 97 · 弱美元支撑', 'pill-green', '偏多', 'var(--green)');
-  h += '</div>';
-
-  // --- CYCLE CHARTS ---
-  h += section('周期定位 · 美林时钟 + 三周期模型', true);
-  h += '<div class="chart-row"><div class="chart-box" id="mc_merrill"></div><div class="chart-box" id="mc_threecycle"></div></div>';
-  h += secEnd();
-
-  // --- MACRO CHARTS ---
-  h += section('周期驱动因素 · 深度图表', true);
-  h += '<div class="chart-row"><div class="chart-box" id="mc_gdp"></div><div class="chart-box" id="mc_pmi"></div></div>';
-  h += '<div class="chart-row"><div class="chart-box" id="mc_m1m2"></div><div class="chart-box" id="mc_fiscal"></div></div>';
-  h += secEnd();
-
-  // --- PHASE HISTORY TIMELINE ---
-  h += section('周期演化时间轴 · 2023−2026');
-  h += '<div class="timeline" id="mc_timeline">';
+  h += '<div id="cycle-merrill" style="display:none"><div class="chart-box" id="mc_merrill" style="height:320px"></div></div>';
+  h += '<div id="cycle-three" style="display:none"><div class="chart-box" id="mc_threecycle" style="height:320px"></div></div>';
+  
+  h += '<div id="cycle-timeline" style="display:none"><div class="timeline">';
   var phases = [
     {period:'2023',phase:'复苏',color:'var(--green)',desc:'疫后反弹 GDP 5.0%+'},
     {period:'2024-H1',phase:'增速放缓',color:'var(--orange)',desc:'GDP 4.7% · 下行压力'},
@@ -382,164 +386,135 @@ function renderMacro(){
     var p=phases[i];
     h += '<div class="tl-node"><div class="tl-dot" style="background:'+p.color+'"></div><div class="tl-phase" style="color:'+p.color+'">'+p.phase+'</div><div class="tl-label">'+p.period+'<br/>'+p.desc+'</div></div>';
   }
+  h += '</div></div>';
+
+  h += '<div style="margin-top:10px"><div class="chart-row"><div class="chart-box" id="mc_gdp" style="height:260px"></div><div class="chart-box" id="mc_pmi" style="height:260px"></div></div></div>';
+  h += secEnd();
+
+  // ===== SECTION 2: 重点指标跟踪 =====
+  h += section('② 重点指标跟踪 · 点击「查看专题」跳转详情', true);
+  var indicators = [
+    {n:'GDP 增速',v:'4.3%',c:'var(--red)',desc:'Q2 当季 · 累计 +4.7% · 低于目标',topic:'宏观1'},
+    {n:'PMI',v:'49.2',c:'var(--red)',desc:'跌破荣枯线 · 新订单 48.5 收缩',topic:'宏观2'},
+    {n:'CPI',v:'1.0%',c:'var(--orange)',desc:'低通胀 · 核心 CPI 1.0% · 环比-0.3%',topic:'宏观5'},
+    {n:'M1-M2 剪刀差',v:'-4.0pp',c:'var(--red)',desc:'历史极低 · 资金沉淀严重',topic:'宏观8'},
+    {n:'10Y 国债',v:'1.71%',c:'var(--green)',desc:'历史低位 · 利率极度宽松',topic:'宏观14'},
+    {n:'社融存量',v:'7.4%',c:'var(--red)',desc:'信用下行 · 政府债为主支撑',topic:'宏观9'},
+    {n:'人民币汇率',v:'6.80',c:'var(--green)',desc:'升值通道 · DXY 97 弱美元',topic:'宏观15'},
+    {n:'出口同比',v:'23.9%',c:'var(--orange)',desc:'抢出口效应 · 可持续性存疑',topic:'宏观17'},
+  ];
+
+  h += '<div class="ind-grid">';
+  for(var i=0;i<indicators.length;i++){
+    var ind=indicators[i];
+    h += '<div class="ind-card">';
+    h += '<div class="iv" style="color:'+ind.c+'">'+ind.v+'</div>';
+    h += '<div class="in">'+ind.n+'</div>';
+    h += '<div class="id">'+ind.desc+'</div>';
+    h += '<div class="idr" onclick="event.stopPropagation();scrollToTopic(\''+ind.topic+'\')">▸ 查看专题</div>';
+    h += '</div>';
+  }
   h += '</div>';
   h += secEnd();
 
-  // --- DETAIL TABLE ---
-  h += section('宏观指标详表 · 月度追踪');
-  h += '<table class="mac-tbl"><thead><tr><th>指标</th><th>当前值</th><th>上月/上季</th><th>6月前</th><th>趋势</th><th>周期意义</th></tr></thead><tbody>';
-  var rows = [
-    ['GDP 当季同比','4.3%','5.0% (Q1)','4.5% (Q4)','↓','增长偏弱 · 累计 +4.7% · 低于目标 5%'],
-    ['GDP 绝对值','686,971 亿','—','—','—','上半年不变价 · 经济体量约 137 万亿/年'],
-    ['制造业 PMI','49.2','50.3','50.1','↓ 急转','收缩 · 7 月跌破荣枯线 50'],
-    ['　新订单','48.5','50.1','49.8','↓','需求端核心指标 · 自 51.2→48.5 两个月降 2.7pp'],
-    ['　生产','49.9','51.0','50.5','↓','生产也跌破 50 · 高温+需求双拖累'],
-    ['　高技术制造','53.3','54.0','52.8','↓','结构性亮点 · 仍处扩张区间'],
-    ['CPI 同比','1.0%','1.1%','0.4%','→','低通胀 · 核心 CPI 1.0% · 环比 −0.3% (季节性)'],
-    ['M2 同比 / 余额','8.0% / 356.71 万亿','8.6%','8.6%','↓','M2 增速回落 0.6pp · 仍高于名义 GDP · 流动性充裕'],
-    ['M1−M2 剪刀差','−4.0pp','−4.0pp','−4.9pp','→','活期<定期 · 企业投资意愿极度低迷'],
-    ['社融存量同比','7.4%','7.7%','7.9%','↓','信用下行 · 社融-M2 剪刀差 −0.6pp'],
-    ['　其中: 人民币贷款','10.72 万亿(H1)','—','—','↓','贷款占比下降 · 同比少增'],
-    ['　其中: 政府债券','6.44 万亿(H1)','—','—','↑','逆周期托底 · 直接融资占比升至 11.3%'],
-    ['10Y 国债收益率','1.71%','1.72%','1.62%','→','历史低位 · 利率周期极度宽松'],
-    ['工业增加值','5.3%','4.5%','5.0%','↑','生产端企稳 · 但需求端拖累'],
-    ['出口当月同比','23.9%','27.0%','20.0%','↓','抢出口效应 · 可持续性存疑'],
-    ['固投累计同比','−5.7%','−3.2%','1.5%','↓ 加速','投资萎缩 · 房地产拖累严重'],
-    ['社零当月同比','1.0%','2.1%','4.0%','↓','消费疲弱 · 居民去杠杆'],
-    ['DR007','~1.5%','~1.5%','~1.6%','→','流动性宽裕 · 资金价格极低'],
-    ['LPR 1 年期','3.0%','3.0%','3.0%','→','连 14 月不变 · 降息空间充裕'],
+  // ===== SECTION 3: 宏观专题 =====
+  var macroTopics = [
+    {id:'宏观1',name:'GDP: 季度分解(三驾马车)',score:'-0.5',sig:'偏空',sigs:'数据已计算',inds:[{k:'Q2 当季同比',v:'4.3%'},{k:'累计同比',v:'+4.7%'},{k:'工业增加值',v:'5.3%'},{k:'固投累计',v:'-5.7%'},{k:'社零当月',v:'1.0%'}],src:'SQLite(宏观+行业)',srcTag:'DB计算'},
+    {id:'宏观2',name:'PMI: 分项深度解读',score:'-0.5',sig:'偏空',sigs:'Wind EDB',inds:[{k:'制造业 PMI',v:'49.2'},{k:'新订单',v:'48.5(收缩)'},{k:'生产',v:'49.9'},{k:'高技术制造',v:'53.3(亮点)'}],src:'Wind EDB',srcTag:'Wind'},
+    {id:'宏观3',name:'先行指标: CLI 综合指数',score:'-0.5',sig:'偏空',sigs:'Wind EDB',inds:[{k:'工业增加值',v:'5.3%'},{k:'固投累计',v:'-5.7%'},{k:'社零当月',v:'1.0%'},{k:'出口当月',v:'23.9%'}],src:'Wind EDB',srcTag:'Wind'},
+    {id:'宏观4',name:'产出缺口: HP 滤波估算',score:'0.5',sig:'偏多',sigs:'估算',inds:[{k:'产出缺口',v:'约-1.2%'},{k:'缺口趋势',v:'收窄中'}],src:'模型估算',srcTag:'估算'},
+    {id:'宏观5',name:'CPI: 结构分解',score:'0.5',sig:'偏多',sigs:'数据已计算',inds:[{k:'CPI 同比',v:'1.0%'},{k:'核心 CPI',v:'1.0%'},{k:'环比',v:'-0.3%'}],src:'SQLite',srcTag:'DB计算'},
+    {id:'宏观6',name:'PPI-CPI: 传导机制',score:'0',sig:'中性',sigs:'数据已计算',inds:[{k:'PPI 同比',v:'+2.0%'},{k:'剪刀差',v:'-1.0pp'}],src:'SQLite',srcTag:'DB计算'},
+    {id:'宏观7',name:'通胀预期: Breakeven',score:'0.5',sig:'偏多',sigs:'数据已计算',inds:[{k:'Breakeven',v:'0.7%(10Y-CPI)'}],src:'SQLite',srcTag:'DB计算'},
+    {id:'宏观8',name:'M1-M2: 剪刀差分析',score:'-1',sig:'偏空',sigs:'数据已计算',inds:[{k:'M1 同比',v:'4.1%'},{k:'M2 同比',v:'8.1%'},{k:'剪刀差',v:'-4.0pp'}],src:'SQLite',srcTag:'DB计算'},
+    {id:'宏观9',name:'社融: 结构分解',score:'-0.5',sig:'偏空',sigs:'Wind EDB',inds:[{k:'社融存量同比',v:'7.4%'},{k:'贷款 H1',v:'10.72 万亿'},{k:'政府债 H1',v:'6.44 万亿'}],src:'Wind EDB',srcTag:'Wind'},
+    {id:'宏观10',name:'信用周期: 阶段定位',score:'0',sig:'中性',sigs:'数据已计算',inds:[{k:'信用周期',v:'弱宽→边际转紧'}],src:'SQLite+Wind',srcTag:'混合'},
+    {id:'宏观11',name:'贷款利率: 传导链分析',score:'0.5',sig:'偏多',sigs:'数据已计算',inds:[{k:'LPR 1Y',v:'3.0%(14月不变)'},{k:'实际利率',v:'2.0%(偏高)'}],src:'SQLite',srcTag:'DB计算'},
+    {id:'宏观12',name:'收益率曲线: NS模型',score:'-0.5',sig:'偏空',sigs:'数据已计算',inds:[{k:'10Y-2Y 利差',v:'45bp(极平)'}],src:'SQLite',srcTag:'DB计算'},
+    {id:'宏观13',name:'期限利差: 衰退概率',score:'-0.5',sig:'偏空',sigs:'估算',inds:[{k:'衰退概率',v:'约30%(偏高)'}],src:'模型估算',srcTag:'估算'},
+    {id:'宏观14',name:'流动性: DR007 监测',score:'1',sig:'强偏多',sigs:'数据已计算',inds:[{k:'DR007',v:'~1.5%'},{k:'利率环境',v:'极度宽松'}],src:'SQLite',srcTag:'DB计算'},
+    {id:'宏观15',name:'美元周期: 实际利差模型',score:'1',sig:'强偏多',sigs:'数据已计算',inds:[{k:'DXY',v:'97.0'},{k:'USDCNY',v:'6.80'}],src:'SQLite+Wind',srcTag:'混合'},
+    {id:'宏观16',name:'中美利差: 与汇率联动',score:'1',sig:'强偏多',sigs:'估算',inds:[{k:'中美利差',v:'-2.0pp(收窄)'}],src:'Wind',srcTag:'估算'},
+    {id:'宏观17',name:'全球贸易: 综合指标',score:'-0.5',sig:'偏空',sigs:'Wind EDB',inds:[{k:'出口当月',v:'23.9%(高位)'}],src:'Wind EDB',srcTag:'Wind'},
+    {id:'宏观18',name:'宏观维度汇总',score:'0',sig:'中性偏弱',sigs:'汇总',inds:[{k:'综合判断',v:'内需弱+低利率+弱美元'}],src:'综合',srcTag:'汇总'},
   ];
-  for(var i=0;i<rows.length;i++){
-    var cls = rows[i][4].indexOf('↓')>=0?'pill-red':rows[i][4].indexOf('↑')>=0?'pill-green':rows[i][4]=='—'?'pill-blue':'pill-orange';
-    h += '<tr><td><b>'+rows[i][0]+'</b></td><td>'+rows[i][1]+'</td><td>'+rows[i][2]+'</td><td>'+rows[i][3]+'</td><td><span class="pill '+cls+'">'+rows[i][4]+'</span></td><td style="font-size:10px;color:var(--text2)">'+rows[i][5]+'</td></tr>';
+
+  h += section('③ 宏观专题 ('+macroTopics.length+' 项 · 15 项已计算 / 3 项估算) — 点击展开详情', true);
+  h += '<div style="max-height:620px;overflow-y:auto;">';
+  for(var i=0;i<macroTopics.length;i++){
+    var t=macroTopics[i];
+    var sc = t.score>0?'var(--green)':t.score<0?'var(--red)':'var(--text2)';
+    var cls = t.srcTag==='DB计算'?'pill-green':t.srcTag==='Wind'?'pill-blue':t.srcTag==='混合'?'pill-purple':'';
+    
+    h += '<div class="topic-row" onclick="toggleTopic(this)" id="tr-'+t.id+'">';
+    h += '<span class="tr-score" style="color:'+sc+'">'+(t.score>0?'+':'')+t.score+'</span>';
+    h += '<span class="tr-name">'+t.name+'</span>';
+    h += '<span class="pill '+cls+'">'+t.srcTag+'</span>';
+    h += '<span class="tr-signal" style="color:'+sc+';font-size:10px;">'+t.sig+'</span>';
+    h += '<span class="tr-chevron">▸</span></div>';
+    
+    h += '<div class="topic-detail" id="td-'+t.id+'">';
+    h += '<div class="td-ind">';
+    for(var j=0;j<t.inds.length;j++){
+      h += '<span><b>'+t.inds[j].k+'</b>: '+t.inds[j].v+'</span>';
+    }
+    h += '</div>';
+    h += '<div class="td-source">数据来源: <span class="pill '+cls+'">'+t.src+'</span></div>';
+    h += '</div>';
   }
-  h += '</tbody></table>';
-  h += secEnd();
+  h += '</div>';h += secEnd();
 
-  // Deep links
-  h += '<div class="deep-links"><a class="deep-link" href="投研图表_深度专题.html"><span class="dl-icon">📈</span>深度图表<span class="dl-label">7 组 ECharts · GDP/PMI/M1-M2/CPI+PPI 全系列</span></a><a class="deep-link" href="投研专题_数据驱动版.html"><span class="dl-icon">📊</span>专题全集<span class="dl-label">宏观研判 18 项 · 11 项已实时计算</span></a></div>';
-
+  h += '<div class="deep-links"><a class="deep-link" href="投研专题_数据驱动版.html"><span class="dl-icon">📊</span>打开完整专题全集<span class="dl-label">73 项 × ⑨ 模块 · 可查阅数据库详情</span></a></div>';
   return h;
 }
 
+function expandCycle(c) {
+  var ids = ['merrill','three','timeline'];
+  for (var i=0;i<ids.length;i++) {
+    var el = document.getElementById('cycle-'+ids[i]);
+    var btn = document.getElementById('btn-'+ids[i]);
+    if (ids[i]===c) {
+      el.style.display = el.style.display==='block'?'none':'block';
+      btn.style.background = el.style.display==='block'?'rgba(0,122,255,0.04)':'';
+      btn.style.borderColor = el.style.display==='block'?'rgba(0,122,255,0.2)':'';
+    } else {
+      el.style.display = 'none';
+      btn.style.background = '';
+      btn.style.borderColor = '';
+    }
+  }
+  if (c==='merrill' && document.getElementById('cycle-merrill').style.display==='block') setTimeout(renderMerrillChart,100);
+  if (c==='three' && document.getElementById('cycle-three').style.display==='block') setTimeout(renderThreeCycleChart,100);
+}
+function toggleTopic(el) {
+  el.classList.toggle('open');
+  var d = document.getElementById('td-'+el.id.replace('tr-',''));
+  if (d) d.classList.toggle('open');
+}
+function scrollToTopic(id) {
+  var el = document.getElementById('tr-'+id);
+  if (el) {
+    var p = el.closest('.sec-bd');
+    if (p && !p.classList.contains('open')) {p.classList.add('open');p.previousElementSibling.classList.add('open');}
+    el.scrollIntoView({behavior:'smooth',block:'center'});
+    el.style.background = 'rgba(0,122,255,0.08)';
+    setTimeout(function(){el.style.background='';},1500);
+  }
+}
+
 function initMacroCharts(){
-  // === MERRILL LYNCH CLOCK ===
-  var c1 = echarts.init(document.getElementById('mc_merrill'));
-  c1.setOption({
-    title:{text:'美林时钟象限',left:'center',top:6,textStyle:{fontSize:12,fontWeight:600}},
-    tooltip:{trigger:'item',formatter:function(p){return p.name+'<br/>GDP: '+p.value[0]+'%  CPI: '+p.value[1]+'%';}},
-    grid:{left:65,right:30,top:40,bottom:25},
-    xAxis:{type:'value',name:'GDP 增速 %',min:3.5,max:6,axisLabel:{fontSize:10,color:'#6e6e73'},splitLine:{lineStyle:{color:'rgba(0,0,0,0.05)'}},axisLine:{show:false}},
-    yAxis:{type:'value',name:'CPI %',min:-1,max:3,axisLabel:{fontSize:10,color:'#6e6e73'},splitLine:{lineStyle:{color:'rgba(0,0,0,0.05)'}},axisLine:{show:false}},
-    series:[
-      // Quadrant backgrounds rendered as markAreas
-      {type:'scatter',
-        data:gdpHistory.map(function(d){return {value:[d.gdp,d.cpi],name:d.q};}),
-        symbolSize:function(v,i){return i===gdpHistory.length-1?20:8;},
-        itemStyle:{color:function(p){return p.dataIndex===gdpHistory.length-1?'#AF52DE':'#007AFF';},opacity:0.7},
-        label:{show:false},
-        markLine:{silent:true,symbol:'none',
-          data:[
-            {xAxis:5,lineStyle:{color:'rgba(0,0,0,0.15)',type:'dashed'},label:{formatter:'增长阈值 5%',fontSize:9,color:'#6e6e73'}},
-            {yAxis:2,lineStyle:{color:'rgba(0,0,0,0.15)',type:'dashed'},label:{formatter:'通胀阈值 2%',fontSize:9,color:'#6e6e73'}}
-          ]
-        }
-      },
-      // Phase labels
-      {type:'scatter',data:[],markArea:{silent:true,
-        label:{fontSize:11,fontWeight:500,color:'rgba(0,0,0,0.25)'},
-        data:[
-          [{xAxis:5,yAxis:3},{xAxis:6,yAxis:2},{itemStyle:{color:'rgba(255,59,48,0.03)'},label:{formatter:'过热'}}],
-          [{xAxis:5,yAxis:2},{xAxis:6,yAxis:-1},{itemStyle:{color:'rgba(52,199,89,0.03)'},label:{formatter:'复苏'}}],
-          [{xAxis:3.5,yAxis:2},{xAxis:5,yAxis:-1},{itemStyle:{color:'rgba(255,149,0,0.04)'},label:{formatter:'衰退/复苏初'}}],
-          [{xAxis:3.5,yAxis:3},{xAxis:5,yAxis:2},{itemStyle:{color:'rgba(255,59,48,0.03)'},label:{formatter:'滞胀'}}]
-        ]
-      }}
-    ]
-  });
-
-  // === THREE-CYCLE RADAR ===
-  var c2 = echarts.init(document.getElementById('mc_threecycle'));
-  c2.setOption({
-    title:{text:'三周期共振模型',left:'center',top:6,textStyle:{fontSize:12,fontWeight:600}},
-    legend:{bottom:0,data:['当前位置','6月前','中性线'],textStyle:{fontSize:10,color:'#6e6e73'},itemWidth:8,itemHeight:8},
-    radar:{
-      center:['50%','52%'],radius:'65%',
-      indicator:[
-        {name:'经济周期\n(GDP+PMI)',max:2,min:-2},
-        {name:'信用周期\n(M1-M2+社融)',max:2,min:-2},
-        {name:'利率周期\n(10Y+DR007)',max:2,min:-2}
-      ],
-      axisName:{fontSize:10,color:'#6e6e73',fontWeight:500},
-      splitArea:{areaStyle:{color:['rgba(0,122,255,0.02)','rgba(0,122,255,0.04)','rgba(0,122,255,0.02)','rgba(0,122,255,0.04)']}}
-    },
-    series:[
-      {type:'radar',name:'中性线',data:[{value:[0,0,0]}],lineStyle:{type:'dashed',color:'rgba(0,0,0,0.15)',width:1},symbol:'none',symbolSize:0,areaStyle:{opacity:0}},
-      {type:'radar',name:'6月前',data:[{value:[-0.8,-0.8,1.0]}],lineStyle:{color:'rgba(0,122,255,0.3)',width:1.5},symbol:'circle',symbolSize:4,itemStyle:{color:'#007AFF',opacity:0.5},areaStyle:{opacity:0}},
-      {type:'radar',name:'当前位置',data:[{value:[threeCycleNow.economic,threeCycleNow.credit,threeCycleNow.rate]}],
-        lineStyle:{color:'#AF52DE',width:2.5},symbol:'circle',symbolSize:8,itemStyle:{color:'#AF52DE'},
-        areaStyle:{color:'rgba(175,82,222,0.08)'}}
-    ]
-  });
-
-  // === GDP BAR ===
-  var c3 = echarts.init(document.getElementById('mc_gdp'));
-  c3.setOption({
-    title:{text:'GDP 增速 (季度)',left:'center',top:6},
-    grid:{left:50,right:20,top:40,bottom:25},
-    xAxis:{type:'category',data:['Q1','Q2','Q3','Q4','Q1','Q2','Q3E'],axisLabel:{fontSize:10,color:'#6e6e73',rotate:0},axisLine:{show:false},axisTick:{show:false}},
-    yAxis:{type:'value',axisLabel:{fontSize:10,color:'#6e6e73'},splitLine:{lineStyle:{color:'rgba(0,0,0,0.05)'}}},
-    series:[{type:'bar',data:[5.0,4.3,4.2,4.0,5.0,4.3,4.2],barWidth:'50%',
-      itemStyle:{borderRadius:[5,5,0,0],color:function(p){
-        var v=[5.0,4.3,4.2,4.0,5.0,4.3,4.2][p.dataIndex];return v>=5?'#34C759':'#FF3B30';
-      }},
-      label:{show:true,position:'top',fontSize:10,fontWeight:600},
-      markLine:{silent:true,symbol:'none',
-        data:[{yAxis:5,label:{formatter:'目标 5%',fontSize:10,color:'#6e6e73'},lineStyle:{color:'rgba(0,0,0,0.2)',type:'dashed'}}]}
-    }]
-  });
-
-  // === PMI LINE ===
-  var c4 = echarts.init(document.getElementById('mc_pmi'));
-  c4.setOption({
-    title:{text:'PMI (近12月)',left:'center',top:6},
-    grid:{left:50,right:20,top:40,bottom:25},
-    xAxis:{type:'category',data:['S','O','N','D','J','F','M','A','M','J','J','A'],axisLabel:{fontSize:10,color:'#6e6e73'},axisLine:{show:false},axisTick:{show:false}},
-    yAxis:{type:'value',min:47,max:52,axisLabel:{fontSize:10,color:'#6e6e73'},splitLine:{lineStyle:{color:'rgba(0,0,0,0.05)'}}},
-    series:[{type:'line',data:[50.1,50.3,50.4,50.2,50.0,50.5,51.0,50.8,50.3,50.3,49.2,49.2],
-      lineStyle:{width:2.5,color:'#007AFF'},symbol:'circle',symbolSize:7,itemStyle:{color:'#007AFF'},
-      areaStyle:{color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:'rgba(0,122,255,0.1)'},{offset:1,color:'rgba(0,122,255,0)'}]}},
-      markLine:{silent:true,symbol:'none',data:[{yAxis:50,lineStyle:{color:'rgba(0,0,0,0.15)',type:'dashed'},label:{formatter:'荣枯线 50',fontSize:9,color:'#6e6e73'}}]}
-    }]
-  });
-
-  // === M1-M2 SPREAD ===
-  var c5 = echarts.init(document.getElementById('mc_m1m2'));
-  c5.setOption({
-    title:{text:'M1−M2 剪刀差',left:'center',top:6},
-    grid:{left:50,right:20,top:40,bottom:25},
-    xAxis:{type:'category',data:['J','F','M','A','M','J','J'],axisLabel:{fontSize:10,color:'#6e6e73'},axisLine:{show:false},axisTick:{show:false}},
-    yAxis:{type:'value',axisLabel:{fontSize:10,color:'#6e6e73',formatter:'{value}pp'},splitLine:{lineStyle:{color:'rgba(0,0,0,0.05)'}}},
-    series:[{type:'bar',data:[-3.8,-3.9,-3.8,-3.9,-4.0,-4.0,-4.0],barWidth:'60%',
-      itemStyle:{color:'#FF3B30',borderRadius:[5,5,0,0]},
-      markLine:{silent:true,symbol:'none',data:[{yAxis:0,lineStyle:{color:'rgba(0,0,0,0.15)',type:'dashed'}}]}
-    }]
-  });
-
-  // === FISCAL + RATE COMPOSITE ===
-  var c6 = echarts.init(document.getElementById('mc_fiscal'));
-  c6.setOption({
-    title:{text:'利率 + 财政压力',left:'center',top:6},
-    legend:{bottom:0,data:['10Y国债','DR007','M2增速'],textStyle:{fontSize:10,color:'#6e6e73'},itemWidth:8,itemHeight:8},
-    grid:{left:50,right:20,top:40,bottom:30},
-    xAxis:{type:'category',data:['J','F','M','A','M','J','J'],axisLabel:{fontSize:10,color:'#6e6e73'},axisLine:{show:false},axisTick:{show:false}},
-    yAxis:{type:'value',axisLabel:{fontSize:10,color:'#6e6e73'},splitLine:{lineStyle:{color:'rgba(0,0,0,0.05)'}}},
-    series:[
-      {name:'10Y国债',type:'line',data:[1.62,1.65,1.68,1.70,1.70,1.72,1.71],lineStyle:{width:2.5,color:'#007AFF'},symbol:'circle',symbolSize:5,itemStyle:{color:'#007AFF'}},
-      {name:'DR007',type:'line',data:[1.50,1.48,1.52,1.50,1.45,1.52,1.50],lineStyle:{width:2.5,color:'#34C759',type:'dashed'},symbol:'circle',symbolSize:5,itemStyle:{color:'#34C759'}},
-      {name:'M2增速',type:'line',data:[7.2,7.5,7.8,7.9,8.0,8.0,8.1],lineStyle:{width:2,color:'#FF9500'},symbol:'circle',symbolSize:5,itemStyle:{color:'#FF9500'}}
-    ]
-  });
+  var c3=echarts.init(document.getElementById('mc_gdp'));
+  c3.setOption({title:{text:'GDP 增速 (季度)',left:'center',top:4,textStyle:{fontSize:11,fontWeight:600}},grid:{left:50,right:20,top:35,bottom:25},xAxis:{type:'category',data:['Q1','Q2','Q3','Q4','Q1','Q2'],axisLabel:{fontSize:9,color:'#6e6e73'},axisLine:{show:false},axisTick:{show:false}},yAxis:{type:'value',axisLabel:{fontSize:9,color:'#6e6e73'},splitLine:{lineStyle:{color:'rgba(0,0,0,0.05)'}}},series:[{type:'bar',data:[5.4,4.8,4.5,5.0,4.3,4.2],barWidth:'50%',itemStyle:{borderRadius:[4,4,0,0],color:function(p){return[5.4,4.8,4.5,5.0,4.3,4.2][p.dataIndex]>=5?'#34C759':'#FF3B30';}},markLine:{silent:true,symbol:'none',data:[{yAxis:5,lineStyle:{color:'rgba(0,0,0,0.15)',type:'dashed'},label:{formatter:'目标 5%',fontSize:9}}]}}]});
+  var c4=echarts.init(document.getElementById('mc_pmi'));
+  c4.setOption({title:{text:'PMI (近 12 月)',left:'center',top:4,textStyle:{fontSize:11,fontWeight:600}},grid:{left:50,right:20,top:35,bottom:25},xAxis:{type:'category',data:['S','O','N','D','J','F','M','A','M','J','J','A'],axisLabel:{fontSize:9,color:'#6e6e73'},axisLine:{show:false},axisTick:{show:false}},yAxis:{type:'value',min:47,max:52,axisLabel:{fontSize:9,color:'#6e6e73'},splitLine:{lineStyle:{color:'rgba(0,0,0,0.05)'}}},series:[{type:'line',data:[50.1,50.3,50.4,50.2,50.0,50.5,51.0,50.8,50.3,50.3,49.2,49.2],lineStyle:{width:2.5,color:'#007AFF'},symbol:'circle',symbolSize:5,itemStyle:{color:'#007AFF'},areaStyle:{color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:'rgba(0,122,255,0.1)'},{offset:1,color:'rgba(0,122,255,0)'}]}},markLine:{silent:true,symbol:'none',data:[{yAxis:50,lineStyle:{color:'rgba(0,0,0,0.15)',type:'dashed'},label:{fontSize:9,formatter:'荣枯线 50'}}]}}]});
+}
+function renderMerrillChart(){
+  var c1=echarts.init(document.getElementById('mc_merrill'));
+  c1.setOption({title:{text:'美林时钟',left:'center',top:4,textStyle:{fontSize:11,fontWeight:600}},tooltip:{trigger:'item'},grid:{left:55,right:25,top:35,bottom:25},xAxis:{type:'value',name:'GDP %',min:3.5,max:6,axisLabel:{fontSize:9,color:'#6e6e73'},splitLine:{lineStyle:{color:'rgba(0,0,0,0.05)'}},axisLine:{show:false}},yAxis:{type:'value',name:'CPI %',min:-1,max:3,axisLabel:{fontSize:9,color:'#6e6e73'},splitLine:{lineStyle:{color:'rgba(0,0,0,0.05)'}},axisLine:{show:false}},series:[{type:'scatter',data:[{value:[5.4,0.0],name:'2025Q1'},{value:[5.2,0.3],name:'Q2'},{value:[4.8,0.7],name:'Q3'},{value:[4.5,0.4],name:'Q4'},{value:[5.0,0.1],name:'2026Q1'},{value:[4.3,0.8],name:'Q2'}],symbolSize:12,itemStyle:{color:'#007AFF',opacity:0.7}},{type:'scatter',data:[{value:[4.3,0.8],name:'当前'}],symbolSize:22,itemStyle:{color:'#AF52DE'},label:{show:true,position:'top',fontSize:11,formatter:'当前'}},{type:'scatter',data:[],markLine:{silent:true,symbol:'none',data:[{xAxis:5,lineStyle:{color:'rgba(0,0,0,0.15)',type:'dashed'},label:{formatter:'增长阈值 5%',fontSize:9}},{yAxis:2,lineStyle:{color:'rgba(0,0,0,0.15)',type:'dashed'},label:{formatter:'通胀阈值 2%',fontSize:9}}]},markArea:{silent:true,label:{fontSize:10,fontWeight:500,color:'rgba(0,0,0,0.2)'},data:[[{xAxis:5,yAxis:3},{xAxis:6,yAxis:2},{itemStyle:{color:'rgba(255,59,48,0.02)'},label:{formatter:'过热'}}],[{xAxis:5,yAxis:2},{xAxis:6,yAxis:-1},{itemStyle:{color:'rgba(52,199,89,0.02)'},label:{formatter:'复苏'}}],[{xAxis:3.5,yAxis:2},{xAxis:5,yAxis:-1},{itemStyle:{color:'rgba(255,149,0,0.03)'},label:{formatter:'衰退'}}],[{xAxis:3.5,yAxis:3},{xAxis:5,yAxis:2},{itemStyle:{color:'rgba(255,59,48,0.02)'},label:{formatter:'滞胀'}}]]}}]});
+}
+function renderThreeCycleChart(){
+  var c2=echarts.init(document.getElementById('mc_threecycle'));
+  c2.setOption({title:{text:'三周期共振',left:'center',top:4,textStyle:{fontSize:11,fontWeight:600}},radar:{center:['50%','52%'],radius:'65%',indicator:[{name:'经济周期',max:2,min:-2},{name:'信用周期',max:2,min:-2},{name:'利率周期',max:2,min:-2}],axisName:{fontSize:10,color:'#6e6e73'},splitArea:{areaStyle:{color:['rgba(0,122,255,0.01)','rgba(0,122,255,0.03)','rgba(0,122,255,0.01)','rgba(0,122,255,0.03)']}}},series:[{type:'radar',name:'中性',data:[{value:[0,0,0]}],lineStyle:{type:'dashed',color:'rgba(0,0,0,0.12)',width:1},symbol:'none',areaStyle:{opacity:0}},{type:'radar',name:'当前位置',data:[{value:[-1,-1.5,1.5]}],lineStyle:{color:'#AF52DE',width:2},symbol:'circle',symbolSize:7,itemStyle:{color:'#AF52DE'},areaStyle:{color:'rgba(175,82,222,0.06)'}}]});
 }
 
 // ===== OVERVIEW =====
@@ -660,7 +635,7 @@ function renderTools(){
   h += '</div>';
   h += section('外部看板入口',true);
   h += '<div class="link-grid">';
-  var links=[{n:'专题全集',u:'投研专题_数据驱动版.html',d:'73专题 × ⑨模块',i:'📊'},{n:'TAA评分卡',u:'TAA评分卡_联动看板.html',d:'五维联动',i:'🎯'},{n:'深度图表',u:'投研图表_深度专题.html',d:'7组 ECharts',i:'📈'},{n:'风险管理',u:'风险管理看板.html',d:'VaR/回撤',i:'🛡️'},{n:'绩效评估',u:'绩效评估看板.html',d:'归因/多周期',i:'📋'},{n:'事件日历',u:'关键事件日历.html',d:'8−12月节点',i:'📅'},{n:'交互试算',u:'交互式CMA试算.html',d:'CMA/TAA/场景',i:'🎮'}];
+  var links=[{n:'专题全集',u:'投研专题_数据驱动版.html',d:'73专题 × ⑨模块',i:'📊'},{n:'TAA评分卡',u:'TAA评分卡_联动看板.html',d:'五维联动',i:'🎯'},{n:'风险管理',u:'风险管理看板.html',d:'VaR/回撤',i:'🛡️'},{n:'绩效评估',u:'绩效评估看板.html',d:'归因/多周期',i:'📋'},{n:'事件日历',u:'关键事件日历.html',d:'8−12月节点',i:'📅'},{n:'交互试算',u:'交互式CMA试算.html',d:'CMA/TAA/场景',i:'🎮'}];
   for(var i=0;i<links.length;i++){var l=links[i];h+='<a href="'+l.u+'" class="link-card"><div class="lk-icon">'+l.i+'</div><div class="lk-name">'+l.n+'</div><div class="lk-desc">'+l.d+'</div></a>';}
   h += '</div>';h += secEnd();
   h += section('数据管线架构');
