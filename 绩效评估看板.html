@@ -1,0 +1,151 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>绩效评估看板</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,"Microsoft YaHei",sans-serif;background:#f0f2f5;color:#1a1a1a;line-height:1.8}
+.header{background:linear-gradient(135deg,#185FA5,#042C53);color:#fff;padding:20px 32px}
+.header h1{font-size:17px;font-weight:500}
+.container{max-width:1200px;margin:0 auto;padding:20px}
+
+.score-row{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+.sc{flex:1;min-width:130px;background:#fff;border-radius:10px;padding:14px;text-align:center;border:0.5px solid #E8ECF1}
+.sc .sv{font-size:22px;font-weight:600}
+.sc .sl{font-size:10px;color:#888780;margin-top:3px}
+.scg .sv{color:#3B6D11}.scr .sv{color:#A32D2D}.scb .sv{color:#185FA5}
+
+.chart-row{display:flex;gap:12px;flex-wrap:wrap;margin:12px 0}
+.cw{flex:1;min-width:360px;height:300px;background:#fff;border-radius:12px;border:0.5px solid #E8ECF1;overflow:hidden}
+
+.card{background:#fff;border-radius:12px;border:0.5px solid #E8ECF1;margin:12px 0;padding:16px 20px}
+.card h2{font-size:14px;color:#042C53;border-bottom:0.5px solid #F0F2F5;padding-bottom:8px;margin-bottom:10px}
+table{width:100%;font-size:11px;border-collapse:collapse}
+th{background:#F1F5F9;padding:6px 8px;text-align:left;font-weight:500;font-size:10px;color:#5F5E5A}
+td{padding:5px 8px;border-bottom:0.5px solid #F0F2F5}
+.tag{display:inline-block;padding:1px 6px;border-radius:3px;font-size:9px}
+.tg{background:#EAF3DE;color:#3B6D11}.tr{background:#FCEBEB;color:#A32D2D}.tb{background:#E6F1FB;color:#185FA5}
+
+.footer{text-align:center;font-size:11px;color:#B4B2A9;padding:24px}
+</style></head><body>
+<div class="header"><h1>绩效评估看板</h1><div style="font-size:11px;color:#85B7EB">框架 v1.6 · 第七章 · Brinson归因/多周期/夏普Calmar · 500天回测</div></div>
+<div class="container">
+
+<div class="score-row">
+<div class="sc scg"><div class="sv">14.0%</div><div class="sl">年化收益</div></div>
+<div class="sc scb"><div class="sv">9.4%</div><div class="sl">年化波动</div></div>
+<div class="sc scg"><div class="sv">1.48</div><div class="sl">夏普比率</div></div>
+<div class="sc scg"><div class="sv">1.64</div><div class="sl">Calmar比率</div></div>
+<div class="sc scg"><div class="sv" style="color:#3B6D11">+2.0%</div><div class="sl">超额收益 vs 基准</div></div>
+<div class="sc scb"><div class="sv">-8.5%</div><div class="sl">最大回撤</div></div>
+</div>
+
+<div class="score-row">
+<div class="sc scg"><div class="sv">+1.9%</div><div class="sl">MTD</div></div>
+<div class="sc scg"><div class="sv">-0.1%</div><div class="sl">QTD</div></div>
+<div class="sc scg"><div class="sv">+1.4%</div><div class="sl">YTD</div></div>
+<div class="sc scg"><div class="sv">+15.1%</div><div class="sl">1年收益</div></div>
+<div class="sc scb"><div class="sv">+8.3%</div><div class="sl">基准1Y(60%HS300+40%债)</div></div>
+</div>
+
+<div class="chart-row">
+<div class="cw" id="c_periods"></div>
+<div class="cw" id="c_weekly"></div>
+</div>
+<div class="chart-row">
+<div class="cw" id="c_contrib"></div>
+<div class="cw" id="c_excess"></div>
+</div>
+
+<div class="card"><h2>资产贡献分解</h2>
+<table>
+<tr><th>资产</th><th>权重</th><th>年化收益</th><th>收益贡献</th></tr>
+<tr><td>沪深300</td><td>3.0%</td><td>+16.8%</td><td><span class='tag tg'>+0.5%</span></td></tr>
+<tr><td>创业板</td><td>9.0%</td><td>+44.4%</td><td><span class='tag tg'>+4.0%</span></td></tr>
+<tr><td>标普500</td><td>23.0%</td><td>+16.6%</td><td><span class='tag tg'>+3.8%</span></td></tr>
+<tr><td>黄金</td><td>21.0%</td><td>+27.0%</td><td><span class='tag tg'>+5.7%</span></td></tr>
+<tr style='font-weight:500;background:#F0F4F8'><td>合计</td><td>100%</td><td>14.0%</td><td>+14.0%</td></tr></table></div><div class="card"><h2>评估节奏</h2>
+<table>
+<tr><th>频率</th><th>内容</th><th>最近值</th><th>状态</th></tr>
+<tr><td>周度</td><td>简要涨跌归因 + 偏离度检查</td><td>近4周: 3.5%, -0.3%, 0.5%, -2.0%</td><td><span class="tag tg">正常</span></td></tr>
+<tr><td>月度</td><td>完整收益归因 + 风险指标</td><td>近3月超额: +2.0% vs 基准</td><td><span class="tag tg">跑赢</span></td></tr>
+<tr><td>季度</td><td>Brinson归因 + TAA效果评估</td><td>待首次完整季度运行</td><td><span class="tag tb">待评估</span></td></tr>
+<tr><td>年度</td><td>全面复盘 + 框架升级</td><td>待年度汇总</td><td><span class="tag tb">待评估</span></td></tr>
+</table></div>
+
+<div class="footer">投研体系 v1.6 · 绩效评估 · 500天回测 · 2026-08-09</div>
+</div>
+
+<script>
+var monthly = [{"month": "M-1", "port": 1.9, "bench": -0.7, "excess": 2.6}, {"month": "M-2", "port": 0, "bench": 0, "excess": 0}, {"month": "M-3", "port": 0, "bench": 0, "excess": 0}];
+var weekly = [3.5, -0.3, 0.5, -2.0];
+var contrib = {"\u6caa\u6df1300": {"weight": 3.0, "ann_ret": 16.8, "contrib": 0.5}, "\u521b\u4e1a\u677f": {"weight": 9.0, "ann_ret": 44.4, "contrib": 4.0}, "\u6807\u666e500": {"weight": 23.0, "ann_ret": 16.6, "contrib": 3.8}, "\u9ec4\u91d1": {"weight": 21.0, "ann_ret": 27.0, "contrib": 5.7}};
+
+// Period returns chart
+(function(){
+  var c = echarts.init(document.getElementById('c_periods'));
+  c.setOption({
+    title: {text: '多周期收益 vs 基准', left: 'center', top: 8, textStyle: {fontSize: 13, color: '#042C53'}},
+    tooltip: {trigger: 'axis'},
+    legend: {bottom: 0, data: ['SAA组合', '基准(60%HS300+40%债)'], textStyle: {fontSize: 9}, itemWidth: 10, itemHeight: 6},
+    grid: {left: 55, right: 20, top: 45, bottom: 30},
+    xAxis: {type: 'category', data: ['MTD', 'QTD', 'YTD', '1Y'], axisLabel: {fontSize: 9}},
+    yAxis: {type: 'value', name: '%', axisLabel: {fontSize: 9}},
+    series: [
+      {name: 'SAA组合', type: 'bar', data: [1.9,-0.1,1.4,15.1], barWidth: '40%',
+        itemStyle: {color: '#185FA5', borderRadius: [4,4,0,0]}},
+      {name: '基准(60%HS300+40%债)', type: 'bar', data: [-0.7,-2.1,0,8.3], barWidth: '40%',
+        itemStyle: {color: '#888780', borderRadius: [4,4,0,0]}}
+    ]
+  });
+})();
+
+// Weekly returns
+(function(){
+  var c = echarts.init(document.getElementById('c_weekly'));
+  c.setOption({
+    title: {text: '近4周周度收益', left: 'center', top: 8, textStyle: {fontSize: 13, color: '#042C53'}},
+    tooltip: {trigger: 'axis'},
+    grid: {left: 55, right: 20, top: 45, bottom: 25},
+    xAxis: {type: 'category', data: weekly.map(function(_,i){return 'W'+(weekly.length-i);}), axisLabel: {fontSize: 9}},
+    yAxis: {type: 'value', name: '%', axisLabel: {fontSize: 9}},
+    series: [{type: 'bar', data: weekly.slice().reverse(), barWidth: '50%',
+      itemStyle: {color: function(p){return p.value>=0?'#3B6D11':'#A32D2D';}, borderRadius: [3,3,0,0]}}]
+  });
+})();
+
+// Asset contribution
+(function(){
+  var names = Object.keys(contrib);
+  var c = echarts.init(document.getElementById('c_contrib'));
+  c.setOption({
+    title: {text: '资产收益贡献', left: 'center', top: 8, textStyle: {fontSize: 13, color: '#042C53'}},
+    tooltip: {trigger: 'axis', formatter: function(p){return p[0].name+'<br/>权重: '+contrib[p[0].name].weight+'%<br/>年化: '+contrib[p[0].name].ann_ret+'%<br/>贡献: '+p[0].value+'%';}},
+    grid: {left: 55, right: 20, top: 45, bottom: 25},
+    xAxis: {type: 'category', data: names, axisLabel: {fontSize: 9, rotate: 20}},
+    yAxis: {type: 'value', name: '贡献%', axisLabel: {fontSize: 9}},
+    series: [{type: 'bar', data: names.map(function(n){return contrib[n].contrib;}), barWidth: '50%',
+      itemStyle: {color: function(p){return p.value>=0?'#185FA5':'#A32D2D';}, borderRadius: [3,3,0,0]},
+      markLine: {silent: true, data: [{yAxis: 0, lineStyle: {color: '#888780', type: 'dashed'}}]}
+    }]
+  });
+})();
+
+// Monthly excess
+(function(){
+  var c = echarts.init(document.getElementById('c_excess'));
+  c.setOption({
+    title: {text: '月度超额收益 vs 基准', left: 'center', top: 8, textStyle: {fontSize: 13, color: '#042C53'}},
+    tooltip: {trigger: 'axis'},
+    legend: {bottom: 0, data: ['组合', '基准', '超额'], textStyle: {fontSize: 9}, itemWidth: 10, itemHeight: 6},
+    grid: {left: 55, right: 20, top: 45, bottom: 30},
+    xAxis: {type: 'category', data: monthly.map(function(m){return m.month;}).reverse(), axisLabel: {fontSize: 9}},
+    yAxis: {type: 'value', name: '%', axisLabel: {fontSize: 9}},
+    series: [
+      {name: '组合', type: 'bar', data: monthly.map(function(m){return m.port;}).reverse(), barWidth: '35%', itemStyle: {color: '#185FA5', borderRadius: [3,3,0,0]}},
+      {name: '基准', type: 'bar', data: monthly.map(function(m){return m.bench;}).reverse(), barWidth: '35%', itemStyle: {color: '#888780', borderRadius: [3,3,0,0]}},
+      {name: '超额', type: 'line', data: monthly.map(function(m){return m.excess;}).reverse(), lineStyle: {width: 2, color: '#3B6D11'}, symbol: 'circle', symbolSize: 6}
+    ]
+  });
+})();
+</script></body></html>
