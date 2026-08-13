@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>固收专题 · 险资底层资产看板</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<script src="research/fixed-income/rates-dashboard.js"></script>
+<script src="research/fixed-income/credit-dashboard.js"></script>
+<script src="research/fixed-income/maturity-ladder.js"></script>
+<script src="research/fixed-income/credit-risk.js"></script>
+<style>
+:root{--bg:#f5f7fa;--card:#fff;--primary:#0F4C81;--safe:#10b981;--warn:#f59e0b;--danger:#ef4444;--text:#1e293b;--text2:#64748b;--border:#e2e8f0;--radius:12px}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,"Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:70px}
+
+/* ===== 顶部导航 ===== */
+.hd{background:linear-gradient(135deg,#0F4C81,#1a5fa0);color:#fff;padding:16px 32px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(15,76,129,0.25)}
+.hd .brand-title{font-size:17px;font-weight:600}
+.hd .brand-title span{font-size:11px;background:rgba(255,255,255,0.16);padding:2px 8px;border-radius:10px;margin-left:6px;font-weight:400}
+.hd .brand-sub{font-size:10px;color:rgba(255,255,255,0.7);margin-top:3px}
+.hd .nav{display:flex;gap:6px;flex-wrap:wrap}
+.hd .nav a{padding:7px 16px;border-radius:20px;font-size:12px;font-weight:500;text-decoration:none;color:rgba(255,255,255,0.85);transition:all .2s;border:1px solid transparent}
+.hd .nav a:hover{background:rgba(255,255,255,0.12)}
+.hd .nav a.active{background:#fff;color:var(--primary);font-weight:600}
+
+/* ===== KPI 概览条 ===== */
+.kpi-strip{max-width:1520px;margin:18px auto 0;padding:0 24px;display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.kpi-item{background:var(--card);border-radius:var(--radius);padding:16px 18px;box-shadow:0 2px 8px rgba(0,0,0,0.05);border-left:3px solid var(--primary)}
+.kpi-item.warn{border-left-color:var(--warn)}
+.kpi-item.danger{border-left-color:var(--danger)}
+.kpi-item .kpi-lbl{font-size:11px;color:var(--text2);margin-bottom:4px}
+.kpi-item .kpi-val{font-size:26px;font-weight:700;line-height:1}
+.kpi-item .kpi-val.warn{color:var(--warn)}.kpi-item .kpi-val.danger{color:var(--danger)}
+.kpi-item .kpi-sub{font-size:9px;color:var(--text2);margin-top:5px}
+
+/* ===== 2x3 网格（8 卡片） ===== */
+.grid{max-width:1520px;margin:14px auto 0;padding:0 24px;display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.card{background:var(--card);border-radius:var(--radius);padding:20px 22px;box-shadow:0 2px 8px rgba(0,0,0,0.05)}
+.card h3{font-size:14px;font-weight:600;color:var(--primary);margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.card h3 .tag{font-size:9px;font-weight:500;color:var(--text2);background:var(--bg);padding:2px 8px;border-radius:4px}
+
+.chart{width:100%;height:280px}
+.chart-sm{width:100%;height:200px}
+
+/* ===== 利率债子元素 ===== */
+.fi-change-list{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.fi-change{font-size:10px;padding:3px 9px;border-radius:6px;font-weight:600}
+.fi-change.up{background:rgba(239,68,68,0.1);color:#dc2626}
+.fi-change.down{background:rgba(16,185,129,0.1);color:#059669}
+.fi-change.flat{background:rgba(100,116,139,0.1);color:#64748b}
+
+.fi-spread-alert{border-radius:10px;padding:16px 18px;margin-bottom:12px;border:1px solid var(--border)}
+.fi-spread-alert.negative{background:rgba(239,68,68,0.06);border-color:rgba(239,68,68,0.3)}
+.fi-spread-alert.positive{background:rgba(16,185,129,0.06);border-color:rgba(16,185,129,0.3)}
+.fi-spread-alert .fi-spread-num{font-size:34px;font-weight:700;line-height:1}
+.fi-spread-alert.negative .fi-spread-num{color:var(--danger);animation:blink 1.1s infinite}
+.fi-spread-alert.positive .fi-spread-num{color:var(--safe)}
+.fi-spread-alert .fi-spread-lbl{font-size:11px;color:var(--text2);margin-top:4px}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.35}}
+
+.fi-spread-bar{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.fi-spread-bar .lbl{font-size:11px;color:var(--text2);white-space:nowrap}
+.fi-spread-track{flex:1;height:8px;background:#e2e8f0;border-radius:4px;overflow:hidden}
+.fi-spread-fill{height:100%;border-radius:4px;background:var(--primary);transition:width .5s}
+.fi-spread-fill.low{background:var(--safe)}.fi-spread-fill.mid{background:var(--warn)}.fi-spread-fill.high{background:var(--danger)}
+.fi-spread-val{font-size:11px;font-weight:600;color:var(--text)}
+
+.fi-rates-note,.fi-maturity-sum,.fi-pressure,.fi-sensitivity,.fi-risk-note{font-size:11px;color:var(--text2);line-height:1.8;margin-top:10px;padding:10px 12px;background:var(--bg);border-radius:8px}
+
+/* ===== 信用债子元素 ===== */
+.fi-sector-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:12px}
+.fi-sector{border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center}
+.fi-sector-name{font-size:11px;color:var(--text2);margin-bottom:6px}
+.fi-sector-bp{font-size:24px;font-weight:700;color:var(--text)}
+.fi-sector-bp span{font-size:12px;color:var(--text2);margin-left:2px}
+.fi-sector-meta{font-size:10px;color:var(--text2);margin:6px 0;display:flex;justify-content:center;gap:10px}
+.fi-arrow.up{color:var(--danger)}.fi-arrow.down{color:var(--safe)}.fi-arrow.flat{color:var(--text2)}
+.fi-sector-bar{height:5px;background:#e2e8f0;border-radius:3px;overflow:hidden}
+.fi-sector-fill{height:100%;border-radius:3px}
+.fi-sector-fill.low{background:var(--safe)}.fi-sector-fill.mid{background:var(--warn)}.fi-sector-fill.high{background:var(--danger)}
+
+.fi-conc{margin-top:12px}
+.fi-conc-row{display:flex;align-items:center;gap:10px;padding:7px 0;font-size:11px;border-bottom:1px solid var(--border)}
+.fi-conc-row.breach{background:rgba(239,68,68,0.04);border-radius:6px}
+.fi-conc-name{width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fi-conc-name i{font-style:normal;color:var(--text2);font-size:9px}
+.fi-conc-bar{flex:1;height:8px;background:#e2e8f0;border-radius:4px;overflow:hidden}
+.fi-conc-fill{height:100%;border-radius:4px}
+.fi-conc-fill.ok{background:var(--primary)}.fi-conc-fill.danger{background:var(--danger)}
+.fi-conc-pct{width:48px;text-align:right;font-weight:600}
+.fi-conc-pct.danger{color:var(--danger)}
+.fi-conc-tag{font-size:9px;color:#fff;background:var(--danger);padding:1px 6px;border-radius:3px}
+.fi-credit-alert{display:none;margin-top:10px;padding:10px 12px;border-radius:8px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);color:#dc2626;font-size:11px;line-height:1.6}
+
+/* ===== 到期结构子元素 ===== */
+.fi-dur-gap{border-radius:10px;padding:22px;text-align:center;border:1px solid var(--border)}
+.fi-dur-gap.warn{background:rgba(245,158,11,0.07);border-color:rgba(245,158,11,0.35)}
+.fi-dur-gap.ok{background:rgba(16,185,129,0.06);border-color:rgba(16,185,129,0.3)}
+.fi-dur-gap .fi-dur-num{font-size:38px;font-weight:700;line-height:1.2}
+.fi-dur-gap.warn .fi-dur-num{color:var(--warn)}
+.fi-dur-gap.ok .fi-dur-num{color:var(--safe)}
+.fi-dur-gap .fi-dur-sub{font-size:11px;color:var(--text2);margin-top:6px}
+.fi-dur-formula{display:flex;justify-content:center;gap:14px;margin-top:14px;font-size:11px;color:var(--text2)}
+.fi-dur-formula b{font-size:16px;color:var(--text)}
+
+/* ===== 信用风险子元素 ===== */
+.fi-region-heat{margin-bottom:10px}
+.fi-region-row{display:flex;align-items:center;gap:10px;padding:5px 0;font-size:11px}
+.fi-region-name{width:52px;color:var(--text2)}
+.fi-region-track{flex:1;height:12px;background:#eef2f7;border-radius:6px;overflow:hidden}
+.fi-region-fill{height:100%;border-radius:6px;transition:width .5s}
+.fi-region-fill.cool{background:var(--primary)}.fi-region-fill.warm{background:var(--warn)}.fi-region-fill.hot{background:var(--danger)}
+.fi-region-val{width:110px;text-align:right;font-size:10px;color:var(--text2)}
+.fi-region-val i{font-style:normal;font-size:9px}.fi-region-val b{color:var(--text)}
+
+.fi-warning-table{width:100%;border-collapse:collapse;font-size:10px}
+.fi-warning-table th{background:#e8f0f8;color:var(--primary);padding:7px 9px;text-align:left;font-size:10px}
+.fi-warning-table td{padding:7px 9px;border-bottom:1px solid var(--border);color:var(--text2)}
+.fi-tag{display:inline-block;padding:1px 7px;border-radius:3px;font-size:9px;font-weight:600}
+.fi-tag.danger{background:rgba(239,68,68,0.12);color:#dc2626}
+.fi-tag.warn{background:rgba(245,158,11,0.12);color:#d97706}
+.fi-tag.ok{background:rgba(16,185,129,0.12);color:#059669}
+
+/* ===== 比干人物 ===== */
+.bigan-avatar{position:fixed;right:26px;bottom:86px;width:78px;height:78px;border-radius:50%;background:linear-gradient(160deg,#0F4C81,#1a5fa0);box-shadow:0 6px 24px rgba(15,76,129,0.4);cursor:pointer;z-index:300;transition:transform .2s;display:flex;align-items:center;justify-content:center}
+.bigan-avatar:hover{transform:scale(1.08)}
+.bigan-avatar .bigan-fig{width:100%;height:100%}
+.bigan-heart{transform-origin:center;animation:bigan-breathe 2.4s ease-in-out infinite}
+.bigan-heart .heart-glow{filter:drop-shadow(0 0 5px rgba(96,165,250,0.9))}
+.bigan-alert .bigan-heart{animation:bigan-flash 0.7s ease-in-out infinite}
+.bigan-alert .bigan-heart .heart-glow{filter:drop-shadow(0 0 8px rgba(239,68,68,1))}
+.bigan-avatar .bigan-tip{display:none;position:absolute;right:88px;bottom:10px;background:rgba(15,23,42,0.96);color:#e2e8f0;border-radius:8px;padding:8px 12px;font-size:10px;white-space:nowrap;box-shadow:0 4px 16px rgba(0,0,0,0.3);z-index:310}
+.bigan-avatar:hover .bigan-tip{display:block}
+@keyframes bigan-breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.12)}}
+@keyframes bigan-flash{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.2);opacity:0.55}}
+
+/* 比干穿透详情抽屉 */
+.bigan-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.4);z-index:1100;display:none}
+.bigan-overlay.show{display:block}
+.bigan-drawer{position:fixed;top:0;right:-460px;width:440px;max-width:92vw;bottom:0;background:#fff;z-index:1200;box-shadow:-4px 0 24px rgba(0,0,0,0.18);transition:right .3s ease;display:flex;flex-direction:column}
+.bigan-drawer.open{right:0}
+.bigan-drawer .bd-head{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--border)}
+.bigan-drawer .bd-head h3{font-size:14px;color:var(--primary)}
+.bigan-drawer .bd-close{background:none;border:none;font-size:20px;cursor:pointer;color:var(--text2)}
+.bigan-drawer .bd-body{flex:1;overflow-y:auto;padding:16px 20px;font-size:11px;color:var(--text2);line-height:1.8}
+
+/* 响应式 */
+@media(max-width:1000px){.grid{grid-template-columns:1fr}.kpi-strip{grid-template-columns:repeat(2,1fr)}.hd{flex-direction:column;align-items:flex-start}}
+@media(max-width:560px){.kpi-strip{grid-template-columns:1fr}.fi-sector-cards{grid-template-columns:1fr}.bigan-avatar{right:16px;bottom:80px;width:64px;height:64px}}
+</style>
+</head>
+<body>
+
+<!-- 顶部导航 -->
+<header class="hd">
+  <div>
+    <div class="brand-title">保险资金投研体系 <span>v2.0</span></div>
+    <div class="brand-sub">固收专题 · 险资底层资产看板 · 比干 🫀 深度穿透</div>
+  </div>
+  <nav class="nav">
+    <a href="research-portal.html">研究门户</a>
+    <a href="投研体系_v2.0/insurance-cockpit.html">决策驾驶舱</a>
+    <a href="fixed-income-cockpit.html" class="active">固收专题</a>
+    <a href="投研门户.html">统一门户</a>
+  </nav>
+</header>
+
+<!-- KPI 概览条 -->
+<div class="kpi-strip">
+  <div class="kpi-item warn"><div class="kpi-lbl">久期缺口</div><div class="kpi-val warn" id="kpi-duration">-3.30</div><div class="kpi-sub">资产 5.2 − 负债 8.5（年）</div></div>
+  <div class="kpi-item danger"><div class="kpi-lbl">负债成本利差</div><div class="kpi-val danger" id="kpi-spread">-0.55%</div><div class="kpi-sub">10Y 2.45% − 负债 3.0%</div></div>
+  <div class="kpi-item"><div class="kpi-lbl">AAA 信用利差</div><div class="kpi-val" id="kpi-aaa">65bp</div><div class="kpi-sub">历史分位 40%</div></div>
+  <div class="kpi-item"><div class="kpi-lbl">36个月累计到期</div><div class="kpi-val" id="kpi-total">--亿</div><div class="kpi-sub">2026-09 ~ 2029-08</div></div>
+</div>
+
+<!-- 2x3 网格 -->
+<main class="grid">
+  <!-- 1 利率债收益率曲线 -->
+  <section class="card" id="card-rates">
+    <h3>📈 利率债收益率曲线<span class="tag">1Y/3Y/5Y/7Y/10Y</span></h3>
+    <div class="chart fi-rates-chart"></div>
+    <div class="fi-change-list"></div>
+  </section>
+
+  <!-- 2 信用利差走势 -->
+  <section class="card" id="card-credit">
+    <h3>📊 信用利差走势<span class="tag">AAA / AA+ / AA</span></h3>
+    <div class="chart fi-credit-chart"></div>
+    <div class="fi-sector-cards"></div>
+    <div class="fi-credit-alert"></div>
+    <div class="fi-conc"></div>
+  </section>
+
+  <!-- 3 债券到期结构瀑布图 -->
+  <section class="card" id="card-maturity">
+    <h3>🏗️ 债券到期结构瀑布图<span class="tag">未来 36 个月</span></h3>
+    <div class="chart fi-maturity-chart"></div>
+    <div class="fi-maturity-sum"></div>
+  </section>
+
+  <!-- 4 久期缺口监测 -->
+  <section class="card" id="card-duration">
+    <h3>⏳ 久期缺口监测<span class="tag">资产 − 负债</span></h3>
+    <div class="fi-dur-gap">
+      <div class="fi-dur-num">--</div>
+      <div class="fi-dur-sub">--</div>
+      <div class="fi-dur-formula">
+        <span>资产久期<b id="dur-asset">5.2</b></span><span>−</span>
+        <span>负债久期<b id="dur-liab">8.5</b></span><span>=</span>
+        <span>缺口<b id="dur-gap">-3.3</b></span>
+      </div>
+    </div>
+    <div class="fi-pressure" style="margin-top:12px"></div>
+  </section>
+
+  <!-- 5 信用风险热力图 -->
+  <section class="card" id="card-heat">
+    <h3>🔥 信用风险热力图<span class="tag">区域 × 行业</span></h3>
+    <div class="fi-region-heat"></div>
+    <div class="chart-sm fi-sector-chart"></div>
+    <div class="fi-risk-note"></div>
+  </section>
+
+  <!-- 6 预警清单 -->
+  <section class="card" id="card-warning">
+    <h3>⚠️ 预警清单<span class="tag">评级下调 / 负面 / 到期</span></h3>
+    <table class="fi-warning-table">
+      <thead><tr><th>发行人</th><th>评级</th><th>类型</th><th>详情</th><th>级别</th></tr></thead>
+      <tbody></tbody>
+    </table>
+    <div class="fi-sensitivity"></div>
+  </section>
+
+  <!-- 7 负债成本 vs 资产收益率 -->
+  <section class="card" id="card-spread">
+    <h3>💸 负债成本 vs 资产收益率<span class="tag">利差告警</span></h3>
+    <div class="fi-spread-alert">
+      <div class="fi-spread-num">--</div>
+      <div class="fi-spread-lbl">--</div>
+    </div>
+    <div class="fi-spread-bar">
+      <span class="lbl">期限利差 10Y-1Y 历史分位</span>
+      <div class="fi-spread-track"><div class="fi-spread-fill"></div></div>
+      <span class="fi-spread-val">--</span>
+    </div>
+    <div class="fi-rates-note"></div>
+  </section>
+
+  <!-- 8 再投资压力 -->
+  <section class="card" id="card-pressure">
+    <h3>🔄 再投资压力<span class="tag">到期 ÷ 新增</span></h3>
+    <div class="fi-pressure"></div>
+  </section>
+</main>
+
+<div class="ft" style="text-align:center;font-size:9px;color:#94a3b8;padding:16px 0 20px">
+  固收专题 · 险资底层资产看板 v1.0 · 数据为内置模拟（断网可用）· 以上不构成投资建议
+</div>
+
+<!-- 比干人物 -->
+<div class="bigan-avatar" id="bigan">
+  <svg class="bigan-fig" viewBox="0 0 120 140" xmlns="http://www.w3.org/2000/svg">
+    <!-- 官帽 -->
+    <rect x="34" y="8" width="52" height="10" rx="3" fill="#1e293b"/>
+    <rect x="28" y="15" width="64" height="6" rx="2" fill="#334155"/>
+    <!-- 脸 -->
+    <circle cx="60" cy="40" r="20" fill="#f1d5b0"/>
+    <!-- 眼睛 -->
+    <circle cx="53" cy="38" r="2" fill="#1e293b"/>
+    <circle cx="67" cy="38" r="2" fill="#1e293b"/>
+    <!-- 胡须 -->
+    <path d="M48 50 Q60 58 72 50" stroke="#64748b" stroke-width="2" fill="none"/>
+    <!-- 官袍身体 -->
+    <path d="M38 68 Q60 60 82 68 L88 130 Q60 138 32 130 Z" fill="#0F4C81"/>
+    <rect x="54" y="66" width="12" height="66" fill="#1a5fa0"/>
+    <!-- 玉笏（手持） -->
+    <rect x="70" y="72" width="7" height="34" rx="2" fill="#e2e8f0"/>
+    <!-- 胸前心形（发光） -->
+    <g class="bigan-heart">
+      <path class="heart-glow" d="M60 96 C52 90 42 96 42 106 C42 116 54 122 60 128 C66 122 78 116 78 106 C78 96 68 90 60 96 Z" fill="#93c5fd"/>
+    </g>
+  </svg>
+  <div class="bigan-tip">臣心一片磁针石，不指南方不肯休</div>
+</div>
+
+<!-- 比干穿透详情抽屉 -->
+<div class="bigan-overlay" id="bigan-overlay" onclick="closeBigan()"></div>
+<div class="bigan-drawer" id="bigan-drawer">
+  <div class="bd-head">
+    <h3>🫀 信用风险穿透详情</h3>
+    <button class="bd-close" onclick="closeBigan()">✕</button>
+  </div>
+  <div class="bd-body" id="bigan-body"></div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+  var echartsLib = window.echarts; // 断网时可能为 undefined，模块会降级跳过图表
+
+  // ===== 初始化渲染 =====
+  async function init(){
+    // 模块一：利率债（曲线 + 负债成本利差）
+    if (window.RatesDashboard){
+      await RatesDashboard.render(document.getElementById('card-rates'), echartsLib);
+      await RatesDashboard.render(document.getElementById('card-spread'), echartsLib);
+    }
+    // 模块二：信用债
+    if (window.CreditDashboard){
+      await CreditDashboard.render(document.getElementById('card-credit'), echartsLib);
+    }
+    // 模块三：到期结构（瀑布 + 久期缺口 + 再投资压力）
+    if (window.MaturityLadder){
+      await MaturityLadder.render(document.getElementById('card-maturity'), echartsLib);
+      await MaturityLadder.render(document.getElementById('card-duration'), echartsLib);
+      await MaturityLadder.render(document.getElementById('card-pressure'), echartsLib);
+    }
+    // 模块四：信用风险（热力 + 预警清单）
+    if (window.CreditRisk){
+      await CreditRisk.render(document.getElementById('card-heat'), echartsLib);
+      await CreditRisk.render(document.getElementById('card-warning'), echartsLib);
+    }
+    fillKpiStrip();
+    bindBigan();
+  }
+
+  // ===== KPI 概览条 =====
+  function fillKpiStrip(){
+    var totalEl = document.getElementById('kpi-total');
+    if (window.MaturityLadder && totalEl){
+      var t = MaturityLadder.compute().total;
+      totalEl.textContent = t.toFixed(1) + '亿';
+    }
+  }
+
+  // ===== 比干人物：数据异常检测 + 交互 =====
+  function bindBigan(){
+    var bigan = document.getElementById('bigan');
+    // 数据异常判定：存在「高」级别预警 → 心光变红
+    var hasHigh = false;
+    if (window.CreditRisk){
+      hasHigh = CreditRisk.SOURCE.warnings.some(function(w){ return w.level === 'high'; });
+    }
+    if (hasHigh){ bigan.classList.add('bigan-alert'); }
+    bigan.addEventListener('click', openBigan);
+  }
+
+  function openBigan(){
+    var drawer = document.getElementById('bigan-drawer');
+    var overlay = document.getElementById('bigan-overlay');
+    var body = document.getElementById('bigan-body');
+    if (window.CreditRisk){
+      var src = CreditRisk.SOURCE;
+      var total = src.holdings.reduce(function(s,h){return s+h.amount;},0);
+      var rows = src.holdings.map(function(h){
+        return '<tr><td>'+h.name+'</td><td>'+h.rating+'</td><td>'+h.sector+'</td><td>'+h.region+'</td><td>'+(h.amount/10000).toFixed(2)+'亿</td>'+(h.risk?'<td style="color:#ef4444">⚠区域风险</td>':'<td style="color:#10b981">正常</td>')+'</tr>';
+      }).join('');
+      body.innerHTML =
+        '<div style="font-size:13px;font-weight:600;color:#1e293b;margin-bottom:10px">持仓穿透（总 '+(total/10000).toFixed(2)+' 亿）</div>'+
+        '<table class="fi-warning-table"><thead><tr><th>发行人</th><th>评级</th><th>行业</th><th>区域</th><th>持仓</th><th>状态</th></tr></thead><tbody>'+rows+'</tbody></table>'+
+        '<div style="margin-top:14px;font-size:13px;font-weight:600;color:#1e293b;margin-bottom:8px">预警信号</div>'+
+        src.warnings.map(function(w){
+          var c = w.level==='high'?'#ef4444':w.level==='mid'?'#f59e0b':'#10b981';
+          return '<div style="padding:8px 10px;border-left:3px solid '+c+';background:#f8fafc;border-radius:6px;margin-bottom:6px"><b>'+w.type+'</b> · '+w.issuer+'<br><span style="font-size:10px">'+w.detail+'</span></div>';
+        }).join('')+
+        '<div style="margin-top:10px;padding:10px 12px;background:rgba(15,76,129,0.06);border-radius:8px">偿付敏感度：信用利差扩大 +'+src.sensitivity.spreadBp+'bp → 偿付 '+src.sensitivity.baseSolvency+'% 下降 '+src.sensitivity.solvencyDropPct+'pct 至 '+(src.sensitivity.baseSolvency-src.sensitivity.solvencyDropPct)+'%</div>';
+    } else {
+      body.innerHTML = '<div style="color:#94a3b8;padding:30px 0;text-align:center">信用风险模块未加载</div>';
+    }
+    drawer.classList.add('open');
+    overlay.classList.add('show');
+  }
+
+  window.closeBigan = function(){
+    document.getElementById('bigan-drawer').classList.remove('open');
+    document.getElementById('bigan-overlay').classList.remove('show');
+  };
+
+  // ===== 响应式 resize =====
+  window.addEventListener('resize', function(){
+    if (window.RatesDashboard){
+      RatesDashboard.resize(document.getElementById('card-rates'));
+      RatesDashboard.resize(document.getElementById('card-spread'));
+    }
+    if (window.CreditDashboard) CreditDashboard.resize(document.getElementById('card-credit'));
+    if (window.MaturityLadder){
+      MaturityLadder.resize(document.getElementById('card-maturity'));
+      MaturityLadder.resize(document.getElementById('card-duration'));
+    }
+    if (window.CreditRisk) CreditRisk.resize(document.getElementById('card-heat'));
+  });
+
+  if (document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+</script>
+</body>
+</html>

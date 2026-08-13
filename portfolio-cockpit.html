@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>持仓管理 · 多账户资金统筹</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="data-portfolio/importer.js"></script>
+<script src="ui/account-switcher.js"></script>
+<script src="portfolio/holding-analysis.js"></script>
+<style>
+:root{--bg:#f5f7fa;--card:#fff;--primary:#0F4C81;--safe:#10b981;--warn:#f59e0b;--danger:#ef4444;--text:#1e293b;--text2:#64748b;--border:#e2e8f0;--radius:12px}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,"Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:70px}
+
+/* ===== 顶部导航 ===== */
+.hd{background:linear-gradient(135deg,#0F4C81,#1a5fa0);color:#fff;padding:14px 28px;display:flex;align-items:center;gap:18px;flex-wrap:wrap;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(15,76,129,0.25)}
+.hd .brand-title{font-size:16px;font-weight:600}
+.hd .brand-title span{font-size:11px;background:rgba(255,255,255,0.16);padding:2px 8px;border-radius:10px;margin-left:6px;font-weight:400}
+.hd .nav{display:flex;gap:5px;flex-wrap:wrap;flex:1}
+.hd .nav a{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;text-decoration:none;color:rgba(255,255,255,0.85);transition:all .2s;border:1px solid transparent}
+.hd .nav a:hover{background:rgba(255,255,255,0.12)}
+.hd .nav a.active{background:#fff;color:var(--primary);font-weight:600}
+.hd .acct-wrap{margin-left:auto}
+
+/* ===== 账户切换器 ===== */
+.acct-switcher{position:relative}
+.acct-btn{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.14);border:1px solid rgba(255,255,255,0.3);color:#fff;padding:7px 14px;border-radius:20px;font-size:12px;cursor:pointer;font-family:inherit;transition:all .2s}
+.acct-btn:hover{background:rgba(255,255,255,0.24)}
+.acct-icon{font-size:16px}
+.acct-caret{font-size:9px;opacity:.7}
+.acct-menu{display:none;position:absolute;top:calc(100% + 6px);right:0;background:#fff;border-radius:10px;box-shadow:0 8px 30px rgba(0,0,0,0.18);min-width:210px;z-index:200;overflow:hidden}
+.acct-menu.show{display:block}
+.acct-item{display:flex;align-items:center;gap:10px;padding:12px 16px;font-size:12px;color:var(--text2);cursor:pointer;transition:background .15s}
+.acct-item:hover{background:#f8fafc}
+.acct-item .acct-item-name{color:var(--text);font-weight:500;flex:1}
+.acct-item .acct-item-desc{font-size:9px;color:#94a3b8}
+.acct-item .acct-check{color:var(--primary);font-weight:700}
+.acct-item.active{background:rgba(15,76,129,0.06);border-left:3px solid var(--primary)}
+.acct-item.active .acct-item-name{color:var(--primary)}
+
+/* ===== 导入区 ===== */
+.wrap{max-width:1520px;margin:0 auto;padding:0 24px}
+.import-card{background:var(--card);border-radius:var(--radius);padding:16px 20px;box-shadow:0 2px 8px rgba(0,0,0,0.05);margin:16px 0;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.import-card h3{font-size:13px;color:var(--primary);white-space:nowrap}
+.dropzone{border:2px dashed var(--border);border-radius:10px;padding:12px 20px;text-align:center;cursor:pointer;transition:all .2s;flex:1;min-width:220px;font-size:11px;color:var(--text2)}
+.dropzone:hover,.dropzone.drag{border-color:var(--primary);background:rgba(15,76,129,0.04);color:var(--primary)}
+.btn{padding:8px 16px;border-radius:8px;border:1px solid var(--primary);background:var(--primary);color:#fff;font-size:11px;cursor:pointer;font-family:inherit}
+.btn.ghost{background:transparent;color:var(--primary)}
+.btn.ghost:hover{background:rgba(15,76,129,0.06)}
+.btn-sm{padding:5px 12px;font-size:10px}
+.import-opt{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text2)}
+.import-result{width:100%;font-size:11px;line-height:1.7;display:none}
+.import-result.show{display:block}
+.import-result.ok{color:#059669}.import-result.err{color:#dc2626}.import-result.warn{color:#d97706}
+
+/* ===== 2x3 网格 ===== */
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.card{background:var(--card);border-radius:var(--radius);padding:20px 22px;box-shadow:0 2px 8px rgba(0,0,0,0.05)}
+.card h3{font-size:14px;font-weight:600;color:var(--primary);margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.card h3 .tag{font-size:9px;font-weight:500;color:var(--text2);background:var(--bg);padding:2px 8px;border-radius:4px}
+.chart{width:100%;height:260px}
+
+/* 集中度 TOP10 */
+.pa-top-row{display:flex;align-items:center;gap:9px;padding:6px 0;font-size:11px;border-bottom:1px solid var(--border)}
+.pa-top-row.breach{background:rgba(239,68,68,0.04);border-radius:5px}
+.pa-top-idx{width:18px;height:18px;border-radius:4px;background:var(--bg);color:var(--text2);font-size:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.pa-top-name{width:130px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pa-top-track{flex:1;height:9px;background:#eef2f7;border-radius:5px;overflow:hidden}
+.pa-top-fill{height:100%;background:var(--primary);border-radius:5px}
+.pa-top-fill.danger{background:var(--danger)}
+.pa-top-pct{width:48px;text-align:right;font-weight:600}
+.pa-top-pct.danger{color:var(--danger)}
+.pa-top-tag{font-size:8px;color:#fff;background:var(--danger);padding:1px 5px;border-radius:3px}
+
+/* 久期分析 */
+.pa-dur-gap{border-radius:10px;padding:18px;text-align:center;border:1px solid var(--border);margin-bottom:12px}
+.pa-dur-gap.warn{background:rgba(245,158,11,0.07);border-color:rgba(245,158,11,0.35)}
+.pa-dur-gap.ok{background:rgba(16,185,129,0.06);border-color:rgba(16,185,129,0.3)}
+.pa-dur-num{font-size:32px;font-weight:700;line-height:1.2}
+.pa-dur-gap.warn .pa-dur-num{color:var(--warn)}
+.pa-dur-gap.ok .pa-dur-num{color:var(--safe)}
+.pa-dur-sub{font-size:11px;color:var(--text2);margin-top:5px}
+.pa-dur-rows{margin-top:4px}
+.pa-dur-row{display:flex;align-items:center;gap:10px;font-size:11px;color:var(--text2);padding:5px 0}
+.pa-dur-row span{width:64px}
+.pa-dur-row b{width:36px;text-align:right;color:var(--text)}
+.pa-dur-bar{flex:1;height:8px;background:#eef2f7;border-radius:4px;overflow:hidden}
+.pa-dur-bar div{height:100%;background:var(--primary);border-radius:4px}
+.pa-dur-bar div.liab{background:var(--warn)}
+
+/* 监管红线 */
+.pa-red-row{display:flex;align-items:center;gap:10px;padding:9px 0;font-size:11px;border-bottom:1px solid var(--border)}
+.pa-red-label{width:100px;color:var(--text2)}
+.pa-red-track{flex:1;height:10px;background:#eef2f7;border-radius:5px;position:relative;overflow:visible}
+.pa-red-fill{height:100%;border-radius:5px}
+.pa-red-fill.ok{background:var(--safe)}.pa-red-fill.danger{background:var(--danger)}
+.pa-red-threshold{position:absolute;top:-3px;width:2px;height:16px;background:#1e293b;opacity:.6}
+.pa-red-val{width:64px;text-align:right;font-weight:600}
+.pa-red-val.danger{color:var(--danger)}
+.pa-red-status{width:70px;text-align:right;font-size:10px;font-weight:600}
+.pa-red-status.ok{color:var(--safe)}.pa-red-status.danger{color:var(--danger)}
+
+/* ===== 赵公明 ===== */
+.zhao-avatar{position:fixed;right:26px;bottom:86px;width:78px;height:78px;border-radius:50%;background:linear-gradient(160deg,#b45309,#d97706);box-shadow:0 6px 24px rgba(217,119,6,0.45);cursor:pointer;z-index:300;transition:transform .2s;display:flex;align-items:center;justify-content:center}
+.zhao-avatar:hover{transform:scale(1.08)}
+.zhao-avatar .zhao-fig{width:100%;height:100%}
+.zhao-ingot{transform-origin:center;animation:zhao-breathe 2.4s ease-in-out infinite}
+.zhao-ingot .ingot-glow{filter:drop-shadow(0 0 5px rgba(251,191,36,0.95))}
+.zhao-alert .zhao-ingot{animation:zhao-flash 0.7s ease-in-out infinite}
+.zhao-alert .zhao-ingot .ingot-glow{filter:drop-shadow(0 0 8px rgba(239,68,68,1))}
+.zhao-avatar .zhao-tip{display:none;position:absolute;right:88px;bottom:10px;background:rgba(15,23,42,0.96);color:#e2e8f0;border-radius:8px;padding:8px 12px;font-size:10px;white-space:nowrap;box-shadow:0 4px 16px rgba(0,0,0,0.3);z-index:310}
+.zhao-avatar:hover .zhao-tip{display:block}
+@keyframes zhao-breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.12)}}
+@keyframes zhao-flash{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.2);opacity:0.55}}
+
+/* 赵公明抽屉 */
+.zhao-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.4);z-index:1100;display:none}
+.zhao-overlay.show{display:block}
+.zhao-drawer{position:fixed;top:0;right:-460px;width:440px;max-width:92vw;bottom:0;background:#fff;z-index:1200;box-shadow:-4px 0 24px rgba(0,0,0,0.18);transition:right .3s ease;display:flex;flex-direction:column}
+.zhao-drawer.open{right:0}
+.zhao-drawer .zd-head{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--border)}
+.zhao-drawer .zd-head h3{font-size:14px;color:var(--primary)}
+.zhao-drawer .zd-close{background:none;border:none;font-size:20px;cursor:pointer;color:var(--text2)}
+.zhao-drawer .zd-body{flex:1;overflow-y:auto;padding:16px 20px;font-size:11px;color:var(--text2);line-height:1.8}
+
+@media(max-width:1000px){.grid{grid-template-columns:1fr}.hd{flex-direction:column;align-items:flex-start}.hd .acct-wrap{margin-left:0}}
+@media(max-width:560px){.zhao-avatar{right:16px;bottom:80px;width:64px;height:64px}.import-card{flex-direction:column;align-items:stretch}}
+</style>
+</head>
+<body>
+
+<!-- 顶部导航 + 账户切换器 -->
+<header class="hd">
+  <div class="brand-title">保险资金投研体系 <span>v2.0</span></div>
+  <nav class="nav">
+    <a href="research-portal.html">研究门户</a>
+    <a href="投研体系_v2.0/insurance-cockpit.html">决策驾驶舱</a>
+    <a href="fixed-income-cockpit.html">固收专题</a>
+    <a href="portfolio-cockpit.html" class="active">持仓管理</a>
+    <a href="投研门户.html">统一门户</a>
+  </nav>
+  <div class="acct-wrap">
+    <div class="acct-switcher" id="acct-switcher"></div>
+  </div>
+</header>
+
+<div class="wrap">
+  <!-- 导入区 -->
+  <div class="import-card">
+    <h3>📥 持仓导入</h3>
+    <div class="dropzone" id="dropzone">拖拽文件到此处，或点击选择（支持 .xlsx / .csv / .json）</div>
+    <input type="file" id="file-input" accept=".xlsx,.xls,.csv,.json" style="display:none">
+    <label class="import-opt"><input type="checkbox" id="overwrite"> 覆盖重复代码</label>
+    <a class="btn ghost btn-sm" href="templates/holding-template.csv" download>⬇ 下载模板</a>
+    <div class="import-result" id="import-result"></div>
+  </div>
+
+  <!-- 2x3 持仓分析网格 -->
+  <main class="grid" id="grid">
+    <section class="card"><h3>🥧 资产配置饼图<span class="tag">权益/固收/另类/现金</span></h3><div class="chart pa-allocation-chart"></div></section>
+    <section class="card"><h3>🏭 行业分布条形图<span class="tag">TOP 行业</span></h3><div class="chart pa-industry-chart"></div></section>
+    <section class="card"><h3>🎯 个券集中度 TOP10<span class="tag">超 10% 标红</span></h3><div class="pa-top10"></div></section>
+    <section class="card"><h3>📉 盈亏分布<span class="tag">市值 − 成本</span></h3><div class="chart pa-pnl-chart"></div></section>
+    <section class="card"><h3>⏳ 久期分析（固收）<span class="tag">资产 − 负债</span></h3><div class="pa-duration"></div></section>
+    <section class="card"><h3>🚦 监管红线仪表盘<span class="tag">权益/集中度/偿付</span></h3><div class="pa-redline"></div></section>
+  </main>
+</div>
+
+<!-- 赵公明人物 -->
+<div class="zhao-avatar" id="zhao">
+  <svg class="zhao-fig" viewBox="0 0 120 140" xmlns="http://www.w3.org/2000/svg">
+    <!-- 财神帽 -->
+    <rect x="30" y="6" width="60" height="9" rx="3" fill="#1e293b"/>
+    <path d="M28 12 L36 20 L30 20 Z" fill="#b45309"/>
+    <path d="M92 12 L84 20 L90 20 Z" fill="#b45309"/>
+    <rect x="26" y="15" width="68" height="6" rx="2" fill="#334155"/>
+    <!-- 脸 -->
+    <circle cx="60" cy="40" r="20" fill="#f1d5b0"/>
+    <circle cx="53" cy="38" r="2" fill="#1e293b"/>
+    <circle cx="67" cy="38" r="2" fill="#1e293b"/>
+    <!-- 长须 -->
+    <path d="M46 52 Q60 62 74 52" stroke="#64748b" stroke-width="2" fill="none"/>
+    <!-- 红袍身体 -->
+    <path d="M38 66 Q60 58 82 66 L88 130 Q60 138 32 130 Z" fill="#b91c1c"/>
+    <rect x="54" y="64" width="12" height="68" fill="#7f1d1d"/>
+    <!-- 金元宝（发光） -->
+    <g class="zhao-ingot">
+      <path class="ingot-glow" d="M45 96 Q45 88 52 88 L68 88 Q75 88 75 96 Q75 102 68 102 L52 102 Q45 102 45 96 Z" fill="#fbbf24"/>
+      <ellipse cx="60" cy="95" rx="15" ry="4" fill="#f59e0b"/>
+      <text x="60" y="99" text-anchor="middle" font-size="10" fill="#7c2d12">招财</text>
+    </g>
+  </svg>
+  <div class="zhao-tip">多路财源，统筹有道</div>
+</div>
+
+<!-- 赵公明抽屉 -->
+<div class="zhao-overlay" id="zhao-overlay" onclick="closeZhao()"></div>
+<div class="zhao-drawer" id="zhao-drawer">
+  <div class="zd-head">
+    <h3>💰 多账户资金统筹</h3>
+    <button class="zd-close" onclick="closeZhao()">✕</button>
+  </div>
+  <div class="zd-body" id="zhao-body"></div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+  var echartsLib = window.echarts;
+  var gridEl = document.getElementById('grid');
+  var currentAccount = '普通';
+
+  async function init(){
+    // 账户切换器
+    if (window.AccountSwitcher){
+      currentAccount = AccountSwitcher.init(document.getElementById('acct-switcher'));
+      AccountSwitcher.onChange(async function(acct){
+        currentAccount = acct;
+        await refresh(acct);
+      });
+    }
+    await refresh(currentAccount);
+    bindImport();
+    bindZhao();
+  }
+
+  async function refresh(acct){
+    if (window.HoldingAnalysis){
+      var d = await HoldingAnalysis.render(gridEl, acct, echartsLib);
+      updateZhao(d);
+      return d;
+    }
+  }
+
+  function updateZhao(d){
+    var zhao = document.getElementById('zhao');
+    if (zhao){
+      if (d && d.breachCount > 0){ zhao.classList.add('zhao-alert'); }
+      else { zhao.classList.remove('zhao-alert'); }
+    }
+  }
+
+  // ===== 导入 =====
+  function bindImport(){
+    var dz = document.getElementById('dropzone');
+    var fi = document.getElementById('file-input');
+    var result = document.getElementById('import-result');
+    dz.addEventListener('click', function(){ fi.click(); });
+    dz.addEventListener('dragover', function(e){ e.preventDefault(); dz.classList.add('drag'); });
+    dz.addEventListener('dragleave', function(){ dz.classList.remove('drag'); });
+    dz.addEventListener('drop', function(e){ e.preventDefault(); dz.classList.remove('drag'); if(e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]); });
+    fi.addEventListener('change', function(){ if(fi.files.length) handleFile(fi.files[0]); });
+  }
+
+  async function handleFile(file){
+    var result = document.getElementById('import-result');
+    var overwrite = document.getElementById('overwrite').checked;
+    result.className = 'import-result show';
+    try {
+      var r = await PortfolioImporter.importFile(file, currentAccount, overwrite);
+      if (r.success){
+        result.classList.add('ok');
+        var dupTxt = r.duplicates.length ? '，重复' + r.duplicates.map(function(d){return d.code + '(' + d.action + ')';}).join('、') : '';
+        result.innerHTML = '✅ 导入成功：新增 <b>' + r.imported + '</b> 条，当前账户共 <b>' + r.total + '</b> 条' + dupTxt +
+          (r.errors.length ? '<br><span style="color:#d97706">⚠ 有 ' + r.errors.length + ' 行被跳过：' + r.errors.slice(0,5).join('；') + '</span>' : '');
+        await refresh(currentAccount);
+      } else {
+        result.classList.add('err');
+        result.innerHTML = '❌ 导入失败：' + (r.errors.slice(0,8).join('；') || '无可导入数据');
+      }
+    } catch(e){
+      result.classList.add('err');
+      result.innerHTML = '❌ 解析失败：' + e.message;
+    }
+  }
+
+  // ===== 赵公明抽屉 =====
+  function bindZhao(){
+    document.getElementById('zhao').addEventListener('click', openZhao);
+  }
+  function openZhao(){
+    var body = document.getElementById('zhao-body');
+    var d = window.HoldingAnalysis ? HoldingAnalysis.compute(currentAccount) : null;
+    if (d){
+      var rows = d.holdings.map(function(h){
+        return '<tr><td>'+h.security_name+'</td><td>'+h.asset_class+'</td><td>'+(h.industry||'-')+'</td><td>'+(h.market_value/10000).toFixed(1)+'万</td><td style="color:'+(h.market_value>=h.cost_value?'#10b981':'#ef4444')+'">'+((h.market_value-h.cost_value)>0?'+':'')+((h.market_value-h.cost_value)/10000).toFixed(1)+'万</td></tr>';
+      }).join('');
+      body.innerHTML =
+        '<div style="font-size:13px;font-weight:600;color:#1e293b;margin-bottom:8px">'+currentAccount+'账户 · 总市值 '+(d.total/10000).toFixed(0)+'万</div>'+
+        '<table class="fi-warning-table" style="width:100%;border-collapse:collapse;font-size:10px"><thead><tr><th style="text-align:left">名称</th><th style="text-align:left">类别</th><th style="text-align:left">行业</th><th style="text-align:right">市值</th><th style="text-align:right">盈亏</th></tr></thead><tbody>'+rows+'</tbody></table>'+
+        '<div style="margin-top:14px;font-size:13px;font-weight:600;color:#1e293b;margin-bottom:8px">监管红线</div>'+
+        d.redline.map(function(r){
+          return '<div style="padding:8px 10px;border-left:3px solid '+(r.breach?'#ef4444':'#10b981')+';background:#f8fafc;border-radius:6px;margin-bottom:6px"><b>'+r.label+'</b>：'+r.value+r.unit+'（阈值 '+r.threshold+r.unit+'）'+(r.breach?' <span style="color:#ef4444">🔴 超标</span>':' <span style="color:#10b981">✅ 正常</span>')+'</div>';
+        }).join('');
+    } else {
+      body.innerHTML = '<div style="color:#94a3b8;padding:30px 0;text-align:center">持仓分析模块未加载</div>';
+    }
+    document.getElementById('zhao-drawer').classList.add('open');
+    document.getElementById('zhao-overlay').classList.add('show');
+  }
+  window.closeZhao = function(){
+    document.getElementById('zhao-drawer').classList.remove('open');
+    document.getElementById('zhao-overlay').classList.remove('show');
+  };
+
+  window.addEventListener('resize', function(){
+    if (window.HoldingAnalysis) HoldingAnalysis.resize(gridEl);
+  });
+
+  if (document.readyState === 'loading'){ document.addEventListener('DOMContentLoaded', init); }
+  else { init(); }
+})();
+</script>
+</body>
+</html>
