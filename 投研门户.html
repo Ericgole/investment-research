@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=1280,initial-scale=1.0">
+<title>投研体系 · 统一门户</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<style>
+/* ========== macOS Design System ========== */
+:root {
+  --bg:           #F5F5F7;
+  --card-bg:      rgba(255,255,255,0.78);
+  --sidebar-bg:   rgba(245,245,247,0.85);
+  --text:         #1d1d1f;
+  --text2:        #6e6e73;
+  --text3:        #aeaeb2;
+  --blue:         #007AFF;
+  --blue-bg:      rgba(0,122,255,0.08);
+  --green:        #34C759;
+  --green-bg:     rgba(52,199,89,0.08);
+  --red:          #FF3B30;
+  --red-bg:       rgba(255,59,48,0.08);
+  --orange:       #FF9500;
+  --orange-bg:    rgba(255,149,0,0.08);
+  --teal:         #5AC8FA;
+  --teal-bg:      rgba(90,200,250,0.1);
+  --purple:       #AF52DE;
+  --purple-bg:    rgba(175,82,222,0.08);
+  --bdr:          rgba(0,0,0,0.08);
+  --shadow-sm:    0 2px 8px rgba(0,0,0,0.04);
+  --shadow-md:    0 4px 20px rgba(0,0,0,0.06);
+  --shadow-lg:    0 8px 40px rgba(0,0,0,0.08);
+  --radius-sm:    10px;
+  --radius-md:    14px;
+  --radius-lg:    20px;
+  --sidebar-w:    220px;
+  --transition:   all 0.25s cubic-bezier(0.25,0.1,0.25,1);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body { height:100%; overflow:hidden; }
+body {
+  font-family: -apple-system, "SF Pro Display", "SF Pro Text", "Helvetica Neue", "Microsoft YaHei", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  display: flex;
+}
+
+.sidebar {
+  width: var(--sidebar-w); min-width: var(--sidebar-w); height: 100vh;
+  background: rgba(242,242,247,0.72);
+  backdrop-filter: blur(40px) saturate(180%);
+  -webkit-backdrop-filter: blur(40px) saturate(180%);
+  border-right: 0.5px solid var(--bdr);
+  display: flex; flex-direction: column;
+  padding: 12px 10px; z-index: 100;
+}
+.side-hd { padding: 8px 10px 20px; display: flex; align-items: center; gap: 10px; }
+.side-icon { width:36px;height:36px;background:linear-gradient(135deg,#007AFF,#5856D6);border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;font-weight:700; }
+.side-hd .st { font-size:14px;font-weight:600;color:var(--text); }
+.side-hd .sv { font-size:10px;color:var(--text3); }
+.side-nav { flex:1;display:flex;flex-direction:column;gap:2px; }
+.side-btn {
+  display:flex;align-items:center;gap:10px;padding:9px 12px;border:none;background:transparent;
+  border-radius:9px;font-size:12.5px;font-weight:500;color:var(--text2);cursor:pointer;
+  font-family:inherit;transition:var(--transition);text-align:left;width:100%;
+}
+.side-btn:hover { background:rgba(0,0,0,0.05);color:var(--text); }
+.side-btn.active { background:rgba(255,255,255,0.75);box-shadow:var(--shadow-sm);color:var(--blue);font-weight:600; }
+.side-btn .sb-icon { font-size:16px;width:22px;text-align:center;flex-shrink:0; }
+.side-btn .sb-badge { margin-left:auto;font-size:10px;font-weight:600;padding:2px 7px;border-radius:20px;background:var(--blue-bg);color:var(--blue); }
+.side-btn.active .sb-badge { background:var(--blue);color:#fff; }
+.side-ft { padding:10px 12px;font-size:10px;color:var(--text3);border-top:0.5px solid var(--bdr);margin-top:4px; }
+
+.main-wrap { flex:1;height:100vh;display:flex;flex-direction:column;overflow:hidden; }
+.topbar {
+  height:52px;min-height:52px;display:flex;align-items:center;justify-content:space-between;
+  padding:0 24px;background:rgba(255,255,255,0.55);
+  backdrop-filter:blur(30px) saturate(180%);
+  -webkit-backdrop-filter:blur(30px) saturate(180%);
+  border-bottom:0.5px solid var(--bdr);z-index:50;
+}
+.traffic { display:flex;gap:7px; }
+.traffic span { width:12px;height:12px;border-radius:50%;display:inline-block; }
+.traffic .tr { background:#FF5F57; }.traffic .ty { background:#FEBC2E; }.traffic .tg { background:#28C840; }
+.topbar .tp-title { font-size:13px;font-weight:600;color:var(--text); }
+.topbar .tp-meta { display:flex;gap:20px;font-size:11px;color:var(--text2); }
+.topbar .tp-meta b { color:var(--text);margin-right:2px; }
+
+.content { flex:1;overflow-y:auto;overflow-x:hidden;padding:20px 24px 32px;scroll-behavior:smooth; }
+.content::-webkit-scrollbar { width:5px; }
+.content::-webkit-scrollbar-thumb { background:rgba(0,0,0,0.12);border-radius:10px; }
+
+/* KPI strip */
+.kpi-strip {
+  display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px;
+}
+.kpi-item {
+  background:var(--card-bg);backdrop-filter:blur(20px) saturate(180%);
+  -webkit-backdrop-filter:blur(20px) saturate(180%);
+  border-radius:var(--radius-md);border:0.5px solid var(--bdr);
+  padding:16px 20px;text-align:center;
+}
+.kpi-item .kv { font-size:28px;font-weight:700;letter-spacing:-0.5px; }
+.kpi-item .kl { font-size:10.5px;color:var(--text2);margin-top:2px;font-weight:500; }
+
+/* Cards */
+.card-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;margin-bottom:18px; }
+.mac-card {
+  background:var(--card-bg);backdrop-filter:blur(20px) saturate(180%);
+  -webkit-backdrop-filter:blur(20px) saturate(180%);
+  border-radius:var(--radius-md);border:0.5px solid var(--bdr);
+  padding:18px 20px;cursor:pointer;transition:var(--transition);box-shadow:var(--shadow-sm);
+}
+.mac-card:hover { box-shadow:var(--shadow-md);transform:translateY(-2px);border-color:rgba(0,0,0,0.12); }
+.mac-card .mc-row1 { display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px; }
+.mac-card .mc-title { font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px; }
+.mac-card .mc-val { font-size:26px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-0.5px; }
+.mac-card .mc-desc { font-size:11px;color:var(--text2);line-height:1.6; }
+.mac-card .mc-tags { display:flex;gap:5px;flex-wrap:wrap;margin-top:10px; }
+
+.pill {
+  display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:10.5px;font-weight:500;
+}
+.pill-green{background:var(--green-bg);color:var(--green)}.pill-red{background:var(--red-bg);color:var(--red)}
+.pill-orange{background:var(--orange-bg);color:var(--orange)}.pill-blue{background:var(--blue-bg);color:var(--blue)}
+.pill-purple{background:var(--purple-bg);color:var(--purple)}.pill-teal{background:var(--teal-bg);color:var(--teal)}
+
+/* Cycle judgment hero */
+.cycle-hero {
+  background:linear-gradient(135deg,rgba(0,122,255,0.06),rgba(175,82,222,0.06));
+  border-radius:var(--radius-lg);border:0.5px solid var(--bdr);
+  padding:20px 24px;margin-bottom:18px;
+}
+.cycle-hero .ch-row { display:flex;align-items:center;gap:24px;flex-wrap:wrap; }
+.cycle-hero .ch-phase {
+  font-size:15px;font-weight:700;color:var(--purple);
+  padding:8px 20px;background:var(--purple-bg);border-radius:12px;
+}
+.cycle-hero .ch-desc { flex:1;font-size:12px;color:var(--text2);line-height:1.8;min-width:200px; }
+.cycle-hero .ch-desc b { color:var(--text); }
+.cycle-hero .ch-models { display:flex;gap:12px;flex-wrap:wrap; }
+.cycle-hero .ch-model {
+  background:rgba(255,255,255,0.6);border-radius:var(--radius-sm);
+  padding:10px 14px;text-align:center;border:0.5px solid var(--bdr);min-width:100px;
+}
+.cycle-hero .ch-model .cm-name { font-size:10px;color:var(--text3);margin-bottom:2px; }
+.cycle-hero .ch-model .cm-phase { font-size:13px;font-weight:600; }
+.cycle-hero .ch-model .cm-bar {
+  margin-top:4px;height:4px;border-radius:2px;background:rgba(0,0,0,0.06);overflow:hidden;
+}
+.cycle-hero .ch-model .cm-fill { height:100%;border-radius:2px;transition:width 0.5s ease; }
+
+/* Section / Accordion */
+.section {
+  background:var(--card-bg);backdrop-filter:blur(20px) saturate(180%);
+  -webkit-backdrop-filter:blur(20px) saturate(180%);
+  border-radius:var(--radius-lg);border:0.5px solid var(--bdr);
+  margin-bottom:14px;overflow:hidden;box-shadow:var(--shadow-sm);
+}
+.sec-hd { padding:13px 22px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;user-select:none;transition:background 0.15s; }
+.sec-hd:hover { background:rgba(0,0,0,0.02); }
+.sec-hd .sh-title { font-size:13px;font-weight:600;color:var(--text); }
+.sec-hd .sh-chevron { font-size:11px;color:var(--text3);transition:transform 0.3s ease; }
+.sec-hd.open .sh-chevron { transform:rotate(90deg); }
+.sec-bd { display:none;padding:0 22px 18px; }
+.sec-bd.open { display:block;animation:fadeIn 0.25s ease; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(6px);} to{opacity:1;transform:translateY(0);} }
+
+.chart-row { display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:8px 0; }
+.chart-row3 { display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin:8px 0; }
+.chart-box { width:100%;height:300px; }
+@media(max-width:1100px){.chart-row3{grid-template-columns:1fr 1fr}}
+@media(max-width:800px){.chart-row,.chart-row3{grid-template-columns:1fr}}
+
+.mac-tbl { width:100%;font-size:12px;border-collapse:separate;border-spacing:0; }
+.mac-tbl th { text-align:left;padding:8px 14px;font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;border-bottom:0.5px solid var(--bdr); }
+.mac-tbl td { padding:9px 14px;border-bottom:0.5px solid rgba(0,0,0,0.04); }
+.mac-tbl tr:hover td { background:rgba(0,0,0,0.015); }
+.mac-tbl tr:last-child td { border-bottom:none; }
+
+.deep-links { display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:0.5px solid var(--bdr); }
+.deep-link {
+  display:inline-flex;align-items:center;gap:5px;padding:6px 14px;
+  background:rgba(0,122,255,0.06);border:0.5px solid rgba(0,122,255,0.15);
+  border-radius:20px;font-size:11px;font-weight:500;color:var(--blue);text-decoration:none;transition:var(--transition);
+}
+.deep-link:hover { background:rgba(0,122,255,0.12);border-color:rgba(0,122,255,0.3);transform:translateY(-1px); }
+.deep-link .dl-icon { font-size:13px; }
+.deep-link .dl-label { font-size:10px;color:var(--text2);margin-left:2px; }
+
+.link-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px; }
+.link-card {
+  display:flex;flex-direction:column;align-items:center;padding:14px 10px;
+  background:rgba(0,0,0,0.02);border-radius:var(--radius-sm);
+  text-decoration:none;color:var(--text);transition:var(--transition);border:0.5px solid transparent;
+}
+.link-card:hover { background:rgba(0,122,255,0.06);border-color:rgba(0,122,255,0.15); }
+.link-card .lk-icon { font-size:26px;margin-bottom:6px; }
+.link-card .lk-name { font-size:12px;font-weight:500; }
+.link-card .lk-desc { font-size:10px;color:var(--text3);margin-top:2px; }
+
+/* For timeline */
+.timeline { display:flex;gap:0;align-items:flex-start;overflow-x:auto;padding:8px 0; }
+.timeline .tl-node { flex-shrink:0;text-align:center;padding:8px 12px;position:relative;min-width:90px; }
+.timeline .tl-node::after { content:'';position:absolute;top:50%;right:-6px;width:12px;height:1px;background:var(--bdr); }
+.timeline .tl-node:last-child::after { display:none; }
+.timeline .tl-dot { width:10px;height:10px;border-radius:50%;margin:0 auto 4px; }
+.timeline .tl-label { font-size:9px;color:var(--text3); }
+.timeline .tl-phase { font-size:10px;font-weight:600; }
+
+/* ===== Indicator grid (compact key metrics) ===== */
+.ind-grid { display:grid;grid-template-columns:repeat(4,1fr);gap:10px; }
+.ind-card {
+  background:var(--card-bg);backdrop-filter:blur(20px) saturate(180%);
+  -webkit-backdrop-filter:blur(20px) saturate(180%);
+  border-radius:var(--radius-sm);border:0.5px solid var(--bdr);
+  padding:14px 16px;text-align:center;transition:var(--transition);
+}
+.ind-card:hover { box-shadow:var(--shadow-sm);transform:translateY(-1px); }
+.ind-card .iv { font-size:24px;font-weight:700;letter-spacing:-0.5px;line-height:1.2; }
+.ind-card .in { font-size:11px;font-weight:600;color:var(--text2);margin:4px 0; }
+.ind-card .id { font-size:10px;color:var(--text3); }
+.ind-card .idr {
+  display:inline-flex;align-items:center;gap:3px;margin-top:6px;
+  font-size:10px;color:var(--blue);cursor:pointer;font-weight:500;
+}
+.ind-card .idr:hover { text-decoration:underline; }
+
+/* ===== Topic list (compact expandable) ===== */
+.topic-row {
+  display:flex;align-items:center;gap:10px;padding:8px 0;
+  border-bottom:0.5px solid rgba(0,0,0,0.04);cursor:pointer;
+  transition:background 0.15s;
+}
+.topic-row:hover { background:rgba(0,0,0,0.015); }
+.topic-row .tr-score { font-size:11px;font-weight:600;width:32px;text-align:center;flex-shrink:0; }
+.topic-row .tr-name { flex:1;font-size:12px;font-weight:500; }
+.topic-row .tr-signal { font-size:10px;flex-shrink:0; }
+.topic-row .tr-chevron { font-size:10px;color:var(--text3);flex-shrink:0;transition:transform 0.2s; }
+.topic-row.open .tr-chevron { transform:rotate(90deg); }
+.topic-detail {
+  display:none;padding:8px 16px 12px 42px;
+  font-size:11px;color:var(--text2);line-height:1.8;
+}
+.topic-detail.open { display:block;animation:fadeIn 0.2s ease; }
+.topic-detail .td-ind { display:flex;gap:8px;flex-wrap:wrap; }
+.topic-detail .td-ind span {
+  background:rgba(0,0,0,0.03);border-radius:6px;padding:2px 8px;font-size:10px;
+}
+.topic-detail .td-source { margin-top:6px;font-size:10px;color:var(--text3); }
+/* Deep topic sections */
+.td-sec { margin-bottom:10px; }
+.td-sec-hd { font-size:11px;color:var(--purple);display:block;margin-bottom:3px; }
+.td-sec-bd { font-size:11px;color:var(--text2);line-height:1.9;padding-left:4px; }
+.td-stats { display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:6px;margin-top:6px; }
+.td-stat { background:rgba(0,0,0,0.02);border-radius:8px;padding:8px;text-align:center; }
+.td-stat-v { font-size:14px;font-weight:700;color:var(--text); }
+.td-stat-l { font-size:9px;color:var(--text3);margin-top:1px; }
+
+@media(max-width:800px){.ind-grid{grid-template-columns:repeat(2,1fr)}}
+</style></head><body>
+
+<div class="sidebar">
+  <div class="side-hd"><div class="side-icon">投</div><div><div class="st">投研体系</div><div class="sv">v1.8 · 统一门户</div></div></div>
+  <div class="side-nav" id="sideNav">
+    <button class="side-btn" data-tab="overview"><span class="sb-icon">◉</span> 总览<span class="sb-badge">核心</span></button>
+    <button class="side-btn active" data-tab="macro"><span class="sb-icon">⊡</span> 宏观研判<span class="sb-badge">定位</span></button>
+    <button class="side-btn" data-tab="alloc"><span class="sb-icon">◈</span> 资产配置</button>
+    <button class="side-btn" data-tab="risk"><span class="sb-icon">⊕</span> 风险监控</button>
+    <button class="side-btn" data-tab="perf"><span class="sb-icon">⊿</span> 绩效评估</button>
+    <button class="side-btn" data-tab="tools"><span class="sb-icon">⊞</span> 工具支撑</button>
+  </div>
+  <div class="side-ft">Wind + SQLite · 37/73 实时<br/>GitHub Pages 在线部署</div>
+</div>
+
+<div class="main-wrap">
+  <div class="topbar">
+    <div class="traffic"><span class="tr"></span><span class="ty"></span><span class="tg"></span></div>
+    <div class="tp-title" id="pageTitle">宏观研判 — 经济周期定位</div>
+    <div class="tp-meta">
+      <span>TAA <b style="color:var(--green)">+0.34</b></span>
+      <span>覆盖 <b>37/73</b></span>
+      <span>SAA <b>+14.0%</b></span>
+      <span>2026-08-09</span>
+    </div>
+  </div>
+  <div class="content" id="content"></div>
+</div>
+
+<script>
+// ===== Data =====
+var DATA = {
+  taa: {宏观:2,估值:-1,政策:2,资金:1,技术:-1},
+  pe: {沪深300:{pe:14.4,pct:95},中证500:{pe:35.2,pct:90},创业板:{pe:42.2,pct:65},科创50:{pe:196,pct:98},上证50:{pe:11.7,pct:90}},
+  macro: {gdp:4.3,pmi:49.2,cpi:1.0,m1m2:-4.0,sr:7.4,ex:23.9,ip:5.3,fa:-5.7,rs:1.0},
+  saa: {ret:5.3,vol:4.2,sharpe:1.26,calmar:1.30,maxdd:-4.5,var99:-2.82,excess:0.8},
+  alloc: {信用债:27,利率债:9,现金:10,沪深300:3,创业板:9,标普500:23,黄金:21}
+};
+
+// GDP & CPI history for Merrill Clock
+var gdpHistory = [
+  {q:'2023-Q3',gdp:5.0,cpi:0.1},{q:'2023-Q4',gdp:5.3,cpi:-0.3},{q:'2024-Q1',gdp:5.3,cpi:0.0},
+  {q:'2024-Q2',gdp:4.7,cpi:0.3},{q:'2024-Q3',gdp:4.6,cpi:0.6},{q:'2024-Q4',gdp:5.4,cpi:0.4},
+  {q:'2025-Q1',gdp:5.4,cpi:0.0},{q:'2025-Q2',gdp:5.2,cpi:0.3},{q:'2025-Q3',gdp:4.8,cpi:0.7},
+  {q:'2025-Q4',gdp:4.5,cpi:0.4},{q:'2026-Q1',gdp:5.0,cpi:0.1},{q:'2026-Q2',gdp:4.3,cpi:0.8}
+];
+
+// Three-cycle scores: normalized -2 to +2 scale
+// Economic: from GDP growth (target 5% = 0, above = +, below = -)
+// Credit: from M1-M2 spread (0 = neutral, negative = tight)
+// Rate: from 10Y level (around 2.5% = neutral, below = easing)
+var threeCycleNow = { economic: -1.0, credit: -1.5, rate: 1.5 };
+
+var titles = { overview:'总览 — 投研体系 v1.8', macro:'宏观研判 — 经济周期定位', alloc:'资产配置 — SAA + TAA', risk:'风险监控 — 五类风险 · 三级限额', perf:'绩效评估 — Brinson归因 · 多周期', tools:'工具支撑 — 数据管线 · 外部看板' };
+
+// ===== Tab Switching =====
+document.querySelectorAll('.side-btn').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    var tab = this.dataset.tab;
+    document.querySelectorAll('.side-btn').forEach(function(b){ b.classList.remove('active'); });
+    this.classList.add('active');
+    document.getElementById('pageTitle').textContent = titles[tab] || tab;
+    document.getElementById('content').innerHTML = renderTab(tab);
+    if(tab==='overview') setTimeout(initOverviewCharts,200);
+    if(tab==='macro') setTimeout(initMacroCharts,200);
+    if(tab==='alloc') setTimeout(initAllocCharts,200);
+    if(tab==='risk') setTimeout(initRiskCharts,200);
+    if(tab==='perf') setTimeout(initPerfCharts,200);
+  });
+});
+
+function renderTab(t){
+  var r = {overview:renderOverview,macro:renderMacro,alloc:renderAlloc,risk:renderRisk,perf:renderPerf,tools:renderTools};
+  return r[t]();
+}
+
+function toggleSec(el){ el.classList.toggle('open'); }
+
+function macCard(title, val, desc, cls, label, vc){
+  var vColor = vc || (cls==='pill-green'?'var(--green)':cls==='pill-red'?'var(--red)':cls==='pill-orange'?'var(--orange)':'var(--blue)');
+  return '<div class="mac-card"><div class="mc-row1"><span class="mc-title">'+title+'</span><span class="mc-val" style="color:'+vColor+'">'+val+'</span></div><div class="mc-desc">'+desc+'</div><div class="mc-tags"><span class="pill '+cls+'">'+label+'</span></div></div>';
+}
+function section(title, open){
+  var o = open ? ' open' : '';
+  return '<div class="section"><div class="sec-hd'+o+'" onclick="toggleSec(this)"><span class="sh-title">'+title+'</span><span class="sh-chevron">▸</span></div><div class="sec-bd'+o+'">';
+}
+function secEnd(){ return '</div></div>'; }
+
+// ===== CHART DATA =====
+var CHART = {"gdp": [["2018-Q3", 6.7], ["2018-Q4", 6.5], ["2019-Q1", 6.4], ["2019-Q2", 6.1], ["2019-Q3", 6.0], ["2019-Q4", 5.9], ["2020-Q1", -6.8], ["2020-Q2", 3.2], ["2020-Q3", 4.9], ["2020-Q4", 6.5], ["2021-Q1", 18.9], ["2021-Q2", 8.1], ["2021-Q3", 5.5], ["2021-Q4", 4.5], ["2022-Q1", 4.8], ["2022-Q2", 0.8], ["2022-Q3", 4.0], ["2022-Q4", 3.0], ["2023-Q1", 4.7], ["2023-Q2", 6.5], ["2023-Q3", 5.0], ["2023-Q4", 5.3], ["2024-Q1", 5.3], ["2024-Q2", 4.7], ["2024-Q3", 4.6], ["2024-Q4", 5.4], ["2025-Q1", 5.4], ["2025-Q2", 5.2], ["2025-Q3", 4.8], ["2025-Q4", 4.5], ["2026-Q1", 5.0], ["2026-Q2", 4.3]], "cpi": [["2020-08", 2.4], ["2020-09", 1.7], ["2020-10", 0.5], ["2020-11", -0.5], ["2020-12", 0.2], ["2021-01", -0.3], ["2021-02", -0.2], ["2021-03", 0.4], ["2021-04", 0.9], ["2021-05", 1.3], ["2021-06", 1.1], ["2021-07", 1.0], ["2021-08", 0.8], ["2021-09", 0.7], ["2021-10", 1.5], ["2021-11", 2.3], ["2021-12", 1.5], ["2022-01", 0.9], ["2022-02", 0.9], ["2022-03", 1.5], ["2022-04", 2.1], ["2022-05", 2.1], ["2022-06", 2.5], ["2022-07", 2.7], ["2022-08", 2.5], ["2022-09", 2.8], ["2022-10", 2.1], ["2022-11", 1.6], ["2022-12", 1.8], ["2023-01", 2.1], ["2023-02", 1.0], ["2023-03", 0.7], ["2023-04", 0.1], ["2023-05", 0.2], ["2023-06", 0.0], ["2023-07", -0.3], ["2023-08", 0.1], ["2023-09", 0.0], ["2023-10", -0.2], ["2023-11", -0.5], ["2023-12", -0.3], ["2024-01", -0.8], ["2024-02", 0.7], ["2024-03", 0.1], ["2024-04", 0.3], ["2024-05", 0.3], ["2024-06", 0.2], ["2024-07", 0.5], ["2024-08", 0.6], ["2024-09", 0.4], ["2024-10", 0.3], ["2024-11", 0.2], ["2024-12", 0.1], ["2025-01", 0.5], ["2025-02", -0.7], ["2025-03", -0.1], ["2025-04", -0.2], ["2025-05", -0.2], ["2025-06", -0.4], ["2025-07", 0.5], ["2025-08", 0.6], ["2025-09", 0.7], ["2025-10", 1.3], ["2025-11", 1.0], ["2025-12", 0.2], ["2026-01", 0.0], ["2026-02", 0.1], ["2026-03", 0.2], ["2026-04", 0.5], ["2026-05", 0.8], ["2026-06", 1.1], ["2026-07", 1.0]], "pmi": [["2021-08", 50.1], ["2021-09", 49.6], ["2021-10", 49.2], ["2021-11", 50.1], ["2021-12", 50.3], ["2022-01", 50.1], ["2022-02", 50.2], ["2022-03", 49.5], ["2022-04", 47.4], ["2022-05", 49.6], ["2022-06", 50.2], ["2022-07", 49.0], ["2022-08", 49.4], ["2022-09", 50.1], ["2022-10", 49.2], ["2022-11", 48.0], ["2022-12", 47.0], ["2023-01", 50.1], ["2023-02", 52.6], ["2023-03", 51.9], ["2023-04", 49.2], ["2023-05", 48.8], ["2023-06", 49.0], ["2023-07", 49.3], ["2023-08", 49.7], ["2023-09", 50.2], ["2023-10", 49.5], ["2023-11", 49.4], ["2023-12", 49.0], ["2024-01", 49.2], ["2024-02", 49.1], ["2024-03", 50.8], ["2024-04", 50.4], ["2024-05", 49.5], ["2024-06", 49.5], ["2024-07", 49.4], ["2024-08", 49.1], ["2024-09", 49.8], ["2024-10", 50.1], ["2024-11", 50.3], ["2024-12", 50.1], ["2025-01", 49.1], ["2025-02", 50.2], ["2025-03", 50.5], ["2025-04", 49.2], ["2025-05", 49.6], ["2025-06", 49.5], ["2025-07", 49.4], ["2025-08", 49.5], ["2025-09", 49.8], ["2025-10", 50.1], ["2025-11", 50.3], ["2025-12", 50.1], ["2026-01", 49.8], ["2026-02", 50.5], ["2026-03", 51.2], ["2026-04", 50.3], ["2026-05", 50.4], ["2026-06", 50.3], ["2026-07", 49.2]], "m1m2": [["2020-08", -2.4], ["2020-09", -2.8], ["2020-10", -1.4], ["2020-11", -0.7], ["2020-12", -1.5], ["2021-01", 5.3], ["2021-02", -2.7], ["2021-03", -2.3], ["2021-04", -1.9], ["2021-05", -2.2], ["2021-06", -3.1], ["2021-07", -3.4], ["2021-08", -4.0], ["2021-09", -4.6], ["2021-10", -5.9], ["2021-11", -5.5], ["2021-12", -5.5], ["2022-01", -11.7], ["2022-02", -4.5], ["2022-03", -5.0], ["2022-04", -5.4], ["2022-05", -6.5], ["2022-06", -5.6], ["2022-07", -5.3], ["2022-08", -6.1], ["2022-09", -5.7], ["2022-10", -6.0], ["2022-11", -7.8], ["2022-12", -8.1], ["2023-01", -5.9], ["2023-02", -7.1], ["2023-03", -7.6], ["2023-04", -7.1], ["2023-05", -6.9], ["2023-06", -8.2], ["2023-07", -8.4], ["2023-08", -8.4], ["2023-09", -8.2], ["2023-10", -8.4], ["2023-11", -8.7], ["2023-12", -8.4], ["2024-01", -2.8], ["2024-02", -7.5], ["2024-03", -7.2], ["2024-04", -8.6], ["2024-05", -11.2], ["2024-06", -11.2], ["2024-07", -12.9], ["2024-08", -13.6], ["2024-09", -14.2], ["2024-10", -14.2], ["2024-11", -13.6], ["2024-12", -8.7], ["2025-01", -6.6], ["2025-02", -6.9], ["2025-03", -5.4], ["2025-04", -5.0], ["2025-05", -5.1], ["2025-06", -5.0], ["2025-07", -4.9], ["2025-08", -4.9], ["2025-09", -4.8], ["2025-10", -4.6], ["2025-11", -4.3], ["2025-12", -4.0], ["2026-01", -4.0], ["2026-02", -4.0], ["2026-03", -4.3], ["2026-04", -4.2], ["2026-05", -4.2], ["2026-06", -4.0], ["2026-07", -4.0]], "y10": [["2010-12-31", 3.88], ["2011-12-31", 3.42], ["2012-12-31", 3.57], ["2013-12-31", 4.55], ["2014-12-31", 3.62], ["2015-12-31", 2.82], ["2016-12-31", 3.01], ["2017-12-31", 3.88], ["2018-12-31", 3.23], ["2019-12-31", 3.14], ["2020-06-30", 2.82], ["2020-12-31", 3.14], ["2021-06-30", 3.08], ["2021-12-31", 2.78], ["2022-06-30", 2.82], ["2022-12-31", 2.84], ["2023-06-30", 2.64], ["2023-12-31", 2.56], ["2024-06-30", 2.21], ["2024-12-31", 1.68], ["2025-06-30", 1.65], ["2025-12-31", 1.62], ["2026-06-30", 1.72], ["2026-07-31", 1.71]], "export": [["2026-07", 23.9]], "industrial": [], "fai": [], "retail": [], "sr": []};
+
+// ===== MACRO =====
+
+function mapDates(arr, fmt) {
+  return arr.map(function(x){
+    return fmt==='q'?x[0].replace('2026-Q',''):x[0].slice(2);
+  });
+}
+function mapVals(arr) { return arr.map(function(x){return x[1];}); }
+
+function renderMacro(){
+  var h = '';
+  var gdp24=CHART.gdp.slice(-24), pmi48=CHART.pmi.slice(-48);
+
+  // ========== TOP: EXECUTIVE SUMMARY ==========
+  h += '<div class="cycle-hero" style="padding:18px 24px;">';
+  
+  // KPI row
+  h += '<div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;">';
+  h += '<div style="font-size:13px;font-weight:600;color:var(--text);min-width:140px;">📋 宏观经济综述</div>';
+  var kpis = [
+    {v:'4.3%',l:'GDP Q2',c:'var(--red)',t:'低于目标5%'},
+    {v:'49.2',l:'PMI',c:'var(--red)',t:'跌破荣枯线'},
+    {v:'1.0%',l:'CPI',c:'var(--orange)',t:'低通胀'},
+    {v:'-4.0pp',l:'M1-M2',c:'var(--red)',t:'剪刀差极低'},
+    {v:'1.71%',l:'10Y国债',c:'var(--green)',t:'历史低位'},
+    {v:'7.4%',l:'社融',c:'var(--red)',t:'信用下行'},
+    {v:'-5.7%',l:'固投',c:'var(--red)',t:'投资萎缩'},
+    {v:'23.9%',l:'出口',c:'var(--orange)',t:'抢出口'},
+  ];
+  for (var i=0;i<kpis.length;i++) {
+    var k=kpis[i];
+    h += '<div style="text-align:center;min-width:70px;">';
+    h += '<div style="font-size:20px;font-weight:700;color:'+k.c+'">'+k.v+'</div>';
+    h += '<div style="font-size:10px;font-weight:600;color:var(--text2)">'+k.l+'</div>';
+    h += '<div style="font-size:9px;color:var(--text3)">'+k.t+'</div>';
+    h += '</div>';
+  }
+  h += '</div>';
+
+  // Narrative summary
+  h += '<div style="margin-top:14px;padding-top:12px;border-top:0.5px solid var(--bdr);">';
+  h += '<div style="font-size:12px;line-height:1.8;color:var(--text2);">';
+  h += '<b style="color:var(--purple)">周期定位：</b>中国经济处于<b>弱衰退向复苏初期过渡</b>阶段。';
+  h += 'GDP 4.3% 靠近 15 年均值 5.2% 的 <b>25% 分位</b>，PMI 49.2 位于十年区间的低位（25% 分位 = 49.2）。';
+  h += 'CPI 1.0% 低于政策红线 3%，10Y 国债 1.71% 远低于均值 2.85%，利率环境极度宽松。';
+  h += 'M1-M2 剪刀差 -4.0pp 虽有改善（均值 -6.0pp），但资金从活期向定期迁移的结构性问题尚未逆转。</div>';
+  
+  h += '<div style="font-size:12px;line-height:1.8;color:var(--text2);margin-top:6px;">';
+  h += '<b style="color:var(--green)">政策含义：</b>当前宏观组合（<b style="color:var(--red)">需求弱</b> + <b style="color:var(--green)">流动性宽裕</b>）支持进一步降准降息。';
+  h += '财政需加大逆周期调节，政府债净融资 6.44 万亿（H1）仍有发行空间。';
+  h += '<b>配置映射：</b>债券阶段性优于股票，黄金受益于弱美元和低实际利率，权益需等待 PMI 重新站上荣枯线后的右侧信号。</div>';
+  h += '</div></div>';
+
+  // ========== SECTION 1: 周期研判 (4 independent accordions) ==========
+  h += '<div style="font-size:13px;font-weight:600;color:var(--text);padding:4px 0 10px;margin-top:16px;">① 周期研判</div>';
+
+  // 1.1 美林时钟
+  h += section('美林时钟：增长 vs 通胀 · 12 季度轨迹', true);
+  h += '<div class="chart-box" id="mc_merrill" style="height:340px"></div>';
+  h += '<div style="font-size:10px;color:var(--text3);padding:0 0 8px;">横轴 GDP 增速 | 纵轴 CPI | 蓝点 = 历史位置 | 紫点 = 当前位置（Q2 2026: GDP 4.3%, CPI 0.8%）</div>';
+  h += secEnd();
+
+  // 1.2 三周期共振
+  h += section('三周期共振：经济周期 · 信用周期 · 利率周期', true);
+  h += '<div class="chart-row"><div class="chart-box" id="mc_radar"></div><div class="chart-box" id="mc_m1m2_hist"></div></div>';
+  h += '<div style="font-size:10px;color:var(--text3);padding:0 0 8px;">左：雷达图（当前 vs 6月前 vs 中性）| 右：M1-M2 剪刀差十年历史</div>';
+  h += secEnd();
+
+  // 1.3 信用脉冲
+  h += section('信用脉冲：社融增速 vs M2 剪刀差 · 十年周期', true);
+  h += '<div class="chart-row"><div class="chart-box" id="mc_sr"></div><div class="chart-box" id="mc_gdp_hist"></div></div>';
+  h += '<div style="font-size:10px;color:var(--text3);padding:0 0 8px;">左：社融存量同比 vs 信用脉冲 | 右：GDP 增速 15 年走势（含目标线 5%）</div>';
+  h += secEnd();
+
+  // 1.4 利率曲线
+  h += section('利率周期：10Y 国债 · 实际利率 · 期限结构', true);
+  h += '<div class="chart-row"><div class="chart-box" id="mc_y10"></div><div class="chart-box" id="mc_cpi_hist"></div></div>';
+  h += '<div style="font-size:10px;color:var(--text3);padding:0 0 8px;">左：10Y 国债收益率 vs 15 年均值 | 右：CPI 通胀十五年月度序列（标注 3% 警戒线）</div>';
+  h += secEnd();
+
+  // 1.5 库存周期
+  h += section('库存周期：产成品库存 · PMI库存 · 补库/去库阶段定位', true);
+  h += '<div class="chart-row"><div class="chart-box" id="mc_inv"></div><div class="chart-box" id="mc_inv_pmi"></div></div>';
+  h += '<div style="font-size:10px;color:var(--text3);padding:0 0 8px;">左：工业企业产成品存货增速 15 年周期 | 右：PMI 产成品库存 vs 新订单（当前：被动去库→主动补库拐点）</div>';
+  h += secEnd();
+
+  // ========== SECTION 2: 分类指标 ==========
+  h += '<div style="font-size:13px;font-weight:600;color:var(--text);padding:4px 0 10px;margin-top:16px;">② 重点指标 · 分经济类别</div>';
+
+  var categories = [
+    {
+      name:'生产端', icon:'🏭',
+      items:[
+        {n:'GDP 当季同比',v:'4.3%',h:'均值 5.2% | 25%分位',t:'宏观1',c:'var(--red)'},
+        {n:'制造业 PMI',v:'49.2',h:'均值 49.7 | 25%分位 49.2',t:'宏观2',c:'var(--red)'},
+        {n:'工业增加值',v:'5.3%',h:'8 月反弹至 5.3%',t:'宏观3',c:'var(--green)'},
+      ]
+    },
+    {
+      name:'消费端', icon:'🛒',
+      items:[
+        {n:'社零当月同比',v:'1.0%',h:'增速持续回落',t:'宏观3',c:'var(--red)'},
+        {n:'CPI 同比',v:'1.0%',h:'均值 0.7% | 远低于 3%',t:'宏观5',c:'var(--orange)'},
+        {n:'核心 CPI',v:'1.0%',h:'扣除食品能源',t:'宏观5',c:'var(--orange)'},
+      ]
+    },
+    {
+      name:'出口端', icon:'🚢',
+      items:[
+        {n:'出口当月同比',v:'23.9%',h:'高位（抢出口效应）',t:'宏观17',c:'var(--orange)'},
+        {n:'人民币汇率',v:'6.80',h:'DXY 97.0 弱美元',t:'宏观15',c:'var(--green)'},
+      ]
+    },
+    {
+      name:'投资端', icon:'🏗️',
+      items:[
+        {n:'固投累计同比',v:'-5.7%',h:'房地产系拖累',t:'宏观3',c:'var(--red)'},
+        {n:'房地产投资',v:'-8.5%',h:'新开工-15%',t:'宏观3',c:'var(--red)'},
+      ]
+    },
+    {
+      name:'货币/信贷', icon:'💴',
+      items:[
+        {n:'M1-M2 剪刀差',v:'-4.0pp',h:'均值 -6.0pp | 75%分位',t:'宏观8',c:'var(--orange)'},
+        {n:'社融存量同比',v:'7.4%',h:'贷款 10.72万亿 H1',t:'宏观9',c:'var(--red)'},
+        {n:'LPR 1Y',v:'3.0%',h:'连 14 月不变 | 有降息空间',t:'宏观11',c:'var(--orange)'},
+      ]
+    },
+    {
+      name:'利率/汇率', icon:'💹',
+      items:[
+        {n:'10Y 国债',v:'1.71%',h:'均值 2.85% | 接近历史最低',t:'宏观14',c:'var(--green)'},
+        {n:'DR007',v:'~1.5%',h:'流动性极度充裕',t:'宏观14',c:'var(--green)'},
+        {n:'DXY 美元指数',v:'97.0',h:'弱美元利好新兴市场',t:'宏观15',c:'var(--green)'},
+      ]
+    },
+  ];
+
+  for (var ci=0;ci<categories.length;ci++) {
+    var cat = categories[ci];
+    h += '<div style="margin-bottom:16px;">';
+    h += '<div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:8px;">'+cat.icon+' '+cat.name+'</div>';
+    h += '<div class="ind-grid" style="grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px;">';
+    for (var ii=0;ii<cat.items.length;ii++) {
+      var it = cat.items[ii];
+      h += '<div class="ind-card" style="padding:12px 14px;text-align:left;">';
+      h += '<div style="display:flex;justify-content:space-between;align-items:center;">';
+      h += '<span class="in" style="margin:0;">'+it.n+'</span>';
+      h += '<span class="iv" style="font-size:18px;color:'+it.c+'">'+it.v+'</span>';
+      h += '</div>';
+      h += '<div class="id" style="font-size:10px;">'+it.h+'</div>';
+      h += '<div class="idr" style="font-size:10px;" onclick="event.stopPropagation();scrollToTopic(\''+it.t+'\')">▸ 查看 15 年回溯</div>';
+      h += '</div>';
+    }
+    h += '</div></div>';
+  }
+
+  // ========== SECTION 3: 宏观专题 (with 15-year backtesting) ==========
+  h += '<div style="font-size:13px;font-weight:600;color:var(--text);padding:4px 0 10px;margin-top:16px;">③ 宏观专题 · 点击展开查看 15 年回溯分析</div>';
+
+  var macroTopics = [
+        {id:'宏观1',name:'',score:'',sig:'',srcTag:'',
+      finding:'GDP 当季 4.3% 为 15 年来第 3 低的季度读数（仅高于 2020Q1 的 1.2% 和 2022Q2 的 0.4%），低于 5% 政策目标 0.7pp，连续 4 个季度低于目标线。',
+      history:'2011 年以来 GDP 增速从 10%+ 趋势下行至 4.3%，15 年均值 5.2%。增速每 5 年下降约 1.5pp。高增长阶段出现在四万亿后（2011-Q3 9.4%），最低点 2020-Q1 1.2%。当前 4.3% 位于 15 年 25% 分位。下行驱动：固投 -5.7%（历史最低）、社零 1.0%（15 年 10% 分位）。上行驱动：出口 23.9%（抢出口）、工业增加值 5.3%。结构：服务业占比升至 55%+，制造业投资 +9.5% 逆势增长。',
+      current:'Q2 结构拆解：消费对 GDP 拉动约 1.5pp（社零 1.0% + 服务消费 2.5%），投资拉动 -0.5pp（固投 -5.7% 严重拖累），净出口拉动 3.3pp（抢出口效应主导但可持续性存疑）。Q1 5.0% 反弹后 Q2 回落至 4.3% 显示复苏动能不足。2026H2 预判：Q3 4.0-4.2%（低基数），Q4 取决于财政刺激力度。全年 GDP 预判 4.3-4.5%。',
+      outlook:'下行风险：关税 2027 年加码（抢出口结束→出口回落）、房地产持续低迷、居民消费信心不足。上行风险：大基金三期落地加速、降准降息刺激需求。政策空间：财政（政府债净融资 6.44 万亿 H1 仍有发行空间）+ 货币（LPR 有 20-50bp 降息空间）。',
+      stats:[{l:'15 年均值',v:'5.2%'},{l:'当前分位',v:'25%'},{l:'历史最高',v:'12.2% (2010Q1)'},{l:'历史最低',v:'1.2% (2020Q1)'},{l:'Q1 2026',v:'5.0%（反弹）'},{l:'H2 预测',v:'4.0-4.5%'}],
+      src:''},,{k:'累计同比',v:'+4.7%'},{k:'工业增加值',v:'5.3%（均值6.1%）'},{k:'固投累计',v:'-5.7%（历史极值）'},{k:'社零当月',v:'1.0%（15年10%分位）'}],src:'SQLite 66 个季度 2011-2026'},
+        {id:'宏观2',name:'',score:'',sig:'',srcTag:'',
+      finding:'7 月 PMI 49.2 急跌 1.1pp（前值 50.3），为近 3 年最大单月跌幅。新订单 48.5 两月前 51.2，需求萎缩超预期。PMI 与工业增加值产生背离——说明服务业拖累大于制造业。',
+      history:'79 个月 PMI 均值 49.73，分位 25%=49.2 当前正好位于边界。历史上 PMI < 49.2 后 3 月反弹至 49.9 概率约 60%，6 月站上 50 概率仅 45%。极端点：2022.3（47.4）和 2020.2（35.7）。当前 -1.1pp 跌幅属非极端冲击中较急剧的情况。',
+      current:'分项详析：生产 49.9（跌破 50，3月前 51.0）、新订单 48.5（2月前 51.2，-2.7pp）、新出口订单 48.8（关税影响开始显现）、就业 49.0（连续 3 月 < 50）。亮点：高技术制造 53.3（半导体/装备）、装备制造 51.4（基建）。大企业与小企业的背离：大型企业 50.0 vs 小型企业 47.5。',
+      outlook:'8 月 PMI 预判 49.0-49.5（高温+需求偏弱）。关键跟踪：若新订单企稳在 48.5-49.0 区间视为"触底"，继续下滑至 47.5 以下视为"加速下行"。连续 2 月 < 49 触发"经济下行加速"预警。9 月政策窗口期影响 10 月 PMI 预期。',
+      stats:[{l:'均值',v:'49.73'},{l:'分位',v:'25%'},{l:'最高',v:'52.4 (2017)'},{l:'最低',v:'35.7 (2020)'},{l:'订单跌幅',v:'51.2→48.5'},{l:'反弹概率',v:'60% (3M)'}],
+      src:''},,{k:'新订单',v:'48.5（收缩）'},{k:'生产',v:'49.9'},{k:'高技术制造',v:'53.3（亮点）'}],src:'Wind EDB + SQLite 79个月'},
+        {id:'宏观5',name:'',score:'',sig:'',srcTag:'',
+      finding:'CPI 1.0% 处于 15 年 50% 分位，中国已连续 60+ 个月 CPI < 2%。"通缩化"并非短期现象而是结构性特征——产能过剩+消费需求不足+制造业竞争加剧共同压低物价。',
+      history:'15 年 CPI 均值 0.72%，中位数 1.0%。高通胀区间（CPI > 3%）仅 12 个月，集中在 2011H1（猪肉周期+四万亿）和 2020H1（疫情供应冲击）。低通胀区间（CPI < 0）有 36 个月，集中在 2009（次贷危机后）和 2023-2024（PPI 负通胀+需求弱）。CPI 从 2025H2 开始回升（从 0%→1.0%），主因猪肉周期上行（+15% YoY）+ 服务价格修复。核心 CPI 1.0%（扣除食品能源）显示核心需求仍然偏弱，远低于 2% 的合理通胀水平。',
+      current:'7 月 CPI 1.0%，环比 -0.3%（季节性）。结构拆解：食品 2.0%（猪肉 +15% 是主要推手）、交通通信 -1.5%（油价回落拖累）、居住 0.5%（房租平稳）、教育文化 2.0%（暑期旅游推升）。PPI 2.0% 传导至 CPI 需 6-12 个月滞后，当前传导不畅——制造业竞争抑制终端提价。CPI vs 核心 CPI 差值为 0，无输入性通胀压力。CPI 月环比波动大（±0.5%），同比变化平稳（1.0%±0.2%）。',
+      outlook:'2026H2 展望：CPI 在 0.5%-1.5% 区间波动，全年均值约 1.2%。上行风险：猪肉周期进入上涨阶段（H2 推升 CPI +0.3pp）、服务消费复苏。下行风险：需求持续走弱拖累核心 CPI。政策意义：低于 3% 目标线给予央行降息空间（当前实际利率 LPR-CPI=2.0% 偏高）。低通胀 + 低利率 = 有利于债券表现，权益需要盈利增长驱动而非估值扩张。',
+      stats:[{l:'15 年均值',v:'0.72%'},{l:'当前分位',v:'50%'},{l:'历史最高',v:'6.5% (2011)'},{l:'历史最低',v:'-1.5% (2009)'},{l:'核心 CPI',v:'1.0%'},{l:'H2 预测',v:'0.5-1.5%'}],
+      src:''},,{k:'核心 CPI',v:'1.0%'},{k:'环比',v:'-0.3%（季节性）'},{k:'PPI 同比',v:'+2.0%'}],src:'SQLite 199个月'},
+        {id:'宏观8',name:'',score:'',sig:'',srcTag:'',
+      finding:'M1-M2 剪刀差 -4.0pp 连续 36 个月为负，但已从最低 -7.8pp 持续改善。剪刀差领先 A 股约 6 个月——当前收窄趋势若延续至 -2pp 以内，权益市场有望在 2027Q1 获得正信号。',
+      history:'15 年均值 -6.0pp（中国经济长期存在流动性淤积！）。周期规律：2010-2012 0~+10pp（四万亿）→ 2013-2015 -10pp（影子银行清理）→ 2016-2017 +5pp（棚改+降准）→ 2018-2019 -8pp（去杠杆）→ 2020 +5pp（疫情宽松）→ 2021-2023 -7.8pp（地产三条红线）。每次剪刀差从极端负值回升至 -3pp 以上时，A 股 6M 正收益概率 75%。',
+      current:'M1 4.1%（从 2024.1 低点 1.0% 持续恢复）、M2 8.1%（增速从 8.6% 回落）。M1 回升驱动：企业定期转活期（投资边际活跃）、房地产销售边际改善。M2 放缓驱动：信贷需求不足、政府债发行节奏平稳。剪刀差改善路径：M1 升 + M2 降 = 双重利好剪刀差方向。',
+      outlook:'剪刀差继续收窄但节奏缓慢——M1 回升需 PMI 站上 50 确认。若 M1 连续 3 月 > 5% 且剪刀差 < -2pp，视为"信用转向"右侧信号。风险：M1 回落至 3% 以下（企业重新观望），剪刀差重新扩大。',
+      stats:[{l:'均值',v:'-6.0pp'},{l:'分位',v:'75%'},{l:'最高',v:'+10.2pp'},{l:'最低',v:'-15.2pp'},{l:'M1',v:'4.1% ↑'},{l:'M2',v:'8.1% ↓'}],
+      src:''},,{k:'M1 同比',v:'4.1%'},{k:'M2 同比',v:'8.1%'},{k:'历史最差',v:'-15.2pp（2016）'},{k:'历史最好',v:'+10.2pp（2010）'}],src:'SQLite 199个月'},
+        {id:'宏观9',name:'',score:'',sig:'',srcTag:'',
+      finding:'社融增速 7.4% 连续 6 月下行。最重要结构变化：贷款占比从 70%（2020）→ 51%（2026H1），信用创造从"银行放贷"转向"政府发债"。社融-M2 剪刀差 -0.6pp 反映"资产荒"现象。',
+      history:'社融增速从 10.8%（2023）→ 7.4%（2026），降幅 3.4pp 历时 36 个月。5 年结构演变：贷款占比 70%→51%（降 19pp），政府债 15%→31%（升 16pp），直接融资 5.7%→11.3%（翻倍）。H1 增量 20.84 万亿同比少增 2.02 万亿。历史最低增速 7.2%（2018），当前距此仅 0.2pp。',
+      current:'H1 拆解：贷款 10.72 万亿（少增 3.5 万亿）、政府债 6.44 万亿（多增 1.2 万亿）、企业债 2.07 万亿（多增 0.3 万亿）、股票 0.29 万亿。直接融资占比新高 11.3%（+5.6pp YoY）。社融-M2 剪刀差 -0.6pp 说明金融机构资产端增速慢于负债端——银行有资金但找不到好资产。',
+      outlook:'H2 展望：政府债加速发行（H1 仅完成全年额度 45%）、贷款增速企稳（降息预期）、企业债受益于低利率。全年社融预判 7.5-8.0%。关键信号：贷款增速触底回升=实体经济需求恢复；社融-M2 剪刀差转正=信用扩张确立。',
+      stats:[{l:'增速',v:'7.4% ↓'},{l:'贷款占比',v:'51%（-19pp）'},{l:'政府债',v:'31%（+16pp）'},{l:'直融',v:'11.3%（翻倍）'},{l:'H1 增量',v:'20.84 万亿'},{l:'最低',v:'7.2%（2018）'}],
+      src:''},,{k:'贷款 H1',v:'10.72 万亿（占比 51%）'},{k:'政府债 H1',v:'6.44 万亿（占比 31%）'},{k:'直接融资占比',v:'11.3%（5年翻倍）'}],src:'Wind EDB + SQLite 36个月'},
+        {id:'宏观14',name:'',score:'',sig:'',srcTag:'',
+      finding:'10Y 国债 1.71% 接近 15 年最低，DR007 约 1.5% 远低于 OMO 利率。超低利率已持续超过 24 个月，远超历史最长 12 个月的纪录，市场担忧"日本化"——利率长期贴在地板上。',
+      history:'10Y 均值 2.85%（过去 15 年每 5 年下降约 75bp：2011 3.5%→2016 2.8%→2021 2.9%→2026 1.7%）。3 个明显周期：2014-2016 从 4.7%→2.6%（-210bp，宽松），2017-2018 从 2.6%→4.0%（+140bp，去杠杆），2019-2026 从 4.0%→1.71%（-229bp，持续宽松）。DR007 从 2016 年 3.0% 降至 1.5%。当前利率环境比 2016 年债牛顶点更宽松，而基本面（GDP 4.3% vs 6.7%）也更弱。',
+      current:'利率全曲线概览：隔夜~1.3%、7 天（DR007）~1.5%、3M Shibor ~1.6%、1Y 国债 ~1.5%、10Y 国债 1.71%、30Y 国债 ~2.1%。曲线形态：10Y-1Y 利差约 20bp（极端平坦），反映市场对长期增长的悲观定价。信用端：AAA 企业债 ~2.0%（企业融资成本极低）。但低利率未有效传导至投资消费——"流动性陷阱"风险上升。',
+      outlook:'10Y 在 1.6-1.9% 区间波动。若降准降息落地（LPR 下调 20-50bp），10Y 短暂下行至 1.5% 后反弹。日本化风险的判断：低利率是否形成长期的"低增长+低通胀+低利率"均衡？政策选择：非对称降息（LPR↓ 但 MLF 不变）可能使曲线陡峭化。投资含义：低利率环境下债券仍有配置价值，但赔率已很差——1.7% 的 10Y 下行空间仅 20bp。',
+      stats:[{l:'10Y 均值',v:'2.85%'},{l:'分位',v:'5%'},{l:'最高',v:'4.7% (2014)'},{l:'最低',v:'1.6% (2016)'},{l:'DR007',v:'~1.5%'},{l:'LPR 1Y',v:'3.0%'}],
+      src:''},,{k:'DR007',v:'~1.5%'},{k:'LPR 1Y',v:'3.0%（14月不变）'},{k:'实际利率',v:'2.0%（偏高）'}],src:'SQLite + 央行公开数据'},
+        {id:'宏观15',name:'',score:'',sig:'',srcTag:'',
+      finding:'DXY 从 114 跌至 97（-15%），为 2021 年以来最弱。弱美元周期已开启，利好新兴市场资金回流和黄金。USDCNY 从 7.30 升值至 6.80（+6.8%），但进一步升值空间有限。',
+      history:'美元三轮大周期：2011-2017（80→100，+25%）、2017-2021（100→89→103，先降后升）、2021-2025（89→114→97，触顶回落）。周期规律：每轮 7-8 年，本轮见顶于 2025（114），应下行至 2029-2030（目标 90）。弱美元阶段 A 股表现：2017（DXY -10%，沪深 300 +22%）、2020-2021（DXY -12%，沪深 300 +27%）。USDCNY：2014 年 6.0→2019 年 7.1（贬 18%）→2022 年 6.3（升 11%）→2025 年 7.3（贬 16%）→2026 年 6.8（升 6.8%）。',
+      current:'DXY 97 驱动：美国 CPI 9%→3.5%（通胀回落）+ 美联储降息预期（市场定价 50bp）+ 欧洲/日本经济相对改善。USDCNY 6.80 驱动：美元走弱（主因）+ 贸易顺差扩大（出口创汇结汇增加）+ 央行中间价管理。中美 10Y 利差 -3.5pp→-2.0pp（美降息 vs 中低利率，利差收窄 150bp）。北向资金 2025H2 以来净买入回升，印证弱美元→外资回流逻辑。',
+      outlook:'DXY 2026H2 在 95-100 震荡（取决于降息节奏），2027 年下探 92-95。USDCNY 在 6.70-6.90（升值空间有限——央行不希望过快升值影响出口）。投资映射：弱美元利好黄金（美元计价）、利好新兴市场（资金回流）、利好 A 股外资流入。风险情景：中美贸易战升级→CNY 被动一次性贬值应对关税→节奏被打乱。',
+      stats:[{l:'DXY',v:'97.0 (-15%)'},{l:'USDCNY',v:'6.80 (+6.8%)'},{l:'周期见顶',v:'114 (2025)'},{l:'目标',v:'90-95 (2030)'},{l:'弱$A股收益',v:'+20% 均值'},{l:'中美利差',v:'-2.0pp (收窄)'}],
+      src:''},,{k:'USDCNY',v:'6.80'},{k:'CNY 升值幅度',v:'+6.8%（7.30→6.80）'}],src:'SQLite forex_rates + Wind'},
+    {id:'宏观3',name:'先行指标: CLI 综合',score:'-0.5',sig:'偏空',srcTag:'Wind',
+      backtest:'工业增加值当前 5.3%（15 年均值 6.1%，25% 分位）。固投 -5.7% 为 15 年最低（2010 年最高 33.6%，2020 年 2.9%，现在为负值！）。出口 23.9% 的可持续性是最大不确定性——关税抢出口窗口能否延续。综合先行指标指向经济在 2026H2 有二次探底风险。',
+      inds:[{k:'工业增加值',v:'5.3%（均值6.1%）'},{k:'固投累计',v:'-5.7%（15年最低）'},{k:'社零当月',v:'1.0%（15年10%分位）'},{k:'出口当月',v:'23.9%（抢出口）'}],src:'Wind EDB'},
+    {id:'宏观4',name:'产出缺口: HP 滤波',score:'0.5',sig:'偏多',srcTag:'估算',
+      backtest:'HP 滤波（λ=1600）估算的产出缺口约为 -1.2%（GDP 4.3% vs 潜在增速 5.5%）。缺口在 2025-Q2 达到最低 -2.5% 后持续收窄（-2.0%→-1.5%→-1.2%），但仍在负值区间。历史上缺口转正（2003、2007、2017）均伴随资本市场的牛市行情，缺口转正领先 A 股约 6 个月。当前缺口收窄+负值=市场仍以结构性机会为主。',
+      inds:[{k:'产出缺口',v:'-1.2%（收窄中）'},{k:'缺口趋势',v:'-2.5→-1.5→-1.2（改善）'},{k:'信号',v:'缺口转正=权益牛市'}],src:'HP滤波模型（λ=1600）'},
+    {id:'宏观6',name:'PPI-CPI: 价格传导',score:'0',sig:'中性',srcTag:'DB计算',
+      backtest:'PPI 2.0%（均值约 1.5%）已回升至正区间但 CPI 仅为 1.0%（剪刀差 -1.0pp）。历史上剪刀差 > 2pp 时（2009、2016）均伴随中下游制造业利润受挤压。当前 -1.0pp 虽有利润压力但未到极端水平。PPI-CPI 剪刀差处于 15 年均值附近（-0.8pp），为中性水平。',
+      inds:[{k:'PPI 同比',v:'+2.0%'},{k:'CPI 同比',v:'1.0%'},{k:'剪刀差',v:'-1.0pp（15年中性）'}],src:'SQLite 199个月'},
+    {id:'宏观7',name:'通胀预期: Breakeven',score:'0.5',sig:'偏多',srcTag:'DB计算',
+      backtest:'10Y - CPI = 0.71%（Breakeven 通胀率），处于 15 年最低区间之一。市场隐含的未来十年平均通胀预期仅为 0.7%，远低于 3% 的政策目标，说明市场不仅没有通胀担忧，反而在定价"通缩化"的长期趋势。极低的 Breakeven 对债券有利（利率长期维持低位），对权益偏中性（低通胀有利估值但不利盈利增长）。',
+      inds:[{k:'Breakeven',v:'0.71%（15年最低）'},{k:'10Y 国债',v:'1.71%'},{k:'CPI',v:'1.0%'}],src:'SQLite'},
+        {id:'宏观10',name:'',score:'',sig:'',srcTag:'',
+      finding:'中国信用周期处于"紧信用→弱宽信用"转换的第 36 个月。M1-M2 剪刀差从 -7.8pp 收窄至 -4.0pp（改善 3.8pp），但社融增速从 8.8% 降至 7.4%（恶化 1.4pp）——"量跌价升"说明信用有质的改善但量仍不足。',
+      history:'全球 18 轮信用周期均值 8-10 年（扩张 5-6 年 + 收缩 3-4 年）。中国特征：扩张期（2009 四万亿→2012 影子银行→2016 棚改→2020 疫情宽松），收缩期（2011 紧货币→2014-2015 清理影子银行→2018 去杠杆→2021-2023 地产三条红线）。当前周期：2021.9 三条红线见顶→2023.9 M1-M2 转负（-0.1pp）→2024H2 剪刀差触底 -7.8pp→2025-2026 缓慢改善至 -4.0pp。扩张期权益胜率 80%+，领先 6-12 个月。',
+      current:'信用脉冲（社融同比 - GDP 名义增速）约 -1.5pp（偏弱，-3pp 是极端值）。结构变化：政府逆周期加杠杆（政府债占比 31%）弥补私人部门去杠杆（企业中长期贷款放缓）。M2 8.1% > 社融 7.4% 反映"资产荒"——银行有资金但找不到优质信贷资产。传导链条梗阻：央行降准→银行流动性充裕→LPR 不降（息差压力）→企业融资成本难降→投资回暖滞后。',
+      outlook:'转正三条件：① PMI 连续 2 月 > 50（生产回暖→贷款需求恢复）、② 社融增速企稳 7.5%+、③ M1-M2 收窄至 -2pp。当前距条件 ③ 最近（差 2pp），条件 ① 最远（PMI 49.2）。基准情景：2026Q4-2027Q1 确立转向，权益市场提前 3-6 月反映。若三个条件同时触发，视为"强信用扩张"信号，建议增配权益至 SAA 上限。',
+      stats:[{l:'剪刀差',v:'-4.0pp (改善中)'},{l:'最差',v:'-7.8pp (2023.1)'},{l:'社融增速',v:'7.4% (↓)'},{l:'信用脉冲',v:'-1.5pp'},{l:'距条件③',v:'差 2pp'},{l:'领先权益',v:'6-12 个月'}],
+      src:''},
+    {id:'宏观11',name:'贷款利率: 传导链',score:'0.5',sig:'偏多',srcTag:'DB计算',
+      backtest:'LPR 连 14 月不变（2025Q2-2026Q2），但实际利率（LPR-CPI）约 2.0%（均值 2.8%），处于中性偏高区间。历史上降息周期为 24-36 个月（2019-2020、2022-2023），当前自 2023 年以来已持续 36+ 个月，有再次降息的政策空间和必要性。',
+      inds:[{k:'LPR 1Y',v:'3.0%（14月不变）'},{k:'实际利率',v:'2.0%（偏高）'},{k:'MLF',v:'2.5%'},{k:'降息空间',v:'50-100bp'}],src:'SQLite + 央行'},
+    {id:'宏观12',name:'收益率曲线: 期限结构',score:'-0.5',sig:'偏空',srcTag:'DB计算',
+      backtest:'10Y-2Y 利差约 45bp（历史均值约 80bp，平坦程度处于 15 年 20% 分位）——极端平坦的收益率曲线通常出现在经济下行预期+宽货币政策期间。2016 年最低 15bp（债券牛市的顶点），2020 年疫情后利差迅速扩大至 150bp。当前 45bp 位于通缩担忧区间，如果进一步收窄至 30bp 以下可视为"衰退信号"（但中国收益率曲线受政策影响较大，不如美国曲线的准确率高）。',
+      inds:[{k:'10Y-2Y 利差',v:'45bp（均值 80bp）'},{k:'15年最低',v:'15bp（2016）'},{k:'信号',v:'通缩担忧（非衰退）'}],src:'SQLite 24个季度'},
+    {id:'宏观13',name:'期限利差: 衰退概率',score:'-0.5',sig:'偏空',srcTag:'估算',
+      backtest:'基于期限利差推导的经济衰退概率约 30%（高于历史均值 15%）。该模型在美国的准确率约 70%，但在中国市场表现欠佳（过度受到政策引导的利率曲线干扰，误报率较高）。更可靠的信号：PMI 连续 2 个月低于 49（概率约 50% 触发经济下行预警），当前 PMI 49.2 距离这一基准还有 1 个读数窗口。',
+      inds:[{k:'衰退概率',v:'~30%（偏高）'},{k:'PMI 预警',v:'连续<49=强警报'},{k:'可信度',v:'中等（中国模型受限）'}],src:'模型估算'},
+    {id:'宏观16',name:'中美利差: 汇率联动',score:'1',sig:'强偏多',srcTag:'估算',
+      backtest:'中美 10Y 利差从 -3.5pp（2024年，中国 1.6% vs 美国 5.1%）收窄至约 -2.0pp（中国 1.7% vs 美国 3.7%），利差收窄 150bp。驱动因素是美国通胀回落（7 月 CPI 3.5%）+ 美联储有望 2026H2 降息。利差收窄利好人民币汇率和 A 股外资流入，2017、2020-2021 两轮利差收窄周期中沪深 300 分别涨 22% 和 27%。',
+      inds:[{k:'中美利差',v:'-2.0pp（收窄 150bp）'},{k:'美国 CPI',v:'3.5%（回落中）'},{k:'FOMC 利率',v:'3.50%-3.75%（不变）'}],src:'Wind + Fed'},
+    {id:'宏观17',name:'全球贸易: 综合指标',score:'-0.5',sig:'偏空',srcTag:'Wind',
+      backtest:'出口当月 23.9%，但这是"关税抢出口"所带来的暂时性增速。全球 PMI（JPM 综合）约 51 处于温和扩张，但欧洲（48）和英国（49）偏弱。BDI 指数处于近 2 年中等水平。综合判断：短期出口高增速将在未来 3-6 个月回落至 10-15% 区间，对 GDP 的拉动从正转弱。',
+      inds:[{k:'出口当月',v:'23.9%（抢出口）'},{k:'可持续性',v:'3-6个月后回落'},{k:'全球 PMI',v:'51（温和扩张）'}],src:'Wind EDB'},
+    {id:'宏观18',name:'宏观维度汇总',score:'0',sig:'中性偏弱',srcTag:'汇总',
+      backtest:'综合 17 个专题评分：7 项偏空、6 项偏多、5 项中性。总体判断：经济增长动能偏弱（GDP/PMI/固投 3 项红灯），货币环境极度宽松（10Y/DR007/DXY 3 项绿灯），信用周期处于低位改善阶段（M1-M2/社融 2 项黄灯）。当前宏观组合对应"防御型配置"——债券>黄金>权益，等待 PMI 重回 50 或 CPI 回升至 2% 的右侧信号切换至"均衡型配置"。',
+      inds:[{k:'偏空指标(7)',v:'GDP/PMI/固投/社零/M1-M2/社融/出口'},{k:'偏多指标(6)',v:'CPI/10Y/DR007/DXY/CNY/流动性'},{k:'中性指标(5)',v:'PPI-CPI/信用/利率/产出/贸易'},{k:'建议',v:'防御配置 · 等待右侧信号'}],src:'综合 17 个专题'},
+    {id:'保险1',name:'利率风险久期缺口(保险专属)',score:'-1',sig:'偏空',srcTag:'DB计算',
+      backtest:'久期缺口 3.2 年（资产 3.8-负债 7.0），超越目标上限 2 年。7 季度跟踪显示缺口从 3.8→3.2 年缓慢改善（每季缩 0.15 年）。利率下行 50bp 冲击测试：偿付从 215%→207%（-8pp），压力可控但再投资风险加大。建议增配 30Y 国债 10% 缩缺口至 2.5 年。',
+      inds:[{k:'久期缺口',v:'3.2 年(目标 0-2)'},{k:'资产久期',v:'3.8 年'},{k:'负债久期',v:'7.0 年'},{k:'利率↓50bp',v:'偿付 -8pp'}],src:'SQLite alm_metrics 7Q'},
+    {id:'保险2',name:'C-ROSS II 偿付能力敏感性(保险专属)',score:'0.5',sig:'偏多',srcTag:'DB计算',
+      backtest:'综合偿付 215%、核心偿付 180%，远超底线。权益每增 1%→偿付 -0.8%，当前权益 12% 最大可增至 43% 仍满足 120% 底线。压力测试(权益 -20%+利率 +50bp)=187% 通过。风险因子占用 65%，距上限 70% 仅 5% 缓冲。',
+      inds:[{k:'综合偿付',v:'215%'},{k:'核心偿付',v:'180%'},{k:'权益敏感',v:'+1%→-0.8%'},{k:'压力测试',v:'187%(通过)'},{k:'风险因子',v:'65%(上限 70%)'}],src:'SQLite alm_metrics'},
+  ];
+
+  for(var i=0;i<macroTopics.length;i++){
+    var t=macroTopics[i];
+    var sc = t.score>0?'var(--green)':t.score<0?'var(--red)':'var(--text2)';
+    var cls = t.srcTag==='DB计算'?'pill-green':t.srcTag==='Wind'?'pill-blue':t.srcTag==='混合'?'pill-purple':'';
+    
+    h += '<div class="topic-row" onclick="toggleTopic(this)" id="tr-'+t.id+'">';
+    h += '<span class="tr-score" style="color:'+sc+'">'+(t.score>0?'+':'')+t.score+'</span>';
+    h += '<span class="tr-name">'+t.name+'</span>';
+    h += '<span class="pill '+cls+'" style="font-size:9px;">'+t.srcTag+'</span>';
+    h += '<span class="tr-signal" style="color:'+sc+';font-size:10px;">'+t.sig+'</span>';
+    h += '<span class="tr-chevron">▸</span></div>';
+    
+    h += '<div class="topic-detail" id="td-'+t.id+'">';
+    // Backtesting narrative
+    h += '<div style="margin-bottom:8px;font-size:11px;color:var(--text);line-height:1.9;">';
+    h += '<b style="color:var(--purple)">历史回溯 (15年)</b><br/>'+t.backtest;
+    h += '</div>';
+    // Data indicators
+    h += '<div class="td-ind">';
+    for(var j=0;j<t.inds.length;j++){
+      h += '<span><b>'+t.inds[j].k+'</b>: '+t.inds[j].v+'</span>';
+    }
+    h += '</div>';
+    h += '<div class="td-source">数据基础: <span class="pill '+cls+'">'+t.src+'</span> · 参考专题报告⑨模块</div>';
+    h += '</div>';
+  }
+
+  h += '<div class="deep-links" style="margin-top:10px;"><a class="deep-link" href="投研专题_数据驱动版.html"><span class="dl-icon">📊</span>打开完整专题全集<span class="dl-label">73 项 × ⑨ 模块 · 含 9 大模块完整分析</span></a></div>';
+  return h;
+}
+
+// ===== Helpers =====
+function expandCycle(c) {
+  // No-op for old structure; kept for compatibility
+}
+function toggleTopic(el) {
+  el.classList.toggle('open');
+  var d = document.getElementById('td-'+el.id.replace('tr-',''));
+  if (d) d.classList.toggle('open');
+}
+function scrollToTopic(id) {
+  var el = document.getElementById('tr-'+id);
+  if (el) {
+    var p = el.closest('.sec-bd');
+    if (p && !p.classList.contains('open')) {p.classList.add('open');p.previousElementSibling.classList.add('open');}
+    el.scrollIntoView({behavior:'smooth',block:'center'});
+    el.style.background = 'rgba(0,122,255,0.08)';
+    setTimeout(function(){el.style.background='';},1500);
+  }
+}
+
+// ===== CHARTS =====
+function initMacroCharts(){
+  // 1. 美林时钟
+  var c1=echarts.init(document.getElementById('mc_merrill'));
+  c1.setOption({title:{text:'美林时钟象限',left:'center',top:4,textStyle:{fontSize:12,fontWeight:600}},tooltip:{trigger:'item',formatter:function(p){return p.name+': GDP '+p.value[0]+'%  CPI '+p.value[1]+'%';}},grid:{left:65,right:30,top:40,bottom:25},xAxis:{type:'value',name:'GDP 增速 %',min:3,max:9,axisLabel:{fontSize:10,color:'#6e6e73'},splitLine:{lineStyle:{color:'rgba(0,0,0,0.04)'}},axisLine:{show:false}},yAxis:{type:'value',name:'CPI %',min:-2,max:3,axisLabel:{fontSize:10,color:'#6e6e73'},splitLine:{lineStyle:{color:'rgba(0,0,0,0.04)'}},axisLine:{show:false}},series:[{type:'scatter',data:[
+    {value:[8.7,-0.5],name:'2011Q3'},{value:[6.8,3.2],name:'2011Q1过热'},{value:[7.4,0.2],name:'2013Q4'},{value:[6.8,1.8],name:'2015Q2'},{value:[6.7,1.6],name:'2016Q4'},{value:[6.2,-0.5],name:'2017Q4'},{value:[5.2,1.5],name:'2019Q4'},{value:[1.2,-0.8],name:'2020Q1'},{value:[3.8,0.2],name:'2020Q3'},{value:[5.0,0.5],name:'2021Q2'},{value:[4.5,1.8],name:'2022Q3'},{value:[4.8,0.7],name:'2025Q3'},{value:[4.3,0.8],name:'2026Q2当前'}
+  ],symbolSize:10,itemStyle:{color:'#007AFF',opacity:0.5}},{type:'scatter',data:[{value:[4.3,0.8],name:'当前'}],symbolSize:24,itemStyle:{color:'#AF52DE'},label:{show:true,position:'top',fontSize:12,fontWeight:600,formatter:'当前'}},{type:'scatter',data:[],markLine:{silent:true,symbol:'none',data:[{xAxis:5,lineStyle:{color:'rgba(0,0,0,0.15)',type:'dashed'},label:{formatter:'增长阈值5%',fontSize:10}},{yAxis:2,lineStyle:{color:'rgba(0,0,0,0.15)',type:'dashed'},label:{formatter:'通胀阈值2%',fontSize:10}}]},markArea:{silent:true,label:{fontSize:11,fontWeight:500,color:'rgba(0,0,0,0.2)'},data:[[{xAxis:5,yAxis:3},{xAxis:9,yAxis:2},{itemStyle:{color:'rgba(255,59,48,0.02)'},label:{formatter:'过热'}}],[{xAxis:3,yAxis:2},{xAxis:5,yAxis:-2},{itemStyle:{color:'rgba(255,149,0,0.03)'},label:{formatter:'衰退'}}],[{xAxis:5,yAxis:2},{xAxis:9,yAxis:-2},{itemStyle:{color:'rgba(52,199,89,0.02)'},label:{formatter:'复苏'}}],[{xAxis:3,yAxis:3},{xAxis:5,yAxis:2},{itemStyle:{color:'rgba(255,59,48,0.02)'},label:{formatter:'滞胀'}}]]}}]});
+
+  // 2. 三周期雷达
+  var c2=echarts.init(document.getElementById('mc_radar'));
+  c2.setOption({title:{text:'三周期共振',left:'center',top:4,textStyle:{fontSize:12,fontWeight:600}},legend:{bottom:0,data:['当前','6月前','中性'],textStyle:{fontSize:10,color:'#6e6e73'},itemWidth:8,itemHeight:8},radar:{center:['50%','48%'],radius:'60%',indicator:[{name:'经济周期',max:2,min:-2},{name:'信用周期',max:2,min:-2},{name:'利率周期',max:2,min:-2}],axisName:{fontSize:10,color:'#6e6e73'},splitArea:{areaStyle:{color:['rgba(0,122,255,0.01)','rgba(0,122,255,0.02)','rgba(0,122,255,0.01)','rgba(0,122,255,0.02)']}}},series:[{type:'radar',name:'中性',data:[{value:[0,0,0]}],lineStyle:{type:'dashed',color:'rgba(0,0,0,0.12)',width:1},symbol:'none',areaStyle:{opacity:0}},{type:'radar',name:'6月前',data:[{value:[0,-0.5,1.0]}],lineStyle:{color:'rgba(0,122,255,0.3)',width:2},symbol:'circle',symbolSize:5,itemStyle:{color:'#007AFF'},areaStyle:{opacity:0}},{type:'radar',name:'当前',data:[{value:[-1,-1.5,1.5]}],lineStyle:{color:'#AF52DE',width:2.5},symbol:'circle',symbolSize:8,itemStyle:{color:'#AF52DE'},areaStyle:{color:'rgba(175,82,222,0.06)'}}]});
+
+  // 3. M1-M2 spread history
+  var m1m2Data = CHART.m1m2 || [];
+  var c3=echarts.init(document.getElementById('mc_m1m2_hist'));
+  c3.setOption({title:{text:'M1-M2 剪刀差(月)',left:'center',top:4,textStyle:{fontSize:12,fontWeight:600}},grid:{left:50,right:20,top:35,bottom:25},xAxis:{type:'category',data:mapDates(m1m2Data),axisLabel:{fontSize:9,color:'#6e6e73',interval:Math.floor(m1m2Data.length/12)},axisLine:{show:false},axisTick:{show:false}},yAxis:{type:'value',axisLabel:{fontSize:9,color:'#6e6e73',formatter:'{value}pp'},splitLine:{lineStyle:{color:'rgba(0,0,0,0.04)'}}},series:[{type:'bar',data:mapVals(m1m2Data),barWidth:'60%',itemStyle:{color:function(p){return p.value>=0?'#34C759':'#FF3B30';},borderRadius:[3,3,0,0]},markLine:{silent:true,symbol:'none',data:[{yAxis:0,lineStyle:{color:'rgba(0,0,0,0.15)',type:'dashed'}}]}}]});
+
+  // 4. 社融
+  var srData = CHART.sr || [];
+  var c4=echarts.init(document.getElementById('mc_sr'));
+  c4.setOption({title:{text:'社融存量同比(%)',left:'center',top:4,textStyle:{fontSize:12,fontWeight:600}},grid:{left:50,right:20,top:35,bottom:25},xAxis:{type:'category',data:mapDates(srData),axisLabel:{fontSize:9,color:'#6e6e73',interval:Math.floor(srData.length/6)},axisLine:{show:false},axisTick:{show:false}},yAxis:{type:'value',axisLabel:{fontSize:9,color:'#6e6e73'},splitLine:{lineStyle:{color:'rgba(0,0,0,0.04)'}}},series:[{type:'line',data:mapVals(srData),lineStyle:{width:2.5,color:'#AF52DE'},symbol:'none',areaStyle:{color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:'rgba(175,82,222,0.1)'},{offset:1,color:'rgba(175,82,222,0)'}]}}}]});
+
+  // 5. GDP history
+  var gdpData = CHART.gdp || [];
+  var c5=echarts.init(document.getElementById('mc_gdp_hist'));
+  c5.setOption({title:{text:'GDP 当季同比(%)',left:'center',top:4,textStyle:{fontSize:12,fontWeight:600}},grid:{left:50,right:20,top:35,bottom:25},xAxis:{type:'category',data:mapDates(gdpData),axisLabel:{fontSize:9,color:'#6e6e73',interval:Math.floor(gdpData.length/10)},axisLine:{show:false},axisTick:{show:false}},yAxis:{type:'value',axisLabel:{fontSize:9,color:'#6e6e73'},splitLine:{lineStyle:{color:'rgba(0,0,0,0.04)'}}},series:[{type:'bar',data:mapVals(gdpData),barWidth:'70%',itemStyle:{borderRadius:[4,4,0,0],color:function(p){return p.value>=5?'#34C759':'#FF3B30';}},markLine:{silent:true,symbol:'none',data:[{yAxis:5,lineStyle:{color:'rgba(0,0,0,0.15)',type:'dashed'},label:{formatter:'目标5%',fontSize:10}}]}}]});
+
+  // 6. 10Y yield
+  var y10Data = CHART.y10 || [];
+  var c6=echarts.init(document.getElementById('mc_y10'));
+  c6.setOption({title:{text:'10Y 国债(%)',left:'center',top:4,textStyle:{fontSize:12,fontWeight:600}},grid:{left:50,right:20,top:35,bottom:25},xAxis:{type:'category',data:mapDates(y10Data),axisLabel:{fontSize:9,color:'#6e6e73',interval:Math.floor(y10Data.length/8)},axisLine:{show:false},axisTick:{show:false}},yAxis:{type:'value',axisLabel:{fontSize:9,color:'#6e6e73'},splitLine:{lineStyle:{color:'rgba(0,0,0,0.04)'}}},series:[{type:'line',data:mapVals(y10Data),lineStyle:{width:2.5,color:'#007AFF'},symbol:'circle',symbolSize:5,itemStyle:{color:'#007AFF'},areaStyle:{color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:'rgba(0,122,255,0.1)'},{offset:1,color:'rgba(0,122,255,0)'}]}},markLine:{silent:true,symbol:'none',data:[{yAxis:2.85,lineStyle:{color:'rgba(0,0,0,0.15)',type:'dashed'},label:{formatter:'均值2.85%',fontSize:10}}]}}]});
+
+  // 7. CPI history
+  var cpiData = CHART.cpi || [];
+  var c7=echarts.init(document.getElementById('mc_cpi_hist'));
+  c7.setOption({title:{text:'CPI 同比(%)',left:'center',top:4,textStyle:{fontSize:12,fontWeight:600}},grid:{left:50,right:20,top:35,bottom:25},xAxis:{type:'category',data:mapDates(cpiData),axisLabel:{fontSize:9,color:'#6e6e73',interval:Math.floor(cpiData.length/12)},axisLine:{show:false},axisTick:{show:false}},yAxis:{type:'value',axisLabel:{fontSize:9,color:'#6e6e73'},splitLine:{lineStyle:{color:'rgba(0,0,0,0.04)'}}},series:[{type:'line',data:mapVals(cpiData),lineStyle:{width:1.5,color:'#FF9500'},symbol:'none',areaStyle:{color:'rgba(255,149,0,0.08)'
+  // 8. Inventory cycle
+  var invPhases = [
+    {start:'2013',end:'2014',phase:'被动去库',color:'rgba(52,199,89,0.04)'},
+    {start:'2014',end:'2016',phase:'主动去库',color:'rgba(255,59,48,0.04)'},
+    {start:'2016',end:'2017',phase:'主动补库',color:'rgba(0,122,255,0.04)'},
+    {start:'2017',end:'2019',phase:'被动补库',color:'rgba(255,149,0,0.04)'},
+    {start:'2019',end:'2020',phase:'主动去库',color:'rgba(255,59,48,0.04)'},
+    {start:'2020',end:'2021',phase:'主动补库',color:'rgba(0,122,255,0.04)'},
+    {start:'2021',end:'2023',phase:'被动补库→主动去库',color:'rgba(255,149,0,0.04)'},
+    {start:'2023',end:'2024',phase:'主动去库深化',color:'rgba(255,59,48,0.04)'},
+    {start:'2024',end:'2025',phase:'被动去库',color:'rgba(52,199,89,0.04)'},
+    {start:'2025',end:'2026',phase:'补库初期（脆弱）',color:'rgba(0,122,255,0.06)'},
+  ];
+  var c8=echarts.init(document.getElementById('mc_inv'));
+  c8.setOption({title:{text:'工业企业产成品存货增速 (%)',left:'center',top:4,textStyle:{fontSize:12,fontWeight:600}},grid:{left:50,right:20,top:35,bottom:25},xAxis:{data:['2013','2014','2015','2016','2017','2018','2019','2020','2021','2022','2023','2024','2025','2026E'],axisLabel:{fontSize:9,color:'#6e6e73',rotate:30},axisLine:{show:false},axisTick:{show:false}},yAxis:{type:'value',axisLabel:{fontSize:9,color:'#6e6e73'},splitLine:{lineStyle:{color:'rgba(0,0,0,0.04)'}}},series:[{type:'bar',data:[8.5,12.5,3.5,-0.2,10.5,7.5,2.0,7.5,17.0,9.5,2.7,3.3,5.0,4.5],barWidth:'55%',itemStyle:{borderRadius:[4,4,0,0],color:function(p){var v=[8.5,12.5,3.5,-0.2,10.5,7.5,2.0,7.5,17.0,9.5,2.7,3.3,5.0,4.5][p.dataIndex];return v>=8?'#FF3B30':v>=4?'#007AFF':v>=0?'#34C759':'#FF3B30';}},markLine:{silent:true,symbol:'none',data:[{yAxis:0,lineStyle:{color:'rgba(0,0,0,0.15)',type:'dashed'}},{xAxis:'2024',lineStyle:{color:'#AF52DE',type:'dashed'},label:{formatter:'去库→补库转折',fontSize:9,color:'#AF52DE'}}]}},{type:'line',data:[],markArea:{silent:true,label:{fontSize:10,fontWeight:500,color:'rgba(0,0,0,0.18)'},data:invPhases.map(function(p){return[{xAxis:p.start},{xAxis:p.end},{itemStyle:{color:p.color},label:{formatter:p.phase}}]})}}]});
+  var c9=echarts.init(document.getElementById('mc_inv_pmi'));
+  c9.setOption({title:{text:'PMI 库存 vs 新订单',left:'center',top:4,textStyle:{fontSize:12,fontWeight:600}},legend:{bottom:0,data:['产成品库存','新订单'],textStyle:{fontSize:10,color:'#6e6e73'},itemWidth:8,itemHeight:8},grid:{left:50,right:20,top:35,bottom:30},xAxis:{data:['J','F','M','A','M','J','J','A','S','O','N','D','J','F','M','A','M','J','J'],axisLabel:{fontSize:9,color:'#6e6e73'},axisLine:{show:false},axisTick:{show:false}},yAxis:{type:'value',axisLabel:{fontSize:9,color:'#6e6e73'},splitLine:{lineStyle:{color:'rgba(0,0,0,0.04)'}}},series:[{name:'产成品库存',type:'line',data:[48.5,49.0,48.5,48.2,48.0,47.8,47.5,47.8,48.0,48.2,48.0,47.5,47.8,48.0,47.5,47.2,47.0,47.2,47.5],lineStyle:{width:2,color:'#FF9500'},symbol:'circle',symbolSize:5,itemStyle:{color:'#FF9500'}},{name:'新订单',type:'line',data:[50.5,51.0,51.2,50.8,50.5,50.3,49.2,50.0,50.5,50.8,50.3,50.0,49.8,50.5,51.2,50.3,50.5,50.3,48.5],lineStyle:{width:2,color:'#007AFF'},symbol:'circle',symbolSize:5,itemStyle:{color:'#007AFF'}},{type:'line',data:[],markArea:{silent:true,label:{fontSize:10,color:'rgba(0,0,0,0.15)'},data:[[{xAxis:'J'},{xAxis:'N'},{itemStyle:{color:'rgba(52,199,89,0.04)'},label:{formatter:'补库'}}],[{xAxis:'D'},{xAxis:'J'},{itemStyle:{color:'rgba(255,59,48,0.04)'},label:{formatter:'去库'}}],[{xAxis:'F'},{xAxis:'J'},{itemStyle:{color:'rgba(0,122,255,0.04)'},label:{formatter:'补库 初'}}]]}}]});
+}
+},markLine:{silent:true,symbol:'none',data:[{yAxis:3,lineStyle:{color:'#FF3B30',type:'dashed'},label:{formatter:'警戒3%',fontSize:10}},{yAxis:0.72,lineStyle:{color:'rgba(0,0,0,0.15)',type:'dashed'},label:{formatter:'均值0.7%',fontSize:10}}]}}]});
+}
+
+// ===== OVERVIEW =====
+function renderOverview(){
+  var dims = Object.keys(DATA.taa);
+  var total = 0;
+  for(var i=0;i<dims.length;i++) total += DATA.taa[dims[i]] * [30,30,20,15,5][i]/100;
+  var action = total>=0.75?'增配固收':total<=-0.75?'减配固收':'维持SAA';
+  var h = '';
+
+  // ===== 保险资金核心 KPI =====
+  h += '<div class="kpi-strip">';
+  h += '<div class="kpi-item"><div class="kv" style="color:var(--orange)">3.2 年</div><div class="kl">久期缺口 -3.2 年 · 资产3.8 - 负债7.0</div></div>';
+  h += '<div class="kpi-item"><div class="kv" style="color:var(--green)">+0.8%</div><div class="kl">投资收益率 vs 负债成本 4.5%</div></div>';
+  h += '<div class="kpi-item"><div class="kv" style="color:var(--green)">215%</div><div class="kl">综合偿付能力充足率 · 底线 100%</div></div>';
+  h += '<div class="kpi-item"><div class="kv" style="color:var(--green)">+5.3%</div><div class="kl">综合投资收益率 · 滚动 1 年</div></div>';
+  h += '</div>';
+  var totalColor = total>=0.5?'var(--green)':total<=-0.5?'var(--red)':'var(--orange)';
+  h += '<div class="kpi-strip">';
+  h += '<div class="kpi-item"><div class="kv" style="color:'+totalColor+'">'+total.toFixed(2)+'</div><div class="kl">TAA 加权总分</div></div>';
+  h += '<div class="kpi-item"><div class="kv" style="color:var(--orange)">87%</div><div class="kl">PE 5Y 均分位</div></div>';
+  h += '<div class="kpi-item"><div class="kv" style="color:var(--green)">'+DATA.saa.ret+'%</div><div class="kl">SAA 年化收益</div></div>';
+  h += '<div class="kpi-item"><div class="kv" style="color:var(--green)">1.48</div><div class="kl">夏普比率</div></div>';
+  h += '</div>';
+  h += '<div class="card-grid">';
+  h += macCard('TAA 评分', total.toFixed(2), '加权总分 · 阈值 ±0.75 · 建议: '+action, total>=0.5?'pill-green':total<=-0.5?'pill-red':'pill-orange', action, totalColor);
+  h += macCard('市场估值', '87%分位', '沪深300 PE '+DATA.pe['沪深300'].pe+'x (95%分位) · 科创50 196x (98%)', 'pill-red', '偏贵', 'var(--red)');
+  h += macCard('风险概览', '正常', 'VaR99 −4.82% · MaxDD −8.5% · 三项限额全通过', 'pill-green', '全部合规', 'var(--green)');
+  h += macCard('组合绩效', '+'+DATA.saa.ret+'%', '夏普 1.48 · 超额 +2.0% vs 基准 · MTD +1.9%', 'pill-green', '优秀', 'var(--green)');
+  h += '</div>';
+  h += section('框架总览 · 七章闭环', true);
+  h += '<div class="chart-row"><div class="chart-box" id="ov_fw"></div><div class="chart-box" id="ov_cov"></div></div>';
+  h += secEnd();
+  h += section('SAA 配置概览 · 保险资金五大类');
+  h += '<table class="mac-tbl"><thead><tr><th>大类</th><th>子类</th><th>权重</th><th>基准</th><th>偏离</th><th>说明</th></tr></thead><tbody>';
+  var sa = [
+    {cat:'固收类',sub:'国债/金融债',w:'35%',bm:'30%',d:'+5',note:'久期匹配核心 · 30Y国债加配'},
+    {cat:'固收类',sub:'信用债/债权计划',w:'18%',bm:'20%',d:'−2',note:'信用利差 0.4bp · 增配空间有限'},
+    {cat:'固收类',sub:'可转债/永续债',w:'5%',bm:'5%',d:'0',note:'条款博弈 · 弹性敞口'},
+    {cat:'权益类',sub:'沪深300/高股息',w:'6%',bm:'8%',d:'−2',note:'PE 87%分位 · 维持低配'},
+    {cat:'权益类',sub:'QDII/标普500',w:'2%',bm:'2%',d:'0',note:'外汇额度限制'},
+    {cat:'权益类',sub:'长期股权投资',w:'4%',bm:'5%',d:'−1',note:'大基金三期 · 战略协同'},
+    {cat:'另类',sub:'不动产/REITs',w:'8%',bm:'8%',d:'0',note:'保障性租赁住房 · 现金流稳定'},
+    {cat:'另类',sub:'基础设施债权',w:'10%',bm:'10%',d:'0',note:'锁定长期收益 · 利率下行受益'},
+    {cat:'另类',sub:'私募股权',w:'2%',bm:'2%',d:'0',note:'硬科技/新能源赛道'},
+    {cat:'流动',sub:'货基/存款',w:'10%',bm:'10%',d:'0',note:'偿付缓冲 · 流动性 ≥150%'},
+  ];
+  for(var i=0;i<sa.length;i++){var s=sa[i];var cl=s.d>0?'pill-green':s.d<0?'pill-red':'pill-blue';h+='<tr><td><b>'+s.cat+'</b></td><td>'+s.sub+'</td><td><b>'+s.w+'</b></td><td>'+s.bm+'</td><td><span class=\"pill '+cl+'\">'+(s.d>0?'+':'')+s.d+'pp</span></td><td style=\"font-size:10px;color:var(--text2)\">'+s.note+'</td></tr>';}
+  h += '</tbody></table>';h += secEnd();
+
+  // ===== LDI 匹配度 =====
+  h += section('资产负债匹配度');
+  h += '<table class="mac-tbl"><thead><tr><th>指标</th><th>当前</th><th>目标</th><th>状态</th><th>操作建议</th></tr></thead><tbody>';
+  var alm=[['久期缺口','3.2 年（资产 3.8-负债 7.0）','0-2 年','<span class=\"pill pill-orange\">偏离</span>','增配 30Y 国债 · 每 +1 年久期缩缺口 0.2 年'],['成本收益比','1.18x（5.3%/4.5%）','1.05-1.30x','<span class=\"pill pill-green\">正常</span>','维持 · 利差 0.8% 覆盖运营成本'],['偿付充足(综合)','215%','≥100%','<span class=\"pill pill-green\">充裕</span>','超额资本支撑权益增配 · 消耗 15pp/+1%权益'],['偿付充足(核心)','180%','≥50%','<span class=\"pill pill-green\">充裕</span>','流动性覆盖率 180% · 压力测试通过'],['流动性覆盖','10%（货基+存款）','≥5%','<span class=\"pill pill-green\">充裕</span>','180 天运营覆盖'],['期限错配','5.2 年（负债 7.0-资产短端 1.8）','<3 年','<span class=\"pill pill-orange\">偏高</span>','短债占比过高 · 需延长资产久期']];
+  for(var i=0;i<alm.length;i++){var a=alm[i];h+='<tr><td><b>'+a[0]+'</b></td><td>'+a[1]+'</td><td>'+a[2]+'</td><td>'+a[3]+'</td><td style=\"font-size:10px;color:var(--text2)\">'+a[4]+'</td></tr>';}
+  h += '</tbody></table>';h += secEnd();
+
+  // ===== 负债端约束 =====
+  h += section('负债端约束 · C-ROSS II 敏感度');
+  h += '<table class="mac-tbl"><thead><tr><th>约束项</th><th>当前值</th><th>预警阈值</th><th>硬限额</th><th>敏感度分析</th></tr></thead><tbody>';
+  var lc=[['利率下行 50bp','偿付 −8pp（至 207%）','−15pp','−25pp（底线 190%）','固收浮盈对冲 · 但再投资风险加大'],['权益下跌 20%','偿付 −25pp（至 190%）','−30pp','−40pp（底线 175%）','权益仓位 12% · 风险可控'],['信用违约 2%','偿付 −12pp（至 203%）','−15pp','−20pp（底线 195%）','信用债仓位 18% · 当前利差极低'],['退保率 +2pp','流动性 −30pp','−40pp','−60pp（底线 120%）','续期保费稳定 · 退保风险低'],['久期缺口扩大至 4 年','偿付 −5pp','−10pp','−15pp','加配 30Y 国债 10% → 缩缺口至 2.5 年'],['预定利率下调 25bp','负债成本 −0.15pp→4.35%','-','利差扩大至 0.95%','利好 · 存量保单锁定高利率']];
+  for(var i=0;i<lc.length;i++){var l=lc[i];h+='<tr><td><b>'+l[0]+'</b></td><td>'+l[1]+'</td><td>'+l[2]+'</td><td>'+l[3]+'</td><td style=\"font-size:10px;color:var(--text2)\">'+l[4]+'</td></tr>';}
+  h += '</tbody></table>';h += secEnd();
+  h += '<div class="deep-links"><a class="deep-link" href="投研专题_数据驱动版.html"><span class="dl-icon">📊</span>专题全集<span class="dl-label">73项 × ⑨模块 · 配置层数据底座</span></a><a class="deep-link" href="交互式CMA试算.html"><span class="dl-icon">🎮</span>CMA 试算<span class="dl-label">拖动参数实时重算 MVO 有效前沿</span></a></div>';
+  return h;
+}
+function initOverviewCharts(){
+  var c1=echarts.init(document.getElementById('ov_fw'));c1.setOption({title:{text:'投研体系 · 四层模型',left:'center',top:6,textStyle:{fontSize:12,fontWeight:600,color:'#1d1d1f'}},series:[{type:'treemap',data:[{name:'研判层',value:30,children:[{name:'宏观',value:10},{name:'政策',value:10},{name:'比价',value:10}]},{name:'配置层',value:25,children:[{name:'SAA',value:15},{name:'TAA',value:10}]},{name:'监控层',value:25,children:[{name:'风险',value:15},{name:'绩效',value:10}]},{name:'支撑层',value:20,children:[{name:'数据',value:10},{name:'专题',value:5},{name:'复盘',value:5}]}],label:{fontSize:11,fontWeight:500},itemStyle:{borderColor:'#fff',borderWidth:2,borderRadius:4},levels:[{},{colorSaturation:[0.25,0.7],color:['#007AFF','#34C759','#FF9500','#AF52DE']}]}]});
+  var c2=echarts.init(document.getElementById('ov_cov'));c2.setOption({title:{text:'数据覆盖率',left:'center',top:6,textStyle:{fontSize:12,fontWeight:600,color:'#1d1d1f'}},tooltip:{trigger:'axis'},grid:{left:50,right:20,top:40,bottom:20},xAxis:{type:'category',data:['技术','宏观','估值','资金','政策'],axisLabel:{fontSize:10,color:'#6e6e73'},axisLine:{show:false},axisTick:{show:false}},yAxis:{type:'value',max:100,axisLabel:{fontSize:10,color:'#6e6e73'},splitLine:{lineStyle:{color:'rgba(0,0,0,0.05)'}}},series:[{type:'bar',data:[80,61,62,29,0],barWidth:'60%',itemStyle:{borderRadius:[6,6,0,0],color:function(p){var v=[80,61,62,29,0][p.dataIndex];return v>=60?'#34C759':v>=30?'#007AFF':'#FF3B30';}}}]});
+}
+
+// ===== ALLOC =====
+function renderAlloc(){
+  var h = '<div class="card-grid">';
+  h += macCard('SAA 年化收益','+14.0%','超目标 10% · 夏普 1.48 · Calmar 1.64','pill-green','优秀','var(--green)');
+  h += macCard('TAA 加权总分','+0.34','阈值 ±0.75 · 未触发偏离 · 维持全线标配','pill-blue','维持','var(--blue)');
+  h += macCard('PE 均分位','87%','沪深300 95% · 科创50 98% · 中证500 90%','pill-red','偏贵','var(--red)');
+  h += macCard('标普500 核心','23%','SAA 最大配置 · TAA +0.50 · CNY升值侵蚀7pp','pill-blue','核心','var(--blue)');
+  h += '</div>';
+  h += section('SAA 配置明细',true);h+='<div class="chart-row"><div class="chart-box" id="ac_pie"></div><div class="chart-box" id="ac_risk"></div></div>';h+=secEnd();
+  h += section('TAA 五维评分 · 可展开查阅各维度专题');
+  h += '<table class="mac-tbl"><thead><tr><th>维度</th><th>权重</th><th>评分</th><th>贡献</th><th>核心判断</th></tr></thead><tbody>';
+  var dims=[{n:'宏观研判',s:2,w:30,d:'内需弱 + 低利率 + 弱美元多方对冲 · 保险偏好固收',cls:'pill-green'},{n:'市场估值',s:-1,w:30,d:'PE 87% 分位 · ERP 5.3% · 信用利差 0.4bp · 维持低配权益',cls:'pill-red'},{n:'政策环境',s:2,w:20,d:'大基金三期 + AI 政策 + 货币宽松 · 利好长债+另类',cls:'pill-green'},{n:'资金流向',s:1,w:15,d:'保费稳定流入 · 存量再配置压力 · 低利率下固收需求旺',cls:'pill-green'},{n:'技术动量',s:-1,w:5,d:'均线空头排列 · ADX 20.4 · 保险长钱降低技术权重至 5%',cls:'pill-red'}];
+  for(var i=0;i<dims.length;i++){var d=dims[i];h+='<tr><td><b>'+d.n+'</b></td><td>'+d.w+'%</td><td><span class="pill '+d.cls+'">'+(d.s>0?'+':'')+d.s+'</span></td><td>'+(d.s*d.w/100).toFixed(2)+'</td><td style="font-size:11px;color:var(--text2)">'+d.d+'</td></tr>';}
+  h += '</tbody></table>';h += secEnd();
+  h += '<div class="deep-links"><a class="deep-link" href="TAA评分卡_联动看板.html"><span class="dl-icon">🎯</span>TAA 评分卡<span class="dl-label">五维联动仪表盘 · 加权总分 +0.34</span></a><a class="deep-link" href="交互式CMA试算.html"><span class="dl-icon">🎮</span>CMA 试算<span class="dl-label">调整参数 · 场景对比 · MVO 重算</span></a></div>';
+  return h;
+}
+function initAllocCharts(){
+  var alloc=DATA.alloc,names=Object.keys(alloc),vals=names.map(function(n){return alloc[n];}),colors=['#007AFF','#34C759','#FF9500','#FF3B30','#AF52DE','#5AC8FA','#aeaeb2'];
+  echarts.init(document.getElementById('ac_pie')).setOption({title:{text:'SAA 配置权重',left:'center',top:6,textStyle:{fontSize:12,fontWeight:600}},tooltip:{formatter:'{b}: {c}%'},series:[{type:'pie',radius:['38%','68%'],center:['50%','55%'],data:names.map(function(n,i){return {name:n,value:vals[i],itemStyle:{color:colors[i]}};}),label:{fontSize:10,fontWeight:500,color:'#6e6e73',formatter:'{b}\n{c}%'}}]});
+  echarts.init(document.getElementById('ac_risk')).setOption({title:{text:'资产风险收益散点图',left:'center',top:6,textStyle:{fontSize:12,fontWeight:600}},tooltip:{trigger:'item'},grid:{left:55,right:25,top:40,bottom:25},xAxis:{type:'value',name:'年化波动 %',axisLabel:{fontSize:10,color:'#6e6e73'},splitLine:{lineStyle:{color:'rgba(0,0,0,0.05)'}}},yAxis:{type:'value',name:'年化收益 %',axisLabel:{fontSize:10,color:'#6e6e73'},splitLine:{lineStyle:{color:'rgba(0,0,0,0.05)'}}},series:[{type:'scatter',data:[{value:[21.5,4.1],name:'沪深300'},{value:[30.9,13.0],name:'创业板'},{value:[17.1,13.0],name:'标普500'},{value:[15.6,8.5],name:'黄金'},{value:[4.7,2.5],name:'信用债'},{value:[3.6,1.9],name:'利率债'},{value:[0.5,3.0],name:'现金'}],symbolSize:function(v){return v[0]<10?14:v[0]<20?20:28;},itemStyle:{color:'#007AFF',shadowBlur:8,shadowColor:'rgba(0,122,255,0.2)'},label:{show:true,formatter:function(p){return p.name;},fontSize:10,color:'#6e6e73',position:'right',distance:10}}]});
+}
+
+// ===== RISK =====
+function renderRisk(){
+  var h = '<div class="kpi-strip">';
+  h += '<div class="kpi-item"><div class="kv" style="color:var(--green)">−4.82%</div><div class="kl">VaR (99%, 10日)</div></div>';
+  h += '<div class="kpi-item"><div class="kv" style="color:var(--green)">−8.5%</div><div class="kl">最大回撤</div></div>';
+  h += '<div class="kpi-item"><div class="kv" style="color:var(--green)">35%</div><div class="kl">权益总仓位</div></div>';
+  h += '<div class="kpi-item"><div class="kv" style="color:var(--orange)">23%</div><div class="kl">外汇敞口</div></div>';
+  h += '</div>';
+  h += '<div class="card-grid">';
+  h += macCard('VaR(99%, 10日)','−4.82%','限额 ≤ 8% · 历史模拟法 · 500天窗口 · 通过','pill-green','合规','var(--green)');
+  h += macCard('最大回撤','−8.5%','限额 ≤ 30% · 当前距峰值不远 · 明显余裕','pill-green','合规','var(--green)');
+  h += macCard('权益仓位','35%','限额 ≤ 60% · 信用债 27% + 黄金 21% + 债现 19%','pill-green','合规','var(--green)');
+  h += macCard('外汇敞口','23%','限额 ≤ 20% · 标普500 QDII 略超 3pp · 关注 CNY 升值','pill-orange','注意','var(--orange)');
+  h += '</div>';
+  h += section('风险监控图表',true);h+='<div class="chart-row"><div class="chart-box" id="rc_dd"></div><div class="chart-box" id="rc_limit"></div></div>';h+=secEnd();
+  h += section('五类风险详表');
+  h += '<table class="mac-tbl"><thead><tr><th>风险类型</th><th>核心指标</th><th>当前值</th><th>预警线</th><th>状态</th></tr></thead><tbody>';
+  h += '<tr><td><b>市场风险</b></td><td>VaR(99%,10日)</td><td>−2.82%</td><td>≤5%</td><td><span class="pill pill-green">正常</span></td></tr>';
+  h += '<tr><td><b>利率风险</b></td><td>久期缺口</td><td>3.2 年</td><td>0-2 年</td><td><span class="pill pill-orange">超标</span></td></tr>';
+  h += '<tr><td><b>信用风险</b></td><td>AA-AAA 利差</td><td>0.4bp</td><td>监控反弹</td><td><span class="pill pill-orange">极低</span></td></tr>';
+  h += '<tr><td><b>流动性风险</b></td><td>流动资产占比</td><td>10%(货基+存款)</td><td>≥5%</td><td><span class="pill pill-green">充裕</span></td></tr>';
+  h += '<tr><td><b>集中度风险</b></td><td>单一行业/品种</td><td>国债 35%(最大)</td><td>≤50%</td><td><span class="pill pill-green">正常</span></td></tr>';
+  h += '<tr><td><b>偿付能力风险</b></td><td>C-ROSS II 充足率</td><td>215%</td><td>≥100%</td><td><span class="pill pill-green">充裕</span></td></tr>';
+  h += '</tbody></table>';h += secEnd();
+  h += '<div class="deep-links"><a class="deep-link" href="风险管理看板.html"><span class="dl-icon">🛡️</span>风险管理看板<span class="dl-label">VaR · 回撤路径 · 限额合规 · 4 组 ECharts</span></a></div>';
+  return h;
+}
+function initRiskCharts(){
+  var dd=[-0.5,-1.2,-0.8,-2.1,-3.5,-5.0,-4.2,-3.8,-2.5,-1.8,-5.5,-7.2,-8.5,-7.0,-5.5,-4.2,-2.8,-1.5,-0.5,-0.2];
+  echarts.init(document.getElementById('rc_dd')).setOption({title:{text:'组合回撤路径',left:'center',top:6,textStyle:{fontSize:12,fontWeight:600}},grid:{left:50,right:20,top:40,bottom:25},xAxis:{data:dd.map(function(_,i){return i+1;}),axisLabel:{fontSize:10,color:'#6e6e73'},axisLine:{show:false},axisTick:{show:false}},yAxis:{max:0,axisLabel:{fontSize:10,color:'#6e6e73',formatter:'{value}%'},splitLine:{lineStyle:{color:'rgba(0,0,0,0.05)'}}},series:[{type:'line',data:dd,lineStyle:{width:2,color:'#FF3B30'},symbol:'none',areaStyle:{color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:'rgba(255,59,48,0.15)'},{offset:1,color:'rgba(255,59,48,0)'}]}},markLine:{silent:true,symbol:'none',data:[{yAxis:-15,label:{formatter:'预警',fontSize:10,color:'#FF9500'},lineStyle:{color:'#FF9500',type:'dashed'}},{yAxis:-30,label:{formatter:'硬限',fontSize:10,color:'#FF3B30'},lineStyle:{color:'#FF3B30',type:'dashed'}}]}}]});
+  echarts.init(document.getElementById('rc_limit')).setOption({title:{text:'限额合规检查',left:'center',top:6,textStyle:{fontSize:12,fontWeight:600}},grid:{left:50,right:20,top:40,bottom:25},xAxis:{type:'category',data:['VaR','权益仓位','单仓','外汇'],axisLabel:{fontSize:10,color:'#6e6e73'},axisLine:{show:false},axisTick:{show:false}},yAxis:{type:'value',axisLabel:{fontSize:10,color:'#6e6e73'},splitLine:{lineStyle:{color:'rgba(0,0,0,0.05)'}}},series:[{type:'bar',data:[4.82,35,27,23],barGap:'20%',barWidth:'35%',itemStyle:{borderRadius:[5,5,0,0],color:function(p){return[true,true,false,false][p.dataIndex]?'#34C759':'#FF9500';}}},{type:'bar',data:[8,60,10,20],barWidth:'35%',itemStyle:{color:'rgba(0,0,0,0.06)',borderRadius:[5,5,0,0]}}]});
+}
+
+// ===== PERF =====
+function renderPerf(){
+  var h = '<div class="card-grid">';
+  h += macCard('综合投资收益率','+5.3%','负债成本 4.5% · 利差 +0.8% · 覆盖倍数 1.18x','pill-green','覆盖','var(--green)');
+  h += macCard('夏普比率','1.26','Calmar 1.30 · 超额 +0.8% vs 基准 80%债20%股','pill-green','稳健','var(--green)');
+  h += macCard('Brinson 配置效应','+0.5%','固收超配 +5pp × 超额收益 = +0.5pp · 正向贡献','pill-blue','超配有效','var(--blue)');
+  h += macCard('Brinson 选择效应','+0.3%','30Y 国债选择 vs 基准 · 久期匹配优化','pill-blue','选择有效','var(--blue)');
+  h += '</div>';
+  h += section('多周期绩效',true);h+='<div class="chart-row"><div class="chart-box" id="pc_periods"></div><div class="chart-box" id="pc_contrib"></div></div>';h+=secEnd();
+  h += section('Brinson 归因分解 · 配置效应/选择效应/交互效应');
+  h += '<table class="mac-tbl"><thead><tr><th>归因项</th><th>贡献</th><th>说明</th><th>评价</th></tr></thead><tbody>';
+  h += '<tr><td><b>配置效应</b>(Allocation)</td><td><span class="pill pill-green">+0.5pp</span></td><td>固收超配 5pp(基准 53%→实际 58%)×固收超额 10bp</td><td>超配合规且盈利</td></tr>';
+  h += '<tr><td><b>选择效应</b>(Selection)</td><td><span class="pill pill-green">+0.3pp</span></td><td>30Y 国债选择优于基准指数 · 信用债品种选择贡献</td><td>品种选择有效</td></tr>';
+  h += '<tr><td><b>交互效应</b>(Interaction)</td><td><span class="pill pill-blue">+0.05pp</span></td><td>配置与选择的交互影响 · 可忽略</td><td>微小</td></tr>';
+  h += '<tr style="font-weight:600"><td>总超额收益</td><td><span class="pill pill-green">+0.85pp</span></td><td>vs 保险行业基准(80%债+20%股)</td><td>跑赢</td></tr>';
+  h += '</tbody></table>';h+=secEnd();
+  h += '<div class="deep-links"><a class="deep-link" href="绩效评估看板.html"><span class="dl-icon">📋</span>绩效评估看板<span class="dl-label">Brinson 归因 · 多周期收益 · 资产贡献分解</span></a></div>';
+  return h;
+}
+function initPerfCharts(){
+  echarts.init(document.getElementById('pc_periods')).setOption({title:{text:'多周期收益 vs 基准(80%债+20%股)',left:'center',top:6,textStyle:{fontSize:12,fontWeight:600}},legend:{bottom:0,data:['保险组合','基准'],textStyle:{fontSize:10,color:'#6e6e73'},itemWidth:8,itemHeight:8},grid:{left:50,right:20,top:40,bottom:30},xAxis:{type:'category',data:['MTD','QTD','YTD','1Y'],axisLabel:{fontSize:10,color:'#6e6e73'},axisLine:{show:false},axisTick:{show:false}},yAxis:{type:'value',axisLabel:{fontSize:10,color:'#6e6e73',formatter:'{value}%'},splitLine:{lineStyle:{color:'rgba(0,0,0,0.05)'}}},series:[{name:'保险组合',type:'bar',data:[0.9,1.8,3.5,5.3],barWidth:'35%',barGap:'20%',itemStyle:{color:'#007AFF',borderRadius:[5,5,0,0]}},{name:'基准',type:'bar',data:[0.6,1.2,2.7,4.5],barWidth:'35%',itemStyle:{color:'rgba(0,0,0,0.12)',borderRadius:[5,5,0,0]}}]});
+  echarts.init(document.getElementById('pc_contrib')).setOption({title:{text:'大类资产收益贡献',left:'center',top:6,textStyle:{fontSize:12,fontWeight:600}},grid:{left:50,right:20,top:40,bottom:25},xAxis:{type:'category',data:['固收','权益','另类','流动'],axisLabel:{fontSize:10,color:'#6e6e73'},axisLine:{show:false},axisTick:{show:false}},yAxis:{type:'value',axisLabel:{fontSize:10,color:'#6e6e73',formatter:'{value}%'},splitLine:{lineStyle:{color:'rgba(0,0,0,0.05)'}}},series:[{type:'bar',data:[2.8,1.0,1.3,0.2],barWidth:'50%',itemStyle:{borderRadius:[5,5,0,0],color:function(p){return p.value>=0?'#007AFF':'#FF3B30';}},markLine:{silent:true,symbol:'none',data:[{yAxis:0,lineStyle:{color:'rgba(0,0,0,0.15)',type:'dashed'}}]}}]});
+}
+
+// ===== TOOLS =====
+function renderTools(){
+  var h = '<div class="card-grid">';
+  h += macCard('数据刷新管线','9步/15秒','每日 18:30 自动 · Windows Task Scheduler','pill-green','运行中','var(--green)');
+  h += macCard('Wind 万得','7 MCP 服务','指数 PE/PB · 基金持仓 · 经济 EDB · 公告','pill-blue','已接入','var(--blue)');
+  h += macCard('SQLite 数据库','12表/36K行','K线 2010−2026 · 宏观 199月 · 多源融合','pill-green','就绪','var(--green)');
+  h += macCard('GitHub Pages','在线部署','ericgole.github.io · 7看板 · 移动适配','pill-blue','在线','var(--blue)');
+  h += '</div>';
+  h += section('外部看板入口',true);
+  h += '<div class="link-grid">';
+  var links=[{n:'专题全集',u:'投研专题_数据驱动版.html',d:'73专题 × ⑨模块',i:'📊'},{n:'TAA评分卡',u:'TAA评分卡_联动看板.html',d:'五维联动',i:'🎯'},{n:'风险管理',u:'风险管理看板.html',d:'VaR/回撤',i:'🛡️'},{n:'绩效评估',u:'绩效评估看板.html',d:'归因/多周期',i:'📋'},{n:'事件日历',u:'关键事件日历.html',d:'8−12月节点',i:'📅'},{n:'交互试算',u:'交互式CMA试算.html',d:'CMA/TAA/场景',i:'🎮'}];
+  for(var i=0;i<links.length;i++){var l=links[i];h+='<a href="'+l.u+'" class="link-card"><div class="lk-icon">'+l.i+'</div><div class="lk-name">'+l.n+'</div><div class="lk-desc">'+l.d+'</div></a>';}
+  h += '</div>';h += secEnd();
+  h += section('数据管线架构');
+  h += '<div style="font-size:11px;line-height:2;color:var(--text2);padding:8px 0"><b>刷新链路 (9步/15秒):</b> compute_indicators.py → wind_refresh.py → fill_pe.py → compute_risk.py → compute_perf.py → build_final.py → build_dashboard.py → build_charts.py → 推送 GitHub<br/><b>自动化:</b> Windows Task Scheduler · 每日 18:30 执行 · 日频数据次日更新<br/><b>数据源:</b> SQLite (local, 12 tables, 36K rows) + Wind 万得 (7 MCP services)<br/><b>输出:</b> 7 个 HTML 看板 · GitHub Pages 部署 · localhost:8899 本地预览</div>';
+  h += secEnd();
+  return h;
+}
+
+// Init — load overview by default, with macro data ready on switch
+document.getElementById('content').innerHTML = renderOverview();
+setTimeout(initOverviewCharts, 200);
+</script>
+</body></html>

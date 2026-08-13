@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#042C53">
+<link rel="manifest" href="manifest.json">
+<title>投研移动端 v2.0</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,"Microsoft YaHei",sans-serif;background:#042C53;color:#fff;min-height:100vh;-webkit-font-smoothing:antialiased}
+.header{padding:14px 18px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(255,255,255,0.1)}
+.header h1{font-size:16px;font-weight:500}
+.header .badge{font-size:9px;background:rgba(255,255,255,0.12);padding:2px 10px;border-radius:10px;color:#85B7EB}
+.container{padding:14px 16px}
+/* KPI */
+.kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.kpi-card{background:rgba(255,255,255,0.07);border-radius:12px;padding:14px;text-align:center;border:1px solid rgba(255,255,255,0.06)}
+.kpi-card .kpi-val{font-size:26px;font-weight:600;line-height:1}
+.kpi-card .kpi-lbl{font-size:9px;color:#85B7EB;margin-top:4px}
+.kpi-card .kpi-sub{font-size:9px;margin-top:2px}
+.kpi-card.warn{border-color:rgba(239,159,39,0.35)}
+/* Alerts */
+.section-title{font-size:12px;font-weight:500;margin-bottom:8px;color:#85B7EB}
+.alert-item{background:rgba(255,255,255,0.05);border-radius:8px;padding:10px 12px;margin-bottom:6px;display:flex;align-items:flex-start;gap:8px;font-size:10px;line-height:1.5}
+.alert-item.sev{border-left:3px solid #D85A30}
+.alert-item.warn{border-left:3px solid #EF9F27}
+.alert-item .ai-icon{font-size:14px;flex-shrink:0}
+.alert-item .ai-tag{font-size:8px;padding:1px 6px;border-radius:3px;margin-top:2px;display:inline-block}
+.ai-red{background:rgba(216,90,48,0.2);color:#D85A30}
+.ai-yellow{background:rgba(239,159,39,0.2);color:#EF9F27}
+/* Sugg */
+.sugg-card{background:linear-gradient(135deg,rgba(24,95,165,0.2),rgba(24,95,165,0.05));border-radius:10px;padding:12px;margin-bottom:6px;border:1px solid rgba(24,95,165,0.2);font-size:10px}
+.sugg-card .sugg-title{font-weight:500;margin-bottom:2px}
+.sugg-card .sugg-desc{font-size:9px;color:#85B7EB}
+/* Quick stats */
+.quick-stats{background:rgba(255,255,255,0.05);border-radius:12px;padding:12px;margin-bottom:14px}
+.stat-row{display:flex;justify-content:space-between;padding:5px 0;font-size:10px;border-bottom:1px solid rgba(255,255,255,0.04)}
+.stat-row:last-child{border-bottom:0}
+.stat-row .sr-label{color:#85B7EB}
+/* Refresh */
+.refresh{text-align:center;font-size:8px;color:rgba(255,255,255,0.3);padding:8px}
+.pulse{display:inline-block;width:5px;height:5px;border-radius:50%;background:#639922;margin-right:4px;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+.tap:active{opacity:0.7}
+@media(min-width:480px){.container{max-width:480px;margin:0 auto}}
+</style>
+</head>
+<body>
+<div class="header"><h1>投研移动端</h1><span class="badge">v2.0</span></div>
+<div class="container">
+<div class="kpi-grid">
+  <div class="kpi-card"><div class="kpi-val" style="color:#639922">215%</div><div class="kpi-lbl">偿付能力</div><div class="kpi-sub" style="color:#639922">▲ 充裕</div></div>
+  <div class="kpi-card warn"><div class="kpi-val" style="color:#EF9F27">+0.85</div><div class="kpi-lbl">TAA评分</div><div class="kpi-sub" style="color:#EF9F27">⚠ 触发调整</div></div>
+  <div class="kpi-card"><div class="kpi-val">10.2%</div><div class="kpi-lbl">预期收益</div><div class="kpi-sub" style="color:#85B7EB">波动 7.8%</div></div>
+  <div class="kpi-card"><div class="kpi-val">-3.2</div><div class="kpi-lbl">久期缺口</div><div class="kpi-sub" style="color:#85B7EB">VaR -4.82%</div></div>
+</div>
+<div class="section-title">🔔 活跃预警</div>
+<div class="alert-item sev tap"><div class="ai-icon">🔴</div><div><b>信用利差断流7天</b><br>SAA负债覆盖率精度下降<div><span class="ai-red ai-tag">严重</span></div></div></div>
+<div class="alert-item warn tap"><div class="ai-icon">🟡</div><div><b>TAA+0.85触发调整线</b><br>政策+2.5正向 vs 估值-0.5<div><span class="ai-yellow ai-tag">警告</span></div></div></div>
+<div class="alert-item warn tap"><div class="ai-icon">🟡</div><div><b>权益58%接近60%上限</b><br>增配空间仅2pp<div><span class="ai-yellow ai-tag">警告</span></div></div></div>
+<div class="section-title">💡 操作建议</div>
+<div class="sugg-card tap"><div class="sugg-title">1. 增配创业板+3%</div><div class="sugg-desc">9%→12% · 偿付预降至208% · 收益升至10.8%</div></div>
+<div class="sugg-card tap"><div class="sugg-title">2. 补拉信用利差数据</div><div class="sugg-desc">Wind bond_data断流7天，影响D-1/D-4/D-6</div></div>
+<div class="sugg-card tap"><div class="sugg-title">3. 调高权益上限至65%</div><div class="sugg-desc">反向压力测试: 偿付≥200%时权益可到62%</div></div>
+<div class="quick-stats">
+  <div class="section-title">📊 组合快照</div>
+  <div class="stat-row"><span class="sr-label">权益仓位</span><span>58%</span></div>
+  <div class="stat-row"><span class="sr-label">波动率</span><span style="color:#639922">7.8%</span></div>
+  <div class="stat-row"><span class="sr-label">VaR 99%</span><span>-4.82%</span></div>
+  <div class="stat-row"><span class="sr-label">覆盖率</span><span style="color:#639922">2.60x</span></div>
+  <div class="stat-row"><span class="sr-label">境外敞口</span><span>23%</span></div>
+</div>
+<div class="refresh"><span class="pulse"></span>最后刷新 06:30 · 管道64s · <span style="color:#639922">加载0.6s</span></div>
+</div>
+<script>
+document.querySelectorAll('.tap').forEach(function(e){e.addEventListener('touchstart',function(){},{passive:true})});
+var lt=0;
+document.addEventListener('touchstart',function(e){lt=e.touches[0].clientY});
+document.addEventListener('touchend',function(e){
+  if(window.scrollY===0&&e.changedTouches[0].clientY-lt>70){
+    var r=document.querySelector('.refresh');
+    r.innerHTML='<span class="pulse"></span>刷新中...';
+    setTimeout(function(){r.innerHTML='<span class="pulse"></span>最后刷新 06:30 · 管道64s · <span style="color:#639922">加载0.6s</span>';},600);
+  }
+});
+// === PWA Service Worker ===
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js', { scope: '/' }).then(function(reg) {
+    console.log('[PWA] SW已注册:', reg.scope);
+  }).catch(function(err) {
+    console.warn('[PWA] SW注册失败:', err);
+  });
+}
+</script>
+</body>
+</html>

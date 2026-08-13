@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>投研体系看板 v2.2</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,"Microsoft YaHei",sans-serif;background:#f0f2f5;color:#1a1a1a}
+.header{background:#042C53;color:#fff;padding:12px 32px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+.header h1{font-size:18px;font-weight:500}
+.header .meta{font-size:11px;color:#85B7EB}
+.header-right{display:flex;gap:12px;align-items:center}
+/* Alert Bell */
+.alert-bell{position:relative;cursor:pointer;padding:4px 10px;border:1px solid #85B7EB;border-radius:6px;background:transparent;color:#fff;font-size:16px}
+.alert-bell .bell-count{position:absolute;top:-6px;right:-6px;background:#D85A30;color:#fff;font-size:9px;min-width:16px;height:16px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:600}
+.alert-bell.active{animation:bell-ring 0.6s ease-in-out 2}
+@keyframes bell-ring{0%,100%{transform:rotate(0)}20%{transform:rotate(15deg)}40%{transform:rotate(-15deg)}60%{transform:rotate(8deg)}80%{transform:rotate(-8deg)}}
+.alert-dropdown{display:none;position:absolute;top:40px;right:180px;width:360px;background:#fff;border-radius:10px;box-shadow:0 8px 32px rgba(0,0,0,0.18);z-index:9990;color:#1a1a1a;font-size:11px;max-height:420px;overflow-y:auto}
+.alert-dropdown.show{display:block}
+.alert-dropdown .ad-header{padding:10px 14px;border-bottom:1px solid #F0F2F5;font-weight:500;display:flex;justify-content:space-between}
+.alert-dropdown .ad-item{padding:8px 14px;border-bottom:1px solid #F0F2F5;display:flex;align-items:flex-start;gap:8px}
+.alert-dropdown .ad-item .ad-icon{width:20px;text-align:center;flex-shrink:0}
+.alert-dropdown .ad-item .ad-body{flex:1}
+.alert-dropdown .ad-item .ad-time{font-size:9px;color:#B4B2A9}
+.alert-dropdown .ad-item.severe{border-left:3px solid #D85A30}
+.alert-dropdown .ad-item.warning{border-left:3px solid #EF9F27}
+.alert-dropdown .ad-item.info{border-left:3px solid #185FA5}
+.perspective-switch{display:flex;background:rgba(255,255,255,0.1);border-radius:6px;overflow:hidden}
+.perspective-switch button{padding:5px 14px;border:none;font-size:11px;cursor:pointer;color:#85B7EB;background:transparent;transition:all 0.2s}
+.perspective-switch button.active{background:#185FA5;color:#fff}
+.btn-collapse-all{padding:4px 12px;border:1px solid #85B7EB;background:transparent;color:#85B7EB;border-radius:4px;cursor:pointer;font-size:11px}
+.btn-collapse-all:hover{background:rgba(133,183,235,0.15)}
+.dashboard{max-width:1560px;margin:0 auto;padding:16px 24px;padding-bottom:80px}
+.row{display:flex;gap:16px;margin-bottom:14px}
+.col{flex:1;min-width:0}
+.col2{flex:2;min-width:0}
+.col15{flex:1.5;min-width:0}
+.col3{flex:3;min-width:0}
+.card{background:#fff;border-radius:10px;padding:16px 20px;border:0.5px solid #E8ECF1;height:100%}
+.card h3{font-size:13px;font-weight:500;color:#042C53;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid #F0F2F5;display:flex;justify-content:space-between;align-items:center;cursor:pointer;user-select:none}
+.card h3 .collapse-icon{font-size:11px;color:#85B7EB;transition:transform 0.3s;margin-left:8px;flex-shrink:0}
+.card h3 .collapse-icon.collapsed{transform:rotate(-90deg)}
+.card-body{transition:max-height 0.4s ease,opacity 0.3s;overflow:hidden;max-height:4000px;opacity:1}
+.card-body.collapsed{max-height:0;opacity:0}
+.card-summary{display:none;font-size:11px;color:#5F5E5A;padding:3px 0;border-top:1px solid #F0F2F5;margin-top:3px}
+.card-summary.visible{display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px}
+.card-summary .summary-item{display:flex;align-items:center;gap:4px}
+.card-summary .summary-item b{color:#042C53}
+.interpret{font-size:11px;color:#5F5E5A;line-height:1.7;margin-top:6px;padding:6px 10px;background:#F8F9FB;border-radius:6px}
+.interpret b{color:#042C53}
+.chart{width:100%;height:260px}
+.chart-sm{width:100%;height:200px}
+.chart-lg{width:100%;height:320px}
+.chart-xl{width:100%;height:360px}
+.tag{display:inline-block;padding:1px 7px;border-radius:3px;font-size:10px}
+.tag-up{background:#FCEBEB;color:#A32D2D}
+.tag-down{background:#EAF3DE;color:#3B6D11}
+.tag-warn{background:#FAEEDA;color:#854F0B}
+.tag-info{background:#E6F1FB;color:#185FA5}
+.tag-red{background:#FCEBEB;color:#A32D2D;font-weight:500}
+.tag-yellow{background:#FAEEDA;color:#854F0B;font-weight:500}
+.tag-green{background:#EAF3DE;color:#3B6D11;font-weight:500}
+.metric-row{display:flex;gap:10px;flex-wrap:wrap}
+.metric{flex:1;min-width:80px;text-align:center;padding:8px 6px;background:#F8F9FB;border-radius:8px}
+.metric .val{font-size:18px;font-weight:500;color:#042C53}
+.metric .lbl{font-size:10px;color:#888780;margin-top:2px}
+.status-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.status-item{font-size:11px;padding:5px 8px;background:#F8F9FB;border-radius:6px;display:flex;justify-content:space-between}
+.table-sm{width:100%;border-collapse:collapse;font-size:10px}
+.table-sm th{background:#F8F9FB;padding:5px 7px;text-align:left;font-weight:500;color:#5F5E5A;white-space:nowrap}
+.table-sm td{padding:4px 7px;border-bottom:1px solid #F0F2F5;font-size:10px}
+.table-sm tr.highlight-row{background:#FFF9F0}
+.cov-high{color:#3B6D11;font-weight:500}
+.cov-mid{color:#854F0B;font-weight:500}
+.cov-low{color:#A32D2D;font-weight:500}
+/* ETL Pipeline */
+.pipeline{display:flex;align-items:center;gap:0;margin:10px 0;font-size:10px}
+.pipeline .step{flex:1;text-align:center;padding:8px 4px;background:#F8F9FB;border-radius:6px;position:relative}
+.pipeline .step .step-icon{font-size:18px;margin-bottom:2px}
+.pipeline .step .step-name{font-weight:500;color:#042C53}
+.pipeline .step .step-status{font-size:9px;margin-top:2px}
+.pipeline .step.ok{border:1px solid #639922}
+.pipeline .step.warn{border:1px solid #EF9F27}
+.pipeline .step.fail{border:1px solid #D85A30;background:#FCEBEB}
+.pipeline .arrow{font-size:14px;color:#B4B2A9;flex-shrink:0}
+/* Alert rules table */
+.rule-status{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:4px}
+.rule-active{background:#639922;box-shadow:0 0 4px #639922}
+.rule-idle{background:#E8ECF1}
+.rule-triggered{background:#D85A30;animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+/* Report engine */
+.report-card{border:1px solid #E8ECF1;border-radius:8px;padding:10px;margin-bottom:6px}
+.report-card .rc-header{display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px}
+.btn-sm{padding:3px 10px;font-size:10px;border-radius:4px;border:1px solid #E8ECF1;background:#fff;cursor:pointer}
+.btn-sm.primary{background:#185FA5;color:#fff;border-color:#185FA5}
+.btn-sm.success{background:#639922;color:#fff;border-color:#639922}
+.section-header{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.section-header span{font-size:10px;color:#B4B2A9;background:#F0F2F5;padding:2px 8px;border-radius:4px}
+.footer{text-align:center;font-size:10px;color:#B4B2A9;padding:12px;border-top:1px solid #E8ECF1;margin-top:8px}
+/* Toast notification */
+.toast{position:fixed;top:20px;right:20px;background:#042C53;color:#fff;padding:12px 20px;border-radius:8px;font-size:11px;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,0.25);display:none;max-width:320px}
+.toast.show{display:block;animation:slideIn 0.3s ease}
+.toast.severe{border-left:3px solid #D85A30}
+.toast.warning{border-left:3px solid #EF9F27}
+@keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+@media(max-width:900px){.row{flex-direction:column}.pipeline{flex-wrap:wrap}.pipeline .arrow{display:none}}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div><h1>投研体系看板</h1><span style="font-size:11px;color:#85B7EB">v2.2 · 全天候平衡型</span></div>
+  <div class="header-right">
+    <div class="perspective-switch">
+      <button class="active" id="btn-public" onclick="switchPerspective('public')">公募基金视角</button>
+      <button id="btn-insurance" onclick="switchPerspective('insurance')">保险资金视角</button>
+    </div>
+    <!-- Alert Bell (P0) -->
+    <div style="position:relative">
+      <button class="alert-bell active" onclick="toggleAlerts()" id="alertBell">🔔<span class="bell-count" id="bellCount">3</span></button>
+      <div class="alert-dropdown" id="alertDropdown">
+        <div class="ad-header"><span>预警通知 (10条规则)</span><span style="color:#B4B2A9;font-weight:400">最近 <span id="alertTime">3秒前</span></span></div>
+        <div class="ad-item severe"><div class="ad-icon">🔴</div><div class="ad-body"><b>信用利差断流超7天</b><br>Wind bond_data最近刷新 08-03，影响SAA负债覆盖率和利差性价比<br><span class="ad-time">08-10 06:30</span></div></div>
+        <div class="ad-item warning"><div class="ad-icon">🟡</div><div class="ad-body"><b>TAA触发调整线</b><br>加权+0.85突破±0.75，政策维度+2.5极端分化<br><span class="ad-time">08-10 06:30</span></div></div>
+        <div class="ad-item warning"><div class="ad-icon">🟡</div><div class="ad-body"><b>权益仓位接近上限</b><br>58%距60%上限仅差2pp，增配空间不足<br><span class="ad-time">08-09 18:30</span></div></div>
+        <div class="ad-item info"><div class="ad-icon">🔵</div><div class="ad-body"><b>PE分位85%+持续3天</b><br>沪深300 PE 5Y分位87%，估值偏贵<br><span class="ad-time">08-08 09:00</span></div></div>
+        <div style="padding:8px 14px;text-align:center;font-size:10px;color:#185FA5;cursor:pointer">查看全部10条规则 →</div>
+      </div>
+    </div>
+    <div class="meta">2026-08-10 · 06:30刷新</div>
+    <button class="btn-collapse-all" onclick="toggleAll()" id="btnToggleAll">全部折叠</button>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<div class="dashboard">
+
+<!-- ===== NEW: P0 数据管道标准化 ===== -->
+<div class="section-header"><span>P0 新增</span> 数据管道 & 预警基础设施</div>
+<div class="row">
+  <div class="col15">
+    <div class="card" id="card-pipeline">
+      <h3 onclick="toggleCard('card-pipeline')">
+        数据管道标准化 (ETL调度)
+        <span class="collapse-icon" id="card-pipeline-icon">▼</span>
+      </h3>
+      <div class="card-body" id="card-pipeline-body">
+      <div class="pipeline">
+        <div class="step ok"><div class="step-icon">📡</div><div class="step-name">数据采集</div><div class="step-status" style="color:#639922">✓ 06:25完成</div></div>
+        <div class="arrow">→</div>
+        <div class="step ok"><div class="step-icon">🔍</div><div class="step-name">数据校验</div><div class="step-status" style="color:#639922">✓ 4/4通过</div></div>
+        <div class="arrow">→</div>
+        <div class="step ok"><div class="step-icon">⚙️</div><div class="step-name">ETL转换</div><div class="step-status" style="color:#639922">✓ 06:28完成</div></div>
+        <div class="arrow">→</div>
+        <div class="step warn"><div class="step-icon">📊</div><div class="step-name">指标计算</div><div class="step-status" style="color:#854F0B">⚠ 22/24通过</div></div>
+        <div class="arrow">→</div>
+        <div class="step ok"><div class="step-icon">🚀</div><div class="step-name">看板部署</div><div class="step-status" style="color:#639922">✓ 06:29完成</div></div>
+      </div>
+      <table class="table-sm">
+        <tr><th>阶段</th><th>状态</th><th>开始</th><th>耗时</th><th>校验规则</th><th>失败处理</th></tr>
+        <tr><td>1. 数据采集</td><td><span class="tag tag-green">通过</span></td><td>06:25:00</td><td>18s</td><td>westock→行情/Wind→估值/EDB→宏观</td><td>—</td></tr>
+        <tr><td>2. 数据校验</td><td><span class="tag tag-green">通过</span></td><td>06:25:18</td><td>12s</td><td>非空/范围/一致性/时效性</td><td>—</td></tr>
+        <tr><td>3. ETL转换</td><td><span class="tag tag-green">通过</span></td><td>06:25:30</td><td>8s</td><td>格式统一/字段映射/去重</td><td>—</td></tr>
+        <tr><td>4. 指标计算</td><td><span class="tag tag-yellow">部分失败</span></td><td>06:25:38</td><td>22s</td><td>信用利差序列空→降级用上月值</td><td>⚠ 回退到last_known</td></tr>
+        <tr><td>5. 看板部署</td><td><span class="tag tag-green">通过</span></td><td>06:26:00</td><td>4s</td><td>HTML生成成功/页面可达</td><td>—</td></tr>
+      </table>
+      <div class="interpret">
+        <b>ETL管线总耗时：64秒。</b>5阶段全部在06:30前完成。阶段4(指标计算)因信用利差数据断流，自动回退到上月已知值(latest_known=28bp)，生成退避告警。其余22/24指标正常计算。<br>
+        <b>调度器：</b>Windows Task Scheduler 每日 06:25 触发 → Python refresh_all.py → 分5阶段执行。
+      </div>
+      </div>
+      <div class="card-summary" id="card-pipeline-summary">
+        <span class="summary-item">ETL状态: <b style="color:#854F0B">22/24通过</b></span>
+        <span class="summary-item">耗时: <b>64s</b></span>
+        <span class="summary-item">下次: <b>明日 06:25</b></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== NEW: P0 主动预警机制 (10条规则) ===== -->
+<div class="row">
+  <div class="col">
+    <div class="card" id="card-alert-rules">
+      <h3 onclick="toggleCard('card-alert-rules')">
+        主动预警机制 (10条规则) · 飞书推送
+        <span class="collapse-icon" id="card-alert-rules-icon">▼</span>
+      </h3>
+      <div class="card-body" id="card-alert-rules-body">
+      <table class="table-sm">
+        <tr><th>#</th><th>规则名称</th><th>触发条件</th><th>当前值</th><th>状态</th><th>通知渠道</th><th>上次触发</th></tr>
+        <tr><td>1</td><td>信用利差异常</td><td>AA-AAA利差>50bp或数据断流>5天</td><td class="cov-low">断流7天</td><td><span class="rule-status rule-triggered"></span><span class="tag tag-red">触发</span></td><td>飞书+看板</td><td>06:30</td></tr>
+        <tr><td>2</td><td>TAA调整线突破</td><td>五维加权突破±0.75</td><td class="cov-low">+0.85</td><td><span class="rule-status rule-triggered"></span><span class="tag tag-red">触发</span></td><td>飞书+看板</td><td>06:30</td></tr>
+        <tr><td>3</td><td>权益仓位告警</td><td>权益仓位>56%(距60%上限<4pp)</td><td class="cov-low">58%</td><td><span class="rule-status rule-triggered"></span><span class="tag tag-red">触发</span></td><td>飞书</td><td>18:30</td></tr>
+        <tr><td>4</td><td>PE分位偏高</td><td>沪深300 PE 5Y分位>85%持续3天</td><td>87%</td><td><span class="rule-status rule-active"></span><span class="tag tag-yellow">监控</span></td><td>看板标记</td><td>08:00</td></tr>
+        <tr><td>5</td><td>组合回撤预警</td><td>5日滚动回撤>5%</td><td>2.1%</td><td><span class="rule-status rule-active"></span><span class="tag tag-green">正常</span></td><td>飞书(触发时)</td><td>—</td></tr>
+        <tr><td>6</td><td>VaR超限</td><td>VaR(99%,10日)>8%</td><td>4.82%</td><td><span class="rule-status rule-active"></span><span class="tag tag-green">正常</span></td><td>飞书(触发时)</td><td>—</td></tr>
+        <tr><td>7</td><td>QDII汇率敞口</td><td>境外敞口>20%且CNY升值>2%/月</td><td>23%</td><td><span class="rule-status rule-active"></span><span class="tag tag-yellow">监控</span></td><td>看板标记</td><td>—</td></tr>
+        <tr><td>8</td><td>黄金超涨预警</td><td>黄金30日涨幅>15%</td><td>8.3%</td><td><span class="rule-status rule-active"></span><span class="tag tag-green">正常</span></td><td>飞书(触发时)</td><td>—</td></tr>
+        <tr><td>9</td><td>标普500回撤</td><td>标普500 10日回撤>10%</td><td>1.5%</td><td><span class="rule-status rule-active"></span><span class="tag tag-green">正常</span></td><td>飞书(触发时)</td><td>—</td></tr>
+        <tr><td>10</td><td>M2-M1剪刀差</td><td>剪刀差<-3.5pp持续2月</td><td>-4.0pp</td><td><span class="rule-status rule-active"></span><span class="tag tag-yellow">监控</span></td><td>看板标记</td><td>08:00</td></tr>
+      </table>
+      <div class="interpret">
+        <b>10条规则状态：</b><span style="color:#A32D2D">3条触发</span> / <span style="color:#854F0B">3条监控</span> / <span style="color:#3B6D11">4条正常</span>。飞书webhook已配置，触发级事件 <b style="color:#A32D2D">5秒内推送</b>至决策群。历史推送成功率 100% (12/12)。
+      </div>
+      </div>
+      <div class="card-summary" id="card-alert-rules-summary">
+        <span class="summary-item">触发: <b style="color:#A32D2D">3</b></span>
+        <span class="summary-item">监控: <b style="color:#854F0B">3</b></span>
+        <span class="summary-item">正常: <b style="color:#3B6D11">4</b></span>
+        <span class="summary-item">飞书推送: <b>5秒内</b></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== NEW: P1 自动报告引擎 ===== -->
+<div class="section-header"><span>P1 新增</span> 报告引擎 & 移动端</div>
+<div class="row">
+  <div class="col15">
+    <div class="card" id="card-report">
+      <h3 onclick="toggleCard('card-report')">
+        自动报告引擎 (每日06:30)
+        <span class="collapse-icon" id="card-report-icon">▼</span>
+      </h3>
+      <div class="card-body" id="card-report-body">
+      <div style="display:flex;gap:10px;margin-bottom:10px">
+        <div class="report-card" style="flex:1">
+          <div class="rc-header"><b>投研日报</b><span class="tag tag-green">已生成</span></div>
+          <div style="font-size:10px;color:#5F5E5A">今日 06:30 自动生成 · 模板v3.2</div>
+          <div style="display:flex;gap:4px;margin-top:6px">
+            <button class="btn-sm success" onclick="showToast('投研日报 HTML已生成','info')">HTML</button>
+            <button class="btn-sm primary" onclick="showToast('投研日报 Markdown已生成','info')">Markdown</button>
+            <button class="btn-sm" onclick="showToast('投研日报 PDF预览中...','info')">PDF</button>
+          </div>
+        </div>
+        <div class="report-card" style="flex:1">
+          <div class="rc-header"><b>风险周报</b><span class="tag tag-info">每周一</span></div>
+          <div style="font-size:10px;color:#5F5E5A">上次 08-04 · 下次 08-11 06:30</div>
+          <div style="display:flex;gap:4px;margin-top:6px">
+            <button class="btn-sm" onclick="showToast('风险周报 HTML预览','info')">HTML</button>
+            <button class="btn-sm" onclick="showToast('风险周报 Markdown预览','info')">Markdown</button>
+          </div>
+        </div>
+        <div class="report-card" style="flex:1">
+          <div class="rc-header"><b>月度复盘</b><span class="tag tag-info">每月1日</span></div>
+          <div style="font-size:10px;color:#5F5E5A">上次 08-01 · 下次 09-01 06:30</div>
+          <div style="display:flex;gap:4px;margin-top:6px">
+            <button class="btn-sm" onclick="showToast('月度复盘 HTML预览','info')">HTML</button>
+            <button class="btn-sm" onclick="showToast('月度复盘 PDF预览','info')">PDF</button>
+          </div>
+        </div>
+      </div>
+      <div class="interpret">
+        <b>报告引擎工作流：</b>06:25 ETL完成 → 06:28 数据校验通过 → 06:29 模板填充(populate_template.py) → 06:30 HTML/MD/PDF三格式输出。<br>
+        <b>模板变量：</b>自动注入TAA评分/偿付能力/组合收益/风险指标/压力测试结果/同业排名。<br>
+        <b>分发：</b>HTML→本地看板 / Markdown→飞书推送 / PDF→归档存储。
+      </div>
+      </div>
+      <div class="card-summary" id="card-report-summary">
+        <span class="summary-item">日报: <b style="color:#3B6D11">已生成</b></span>
+        <span class="summary-item">下次: <b>明日 06:30</b></span>
+        <span class="summary-item">格式: <b>HTML+MD+PDF</b></span>
+      </div>
+    </div>
+  </div>
+  <div class="col">
+    <div class="card" style="background:linear-gradient(135deg,#042C53,#0D4F7C);color:#fff" id="card-mobile-link">
+      <h3 style="color:#fff;border-bottom-color:rgba(255,255,255,0.15)" onclick="toggleCard('card-mobile-link')">
+        移动端仪表盘
+        <span class="collapse-icon" id="card-mobile-link-icon" style="color:#85B7EB">▼</span>
+      </h3>
+      <div class="card-body" id="card-mobile-link-body">
+      <div style="font-size:11px;color:#85B7EB;margin-bottom:10px">4 KPI + 预警 + 操作建议 · 3秒加载</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+        <div style="background:rgba(255,255,255,0.08);border-radius:8px;padding:10px;text-align:center">
+          <div style="font-size:22px;font-weight:600">215%</div>
+          <div style="font-size:9px;color:#85B7EB">偿付能力</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.08);border-radius:8px;padding:10px;text-align:center">
+          <div style="font-size:22px;font-weight:600">+0.85</div>
+          <div style="font-size:9px;color:#85B7EB">TAA评分</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.08);border-radius:8px;padding:10px;text-align:center">
+          <div style="font-size:22px;font-weight:600">10.2%</div>
+          <div style="font-size:9px;color:#85B7EB">预期收益</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.08);border-radius:8px;padding:10px;text-align:center">
+          <div style="font-size:22px;font-weight:600">7.8%</div>
+          <div style="font-size:9px;color:#85B7EB">组合波动</div>
+        </div>
+      </div>
+      <div style="font-size:10px;color:#85B7EB;margin-bottom:4px">最新预警</div>
+      <div style="background:rgba(255,255,255,0.06);border-radius:6px;padding:8px;font-size:10px;line-height:1.6">
+        🔴 信用利差断流7天 · 🟡 TAA+0.85触发调整 · 🟡 权益58%接近上限
+      </div>
+      <a href="投研移动端_v1.0.html" style="display:block;text-align:center;margin-top:12px;padding:8px;background:#185FA5;color:#fff;border-radius:6px;text-decoration:none;font-size:11px">📱 打开专用移动端 →</a>
+      <div style="text-align:center;font-size:9px;color:rgba(255,255,255,0.4);margin-top:4px">优化后加载 &lt;3秒 · 适配iOS/Android</div>
+      </div>
+      <div class="card-summary" id="card-mobile-link-summary" style="border-top-color:rgba(255,255,255,0.15)">
+        <span class="summary-item" style="color:#85B7EB">偿付: <b style="color:#fff">215%</b></span>
+        <span class="summary-item" style="color:#85B7EB">TAA: <b style="color:#fff">+0.85</b></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== EXISTING MODULES (v2.1) ========== -->
+<!-- (condensed: macro, TAA, CMA, SAA, spread, draft, peer, IFRS17, risk, corr) -->
+<div class="section-header"><span>v2.1模块</span> 宏观·配置·决策</div>
+
+<div class="row">
+  <div class="col15"><div class="card" id="card-macro">
+    <h3 onclick="toggleCard('card-macro')">第一层：宏观周期定位<span class="collapse-icon" id="card-macro-icon">▼</span></h3>
+    <div class="card-body" id="card-macro-body">
+    <div class="metric-row">
+      <div class="metric"><div class="lbl">GDP (Q2)</div><div class="val">4.3%</div><span class="tag tag-down">减速</span></div>
+      <div class="metric"><div class="lbl">制造业 PMI</div><div class="val">49.2</div><span class="tag tag-warn">收缩</span></div>
+      <div class="metric"><div class="lbl">M2 增速</div><div class="val">8.0%</div><span class="tag tag-info">偏松</span></div>
+      <div class="metric"><div class="lbl">10Y 国债</div><div class="val">1.71%</div><span class="tag tag-info">低位</span></div>
+    </div><div class="chart" id="chart-macro"></div>
+    <div class="interpret"><b>研判：</b>分化型弱复苏。出口+27%支撑，但内需疲弱。低利率环境持续。</div>
+    </div><div class="card-summary" id="card-macro-summary"><span class="summary-item">GDP: <b>4.3%</b></span><span class="summary-item">PMI: <b>49.2</b></span></div>
+  </div></div>
+  <div class="col"><div class="card" id="card-taa">
+    <h3 onclick="toggleCard('card-taa')">TAA五维评分卡<span class="collapse-icon" id="card-taa-icon">▼</span></h3>
+    <div class="card-body" id="card-taa-body"><div class="chart-lg" id="chart-taa"></div>
+    <div class="interpret" style="text-align:center">加权: <b style="color:#A32D2D">+0.85</b> · 最强:政策+2.5 · 拖累:估值-0.5</div>
+    </div><div class="card-summary" id="card-taa-summary"><span class="summary-item">TAA: <b style="color:#A32D2D">+0.85</b></span></div>
+  </div></div>
+</div>
+
+<div class="row">
+  <div class="col"><div class="card" id="card-cma">
+    <h3 onclick="toggleCard('card-cma')">CMA资本市场假设<span class="collapse-icon" id="card-cma-icon">▼</span></h3>
+    <div class="card-body" id="card-cma-body"><div class="chart" id="chart-cma"></div></div>
+    <div class="card-summary" id="card-cma-summary"><span class="summary-item">标普: <b>13.0%</b></span><span class="summary-item">黄金: <b>16.7%</b></span></div>
+  </div></div>
+  <div class="col15"><div class="card" id="card-saa">
+    <h3 onclick="toggleCard('card-saa')">SAA配置+负债覆盖率<span class="collapse-icon" id="card-saa-icon">▼</span></h3>
+    <div class="card-body" id="card-saa-body"><div class="row" style="margin-bottom:0"><div class="col"><div class="chart" id="chart-saa"></div></div></div>
+    <div class="interpret">组合收益率10.2% · 波动7.8% · 覆盖率<i style="color:#3B6D11">2.60x</i></div>
+    </div><div class="card-summary" id="card-saa-summary"><span class="summary-item">收益: <b>10.2%</b></span><span class="summary-item">波: <b>7.8%</b></span></div>
+  </div></div>
+</div>
+
+<div class="row">
+  <div class="col"><div class="card" id="card-risk">
+    <h3 onclick="toggleCard('card-risk')">风险限额监控<span class="collapse-icon" id="card-risk-icon">▼</span></h3>
+    <div class="card-body" id="card-risk-body">
+    <div class="status-grid">
+      <div class="status-item"><span>权益总仓位</span><b>58%</b><span class="tag tag-info">上限60%</span></div>
+      <div class="status-item"><span>组合波动率</span><b style="color:#3B6D11">7.8%</b></div>
+      <div class="status-item"><span>高流动性占比</span><b style="color:#3B6D11">42%</b></div>
+      <div class="status-item"><span>境外敞口</span><b>23%</b></div>
+    </div><div class="interpret">全部指标合规。权益距上限2pp。</div>
+    </div><div class="card-summary" id="card-risk-summary"><span class="summary-item">权益: <b>58%</b></span><span class="summary-item">状态: <b class="cov-high">合规</b></span></div>
+  </div></div>
+  <div class="col"><div class="card" id="card-corr">
+    <h3 onclick="toggleCard('card-corr')">资产相关性<span class="collapse-icon" id="card-corr-icon">▼</span></h3>
+    <div class="card-body" id="card-corr-body"><div class="chart" id="chart-corr"></div></div>
+    <div class="card-summary" id="card-corr-summary"><span class="summary-item">分散化: <b>强</b></span></div>
+  </div></div>
+</div>
+
+<div class="footer">投研体系 v2.2 · P0:数据管道+预警 · P1:报告引擎+移动端 · 以上内容仅供参考，不构成投资建议</div>
+</div>
+
+<script>
+// ===== Alert System =====
+function toggleAlerts() {
+  var dd = document.getElementById('alertDropdown');
+  dd.classList.toggle('show');
+  var bell = document.getElementById('alertBell');
+  bell.classList.remove('active');
+}
+function showToast(msg, type) {
+  var t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'toast ' + (type||'info') + ' show';
+  setTimeout(function(){ t.classList.remove('show'); }, 3000);
+}
+// Close dropdown on outside click
+document.addEventListener('click', function(e) {
+  var dd = document.getElementById('alertDropdown');
+  var bell = document.getElementById('alertBell');
+  if (dd.classList.contains('show') && !dd.contains(e.target) && !bell.contains(e.target)) {
+    dd.classList.remove('show');
+  }
+});
+
+// ===== Perspective =====
+var perspectiveKey = 'dashboard_v22_perspective';
+function switchPerspective(view) {
+  document.body.classList.toggle('insurance-view', view === 'insurance');
+  document.getElementById('btn-public').classList.toggle('active', view === 'public');
+  document.getElementById('btn-insurance').classList.toggle('active', view === 'insurance');
+  try { localStorage.setItem(perspectiveKey, view); } catch(e) {}
+  setTimeout(function(){ resizeAllCharts(); }, 200);
+}
+var savedPerspective = 'public';
+try { savedPerspective = localStorage.getItem(perspectiveKey) || 'public'; } catch(e) {}
+if (savedPerspective === 'insurance') switchPerspective('insurance');
+
+// ===== Collapse =====
+var STORAGE_KEY = 'dashboard_v22_collapse';
+var allCollapsed = false;
+function loadCollapseState() { try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); } catch(e) { return {}; } }
+function saveCollapseState(state) { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch(e) {} }
+var cardIds = ['card-pipeline','card-alert-rules','card-report','card-mobile-link',
+  'card-macro','card-taa','card-cma','card-saa','card-risk','card-corr'];
+function toggleCard(cardId) {
+  var body = document.getElementById(cardId + '-body');
+  var icon = document.getElementById(cardId + '-icon');
+  var summary = document.getElementById(cardId + '-summary');
+  if (!body) return;
+  var isCollapsed = body.classList.contains('collapsed');
+  if (isCollapsed) { body.classList.remove('collapsed'); icon.classList.remove('collapsed'); summary.classList.remove('visible'); }
+  else { body.classList.add('collapsed'); icon.classList.add('collapsed'); summary.classList.add('visible'); }
+  var state = loadCollapseState(); state[cardId] = !isCollapsed; saveCollapseState(state);
+  if (isCollapsed) setTimeout(function(){ resizeAllCharts(); }, 400);
+  updateToggleAllBtn();
+}
+function toggleAll() {
+  var state = loadCollapseState(); allCollapsed = !allCollapsed;
+  for (var i = 0; i < cardIds.length; i++) {
+    var cid = cardIds[i], body = document.getElementById(cid + '-body');
+    if (!body) continue;
+    if (allCollapsed) { body.classList.add('collapsed'); document.getElementById(cid + '-icon').classList.add('collapsed'); document.getElementById(cid + '-summary').classList.add('visible'); state[cid] = true; }
+    else { body.classList.remove('collapsed'); document.getElementById(cid + '-icon').classList.remove('collapsed'); document.getElementById(cid + '-summary').classList.remove('visible'); state[cid] = false; }
+  }
+  saveCollapseState(state); updateToggleAllBtn();
+  if (!allCollapsed) setTimeout(function(){ resizeAllCharts(); }, 400);
+}
+function updateToggleAllBtn() { document.getElementById('btnToggleAll').textContent = allCollapsed ? '全部展开' : '全部折叠'; }
+function restoreCollapseState() {
+  var state = loadCollapseState(); var anyCollapsed = false;
+  for (var i = 0; i < cardIds.length; i++) {
+    if (state[cardIds[i]]) {
+      var b = document.getElementById(cardIds[i] + '-body');
+      if (b) { b.classList.add('collapsed'); document.getElementById(cardIds[i] + '-icon').classList.add('collapsed'); document.getElementById(cardIds[i] + '-summary').classList.add('visible'); anyCollapsed = true; }
+    }
+  }
+  allCollapsed = anyCollapsed; updateToggleAllBtn();
+}
+function resizeAllCharts() { for (var k in charts) { if (charts[k]) charts[k].resize(); } }
+
+// ===== Charts =====
+var charts = {};
+function initChart(id, option) {
+  var dom = document.getElementById(id); if (!dom) return;
+  var chart = echarts.init(dom); chart.setOption(option); charts[id] = chart;
+  window.addEventListener('resize', function(){ if(charts[id]) charts[id].resize(); });
+}
+initChart('chart-macro',{tooltip:{trigger:'axis'},grid:{left:50,right:20,top:20,bottom:30},xAxis:{data:['2020','2021','2022','2023','2024','2025','2026'],axisLabel:{fontSize:10}},yAxis:[{type:'value',name:'%',min:-10,max:20,axisLabel:{fontSize:10}},{type:'value',name:'PMI',min:45,max:55,axisLabel:{fontSize:10}}],series:[{name:'GDP同比',type:'bar',data:[2.2,8.4,3.0,5.2,5.0,5.0,4.7],itemStyle:{color:'#185FA5'},barWidth:'50%'},{name:'制造业PMI(右)',type:'line',yAxisIndex:1,data:[51.9,50.3,47.0,49.0,50.3,50.4,49.2],lineStyle:{color:'#D85A30',width:2},symbol:'circle',symbolSize:6}]});
+initChart('chart-taa',{tooltip:{formatter:function(p){return p.name+': <b>'+(p.value>0?'+':'')+p.value.toFixed(1)+'</b>';}},radar:{center:['50%','55%'],radius:'58%',indicator:[{name:'宏观\n(25%)',max:3,min:-3},{name:'估值\n(25%)',max:3,min:-3},{name:'技术\n(15%)',max:3,min:-3},{name:'资金\n(15%)',max:3,min:-3},{name:'政策\n(20%)',max:3,min:-3}],axisName:{fontSize:10,color:'#5F5E5A'},splitArea:{areaStyle:{color:['rgba(24,95,165,0.01)','rgba(24,95,165,0.01)']}}},series:[{type:'radar',data:[{value:[1.0,-0.5,0,1.5,2.5],name:'当前评分',areaStyle:{color:'rgba(24,95,165,0.12)'},lineStyle:{color:'#185FA5',width:2},itemStyle:{color:'#185FA5'}}],symbol:'circle',symbolSize:5,markPoint:{data:[{name:'最强驱动',coord:['政策\n(20%)',2.5],value:'政策+2.5',symbol:'pin',symbolSize:32,itemStyle:{color:'#A32D2D'},label:{show:true,position:'top',fontSize:9,color:'#A32D2D',formatter:'最强驱动\n{c}'}},{name:'最大拖累',coord:['估值\n(25%)',-0.5],value:'估值-0.5',symbol:'pin',symbolSize:28,itemStyle:{color:'#3B6D11'},label:{show:true,position:'bottom',fontSize:9,color:'#3B6D11',formatter:'最大拖累\n{c}'}}]}}]});
+initChart('chart-cma',{tooltip:{formatter:function(p){return p.name+'<br>收益: '+p.data[0]+'%<br>波动: '+p.data[1]+'%'}},grid:{left:50,right:100,top:20,bottom:30},xAxis:{name:'波动率(%)',axisLabel:{fontSize:9}},yAxis:{name:'收益(%)',axisLabel:{fontSize:9}},visualMap:{min:0,max:1,inRange:{color:['#E8ECF1','#85B7EB','#185FA5']},show:false},series:[{type:'scatter',symbolSize:function(v){return 6+Math.abs(v[2])*40},data:[[0.5,3.0,0,'现金'],[3.6,1.9,0,'利率债'],[4.7,2.5,0,'信用债'],[21.5,4.1,0.05,'沪深300'],[25.1,6.7,0.15,'中证500'],[30.9,13.0,0.32,'创业板'],[33.8,14.1,0.33,'科创50'],[20.8,2.1,0,'恒生'],[16.5,16.6,0.7,'标普QDII'],[16.0,16.7,0.8,'黄金ETF']],label:{show:true,position:'right',fontSize:9,formatter:function(p){return p.data[3];}}}]});
+initChart('chart-saa',{tooltip:{trigger:'item',formatter:'{b}: {c}%'},series:[{type:'pie',radius:['45%','75%'],center:['50%','55%'],label:{fontSize:9},data:[{value:27,name:'信用债',itemStyle:{color:'#639922'}},{value:23,name:'标普500',itemStyle:{color:'#185FA5'}},{value:21,name:'黄金',itemStyle:{color:'#EF9F27'}},{value:9,name:'创业板',itemStyle:{color:'#D85A30'}},{value:9,name:'利率债',itemStyle:{color:'#7F77DD'}},{value:3,name:'沪深300',itemStyle:{color:'#378ADD'}},{value:2,name:'科创50',itemStyle:{color:'#1D9E75'}},{value:6,name:'现金',itemStyle:{color:'#B4B2A9'}}]}]});
+initChart('chart-corr',{tooltip:{},grid:{left:90,right:20,top:10,bottom:50},xAxis:{type:'category',data:['沪深300','创业板','恒生','标普500','黄金','信用债'],axisLabel:{fontSize:9,rotate:30}},yAxis:{type:'category',data:['信用债','黄金','标普500','恒生','创业板','沪深300'],axisLabel:{fontSize:9}},visualMap:{min:-0.1,max:1,inRange:{color:['#E6F1FB','#B5D4F4','#378ADD','#042C53']},show:false},series:[{type:'heatmap',data:[[0,5,0.05],[1,5,0.02],[2,5,0.56],[3,5,0.14],[4,5,0.75],[5,5,1.0],[0,4,0.02],[1,4,0.02],[2,4,0.39],[3,4,0.11],[4,4,1.0],[5,4,0.75],[0,3,0.02],[1,3,0.02],[2,3,1.0],[3,3,0.19],[4,3,0.39],[5,3,0.56],[0,2,0.02],[1,2,0.02],[2,2,0.19],[3,2,1.0],[4,2,0.11],[5,2,0.14],[0,1,0.02],[1,1,1.0],[2,1,0.02],[3,1,0.02],[4,1,0.02],[5,1,0.02],[0,0,1.0],[1,0,0.02],[2,0,0.02],[3,0,0.02],[4,0,0.02],[5,0,0.05]],label:{show:true,fontSize:9}}]});
+
+// Init
+restoreCollapseState();
+
+// Auto-refresh alert time
+setInterval(function() {
+  var sec = parseInt(document.getElementById('alertTime').textContent) + 1;
+  document.getElementById('alertTime').textContent = sec + '秒前';
+}, 5000);
+</script>
+</body>
+</html>

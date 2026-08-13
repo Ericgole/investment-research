@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>交互式框架 · CMA试算</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,"Microsoft YaHei",sans-serif;background:#f0f2f5;color:#1a1a1a;line-height:1.6}
+.header{background:linear-gradient(135deg,#042C53,#185FA5);color:#fff;padding:16px 28px;position:sticky;top:0;z-index:10}
+.header h1{font-size:16px;font-weight:500}.header p{font-size:11px;color:#85B7EB;margin-top:2px}
+.container{max-width:1400px;margin:0 auto;padding:16px}
+
+.nav-row{display:flex;gap:8px;margin-bottom:16px;overflow-x:auto;padding-bottom:4px}
+.nav-btn{padding:6px 14px;border-radius:16px;border:1px solid #D3D1C7;background:#fff;font-size:11px;cursor:pointer;white-space:nowrap;transition:all .15s;font-family:inherit}
+.nav-btn:hover{background:#E6F1FB;border-color:#85B7EB}
+.nav-btn.active{background:#185FA5;color:#fff;border-color:#185FA5}
+
+.section{background:#fff;border-radius:12px;border:0.5px solid #E8ECF1;margin:12px 0;padding:16px 20px}
+.section h2{font-size:14px;color:#042C53;border-bottom:0.5px solid #F0F2F5;padding-bottom:8px;margin-bottom:12px}
+
+.fw-diagram{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin:16px 0}
+.fw-node{flex:1;min-width:100px;max-width:140px;text-align:center;padding:10px 8px;border-radius:8px;font-size:10px;cursor:pointer;transition:all .2s;border:1px solid #E8ECF1;background:#FAFBFC}
+.fw-node:hover{transform:translateY(-2px);box-shadow:0 2px 8px rgba(0,0,0,0.1)}
+.fw-node .n-icon{font-size:22px;display:block;margin-bottom:4px}
+.fw-node .n-title{font-weight:500;color:#042C53;display:block}
+.fw-node .n-desc{font-size:9px;color:#888780;margin-top:2px;display:block}
+.n1{border-left:3px solid #185FA5}.n2{border-left:3px solid #3B6D11}.n3{border-left:3px solid #854F0B}
+.n4{border-left:3px solid #A32D2D}.n5{border-left:3px solid #3B6D11}.n6{border-left:3px solid #185FA5}.n7{border-left:3px solid #888780}
+
+.panel-row{display:flex;gap:12px;flex-wrap:wrap}
+.panel-left{flex:1;min-width:300px}
+.panel-right{flex:1.2;min-width:500px}
+
+.param-group{margin:8px 0}
+.param-group label{display:flex;justify-content:space-between;font-size:11px;color:#5F5E5A;margin-bottom:2px}
+.param-group input[type=range]{width:100%;accent-color:#185FA5}
+.param-group .val{font-weight:500;color:#042C53;min-width:45px;text-align:right}
+.param-row{display:flex;align-items:center;gap:8px;margin:4px 0}
+
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+.btn{padding:6px 14px;border-radius:8px;border:1px solid #D3D1C7;background:#fff;font-size:11px;cursor:pointer;transition:all .15s}
+.btn:hover{background:#F0F4F8}.btn-ac{background:#185FA5;color:#fff;border-color:#185FA5}
+
+.chart-box{width:100%;height:400px;background:#FAFBFC;border-radius:8px;margin:8px 0;border:0.5px solid #F0F2F5}
+
+.result-grid{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+.res-item{flex:1;min-width:80px;background:#F8F9FB;border-radius:8px;padding:10px;text-align:center;border:0.5px solid #E8ECF1}
+.res-item .rv{font-size:16px;font-weight:600;color:#042C53}
+.res-item .rl{font-size:9px;color:#888780;margin-top:2px}
+
+table{width:100%;font-size:10px;border-collapse:collapse;margin:8px 0}
+th{background:#F1F5F9;padding:5px 8px;text-align:left;font-weight:500;font-size:10px;color:#5F5E5A}
+td{padding:4px 8px;border-bottom:0.5px solid #F0F2F5}
+
+.footer{text-align:center;font-size:11px;color:#B4B2A9;padding:24px}
+</style>
+</head>
+<body>
+<div class="header">
+<h1>交互式框架 · CMA试算</h1>
+<p>v1.8 · 调整预期收益/波动率 → 实时重算MVO → 对比当前SAA</p>
+</div>
+<div class="container">
+
+<div class="nav-row" id="nav"></div>
+
+<div id="content"></div>
+<div class="footer">投研体系 v1.8 · 交互式CMA试算 · 2026-08-09</div>
+</div>
+
+<script>
+var PAGES = ['overview','cma','taa','risk','scenario'];
+var currentPage = 'overview';
+
+// Current SAA baseline
+var saaWeights = {信用债:27,利率债:9,现金:10,沪深300:3,创业板:9,中证500:0,标普500:23,黄金:21};
+var cmaBase = {
+  信用债: {ret:2.5, vol:4.7}, 利率债: {ret:1.9, vol:3.6}, 现金: {ret:3.0, vol:0.5},
+  沪深300: {ret:4.1, vol:21.5}, 创业板: {ret:13.0, vol:30.9}, 中证500: {ret:6.7, vol:25.1},
+  标普500: {ret:13.0, vol:17.1}, 黄金: {ret:8.5, vol:15.6}
+};
+
+// Clone for editing
+var cmaEdit = JSON.parse(JSON.stringify(cmaBase));
+
+function renderNav(){
+  var nav = document.getElementById('nav');
+  var labels = {overview:'框架总览',cma:'CMA试算',taa:'TAA调试',risk:'风险场景',scenario:'场景对比'};
+  var h = '';
+  for(var i=0;i<PAGES.length;i++){
+    var p = PAGES[i];
+    h += '<button class="nav-btn'+(p===currentPage?' active':'')+'" onclick="switchPage(\''+p+'\')">'+labels[p]+'</button>';
+  }
+  nav.innerHTML = h;
+}
+
+function switchPage(p){
+  currentPage = p;
+  renderNav();
+  renderPage();
+}
+
+function renderPage(){
+  var h = '';
+  if(currentPage === 'overview') h = renderOverview();
+  else if(currentPage === 'cma') h = renderCMA();
+  else if(currentPage === 'taa') h = renderTAA();
+  else if(currentPage === 'risk') h = renderScenario();
+  else if(currentPage === 'scenario') h = renderCompare();
+  document.getElementById('content').innerHTML = h;
+  
+  if(currentPage === 'cma') setTimeout(initCMACharts, 200);
+  if(currentPage === 'taa') setTimeout(initTAAChart, 200);
+  if(currentPage === 'risk') setTimeout(initRiskChart, 200);
+  if(currentPage === 'scenario') setTimeout(initCompareChart, 200);
+}
+
+// ===== PAGE 1: Framework Overview =====
+function renderOverview(){
+  return '<div class="section"><h2>投研体系 v1.8 · 七章全闭环</h2>'+
+  '<div class="fw-diagram">'+
+  node('1','📡','研判层','宏观+政策+比价','n1')+
+  node('2','⚖️','配置层','SAA中枢+TAA偏离','n2')+
+  node('3','🎯','偏离机制','触发规则+再平衡','n5')+
+  node('4','📊','专题层','73×⑨模块/37实时','n1')+
+  node('5','🛡️','风险层','VaR/回撤/限额','n4')+
+  node('6','📋','绩效层','归因/多周期/夏普','n3')+
+  node('7','🔄','复盘升级','v1.0→v1.8','n7')+
+  '</div>'+
+  '<table><tr><th>数据源</th><th>计算引擎</th><th>输出看板</th><th>部署</th></tr>'+
+  '<tr><td>SQLite 12表<br>Wind 7服务</td><td>compute_indicators<br>+wind_refresh<br>+fill_pe<br>+compute_risk<br>+compute_perf</td><td>专题全集<br>TAA评分卡<br>深度图表<br>风险管理<br>绩效评估<br>事件日历</td><td>GitHub Pages<br>localhost:8899<br>Windows定时</td></tr></table>'+
+  '<div style="margin-top:12px;font-size:11px;color:#888780">点击上方标签切换到交互试算模式 → CMA可调参数/TAA可改评分/风险可设场景</div>'+
+  '</div>';
+}
+function node(n,icon,title,desc,cls){
+  return '<div class="fw-node '+cls+'" onclick="switchPage(\''+(n==='2'?'cma':n==='3'?'taa':n==='5'?'risk':'overview')+'\')"><span class="n-icon">'+icon+'</span><span class="n-title">'+n+'. '+title+'</span><span class="n-desc">'+desc+'</span></div>';
+}
+
+// ===== PAGE 2: CMA Interactive =====
+function renderCMA(){
+  var assets = Object.keys(cmaBase);
+  var h = '<div class="section"><h2>CMA参数调整 · 实时MVO重算</h2><div class="panel-row"><div class="panel-left">';
+  h += '<div class="btn-row">';
+  h += '<button class="btn btn-ac" onclick="resetCMA()">重置基准</button>';
+  h += '<button class="btn" onclick="presetCMA(\'bull\')">牛市情景</button>';
+  h += '<button class="btn" onclick="presetCMA(\'bear\')">熊市情景</button>';
+  h += '<button class="btn" onclick="presetCMA(\'goldilocks\')">金发女孩</button>';
+  h += '</div>';
+  
+  for(var i=0;i<assets.length;i++){
+    var a = assets[i];
+    var r = cmaEdit[a].ret;
+    var v = cmaEdit[a].vol;
+    h += '<div class="param-group"><label><span>'+a+'</span><span class="val">收益 '+r.toFixed(1)+'%</span></label>';
+    h += '<input type="range" min="-5" max="25" step="0.5" value="'+r+'" oninput="updateCMA(\''+a+'\',\'ret\',parseFloat(this.value))">';
+    h += '<label><span></span><span class="val">波动 '+v.toFixed(1)+'%</span></label>';
+    h += '<input type="range" min="0" max="50" step="0.5" value="'+v+'" oninput="updateCMA(\''+a+'\',\'vol\',parseFloat(this.value))">';
+    h += '</div>';
+  }
+  h += '</div><div class="panel-right">';
+  h += '<div class="chart-box" id="cma_chart"></div>';
+  h += '<div id="cma_results" class="result-grid"></div>';
+  h += '</div></div></div>';
+  return h;
+}
+
+function resetCMA(){ cmaEdit = JSON.parse(JSON.stringify(cmaBase)); renderPage(); }
+function presetCMA(type){
+  cmaEdit = JSON.parse(JSON.stringify(cmaBase));
+  if(type==='bull'){ for(var k in cmaEdit) cmaEdit[k].ret += 5; }
+  else if(type==='bear'){ for(var k in cmaEdit) cmaEdit[k].ret -= 3; for(var k in cmaEdit) cmaEdit[k].vol += 5; }
+  else if(type==='goldilocks'){ for(var k in cmaEdit){ if(cmaEdit[k].vol>15) cmaEdit[k].ret += 3; cmaEdit[k].vol -= 2; } }
+  renderPage();
+}
+function updateCMA(asset, field, value){
+  cmaEdit[asset][field] = value;
+  document.querySelectorAll('input[type=range]').forEach(function(inp, i){
+    var label = inp.closest('.param-group').querySelector('.val');
+    if(!label) return;
+  });
+  initCMACharts();
+  updateCMAResults();
+}
+
+function initCMACharts(){
+  var assets = Object.keys(cmaBase);
+  var rets = assets.map(function(a){ return cmaEdit[a].ret; });
+  var vols = assets.map(function(a){ return cmaEdit[a].vol; });
+  
+  // Generate MVP frontier
+  var frontier = [];
+  for(var lambda=0; lambda<=2; lambda+=0.01){
+    var utility = assets.map(function(a,i){ return rets[i] - lambda * vols[i] * vols[i] / 100; });
+    var best = utility.indexOf(Math.max.apply(null, utility));
+    frontier.push({x: vols[best], y: rets[best]});
+  }
+  
+  // Current SAA point
+  var saaRet = 0, saaVol = 0;
+  for(var i=0;i<assets.length;i++){
+    var w = (saaWeights[assets[i]]||0)/100;
+    saaRet += w * rets[i];
+    saaVol += w * vols[i]; // simplified, ignoring correlation
+  }
+  
+  var c = echarts.init(document.getElementById('cma_chart'));
+  c.setOption({
+    title: {text: '有效前沿 vs 当前SAA', left: 'center', top: 8, textStyle: {fontSize: 13, color: '#042C53'}},
+    tooltip: {trigger: 'axis', formatter: function(p){ return '波动: '+p[0].value+'%<br/>收益: '+p[1].value+'%'; }},
+    grid: {left: 60, right: 30, top: 45, bottom: 30},
+    xAxis: {type: 'value', name: '年化波动%', axisLabel: {fontSize: 9}},
+    yAxis: {type: 'value', name: '年化收益%', axisLabel: {fontSize: 9}},
+    series: [
+      {type: 'line', data: frontier, lineStyle: {width: 2, color: '#185FA5'}, symbol: 'none', name: '有效前沿'},
+      {type: 'scatter', data: [{x: saaVol, y: saaRet}], symbolSize: 14, itemStyle: {color: '#A32D2D'}, name: '当前SAA'},
+      {type: 'scatter', data: vols.map(function(v,i){ return {x:v, y:rets[i]}; }), symbolSize: 8,
+        itemStyle: {color: '#888780'}, name: '各资产',
+        label: {show: true, formatter: function(p){ return assets[p.dataIndex]; }, fontSize: 9, position: 'right'}}
+    ]
+  });
+}
+
+function updateCMAResults(){
+  var assets = Object.keys(cmaBase);
+  var totalRet = 0, totalVol = 0;
+  for(var i=0;i<assets.length;i++){
+    var w = (saaWeights[assets[i]]||0)/100;
+    totalRet += w * cmaEdit[assets[i]].ret;
+  }
+  var h = '<div class="res-item"><div class="rv" style="color:#3B6D11">'+totalRet.toFixed(1)+'%</div><div class="rl">SAA预期收益</div></div>';
+  h += '<div class="res-item"><div class="rv">'+(totalRet-10).toFixed(1)+'%</div><div class="rl">vs 10%目标</div></div>';
+  document.getElementById('cma_results').innerHTML = h;
+}
+
+// ===== PAGE 3: TAA Debug =====
+function renderTAA(){
+  var dims = [
+    {name:'政策', weight:20, score:2, items:'大基金+AI+宽松'},
+    {name:'估值', weight:25, score:-1, items:'PE 87%分位'},
+    {name:'技术', weight:15, score:-1, items:'均线空头'},
+    {name:'资金', weight:15, score:1, items:'公募超配'},
+    {name:'宏观', weight:25, score:0, items:'弱均衡'},
+  ];
+  var total = 0;
+  for(var i=0;i<dims.length;i++) total += dims[i].score * dims[i].weight / 100;
+  
+  var h = '<div class="section"><h2>TAA评分试调</h2><p style="font-size:11px;color:#888780;margin-bottom:12px">拖动滑块调整各维度评分，观察加权总分变化。阈值 ±0.75。</p>';
+  h += '<div class="panel-row"><div class="panel-left">';
+  
+  for(var i=0;i<dims.length;i++){
+    var d = dims[i];
+    h += '<div class="param-group"><label><span>'+d.name+' ('+d.items+')</span><span class="val" id="taa_v'+i+'">'+d.score+'</span></label>';
+    h += '<input type="range" min="-2" max="2" step="0.5" value="'+d.score+'" data-idx="'+i+'" oninput="updateTAA()">';
+    h += '</div>';
+  }
+  
+  h += '</div><div class="panel-right">';
+  h += '<div class="chart-box" id="taa_chart"></div>';
+  h += '<div class="result-grid" id="taa_result"></div>';
+  h += '</div></div></div>';
+  setTimeout(function(){ updateTAA(); }, 100);
+  return h;
+}
+
+function updateTAA(){
+  var dims = [
+    {name:'政策', weight:20}, {name:'估值', weight:25}, {name:'技术', weight:15},
+    {name:'资金', weight:15}, {name:'宏观', weight:25}
+  ];
+  var sliders = document.querySelectorAll('input[data-idx]');
+  var scores = [];
+  var total = 0;
+  for(var i=0;i<sliders.length;i++){
+    var s = parseFloat(sliders[i].value);
+    scores.push(s);
+    total += s * dims[i].weight / 100;
+    var lbl = document.getElementById('taa_v'+i);
+    if(lbl) lbl.textContent = s > 0 ? '+'+s : s;
+  }
+  
+  var result = document.getElementById('taa_result');
+  var action = total >= 0.75 ? '<span style="color:#3B6D11">增配权益</span>' :
+               total <= -0.75 ? '<span style="color:#A32D2D">减配权益</span>' :
+               '<span style="color:#888780">维持SAA</span>';
+  result.innerHTML = '<div class="res-item"><div class="rv" style="color:'+(total>=0.75?'#3B6D11':total<=-0.75?'#A32D2D':'#888780')+'">'+total.toFixed(2)+'</div><div class="rl">加权总分</div></div>'+
+    '<div class="res-item"><div class="rv">'+action+'</div><div class="rl">建议动作(阈值±0.75)</div></div>';
+  
+  if(document.getElementById('taa_chart')){
+    var c = echarts.init(document.getElementById('taa_chart'));
+    c.setOption({
+      title: {text: '五维评分', left: 'center', top: 8, textStyle: {fontSize: 13}},
+      grid: {left: 55, right: 20, top: 45, bottom: 25},
+      xAxis: {type: 'category', data: dims.map(function(d){return d.name;}), axisLabel: {fontSize: 9}},
+      yAxis: {type: 'value', name: '评分', min: -2, max: 2, axisLabel: {fontSize: 9}},
+      series: [{type: 'bar', data: scores, barWidth: '50%',
+        itemStyle: {color: function(p){ return p.value>=1?'#3B6D11':p.value<=-1?'#A32D2D':'#888780'; }, borderRadius: [4,4,0,0]},
+        markLine: {silent: true, data: [
+          {yAxis: 0.75, label: {formatter: '触发+', fontSize: 9}, lineStyle: {color: '#3B6D11', type: 'dashed'}},
+          {yAxis: -0.75, label: {formatter: '触发-', fontSize: 9}, lineStyle: {color: '#A32D2D', type: 'dashed'}}
+        ]}
+      }]
+    });
+  }
+}
+
+// ===== PAGE 4: Risk Scenario =====
+function renderScenario(){
+  var h = '<div class="section"><h2>风险场景试算</h2><div class="panel-row"><div class="panel-left">';
+  h += '<p style="font-size:11px;color:#888780;margin-bottom:8px">设置假设场景，观察对SAA组合的影响</p>';
+  h += '<div class="btn-row">';
+  h += '<button class="btn btn-ac" onclick="setScenario(\'base\')">基准</button>';
+  h += '<button class="btn" onclick="setScenario(\'crash\')">股灾(-20%)</button>';
+  h += '<button class="btn" onclick="setScenario(\'ratehike\')">加息(+100bp)</button>';
+  h += '<button class="btn" onclick="setScenario(\'cny\')">CNY升值10%</button>';
+  h += '</div>';
+  h += '<div id="scenario_result" style="font-size:13px;margin-top:16px">点击上方按钮查看场景影响</div>';
+  h += '</div><div class="panel-right"><div class="chart-box" id="sc_chart"></div></div></div></div>';
+  setTimeout(function(){ setScenario('base'); }, 200);
+  return h;
+}
+
+function setScenario(type){
+  var impacts = {
+    base: { 沪深300:0, 创业板:0, 标普500:0, 黄金:0, 信用债:0, 利率债:0, 现金:0, desc:'基准场景：无变化' },
+    crash: { 沪深300:-20, 创业板:-30, 标普500:-15, 黄金:5, 信用债:-2, 利率债:3, 现金:0, desc:'股灾：全球股市暴跌' },
+    ratehike: { 沪深300:-5, 创业板:-8, 标普500:-10, 黄金:-5, 信用债:-3, 利率债:2, 现金:0, desc:'加息100bp：债券重定价' },
+    cny: { 沪深300:2, 创业板:3, 标普500:-8, 黄金:2, 信用债:0, 利率债:0, 现金:0, desc:'CNY升值10%：QDII回报压缩' },
+  };
+  var sc = impacts[type];
+  var totalImpact = 0;
+  for(var k in sc){
+    if(k==='desc') continue;
+    var w = (saaWeights[k]||0)/100;
+    totalImpact += w * sc[k];
+  }
+  var el = document.getElementById('scenario_result');
+  el.innerHTML = '<b>'+sc.desc+'</b><br>组合影响: <b style="color:'+(totalImpact>=0?'#3B6D11':'#A32D2D')+'">'+totalImpact.toFixed(1)+'%</b><br>'+
+    Object.keys(sc).filter(function(k){return k!=='desc';}).map(function(k){return k+': '+sc[k]+'%';}).join(' | ');
+  
+  if(document.getElementById('sc_chart')){
+    var assets = Object.keys(sc).filter(function(k){return k!=='desc';});
+    var c = echarts.init(document.getElementById('sc_chart'));
+    c.setOption({
+      title: {text: '场景影响分解', left: 'center', top: 8, textStyle: {fontSize: 13}},
+      grid: {left: 60, right: 20, top: 45, bottom: 25},
+      xAxis: {type: 'category', data: assets, axisLabel: {fontSize: 9, rotate: 20}},
+      yAxis: {type: 'value', name: '影响%', axisLabel: {fontSize: 9}},
+      series: [{type: 'bar', data: assets.map(function(a){return sc[a];}), barWidth: '50%',
+        itemStyle: {color: function(p){ return p.value>=0?'#3B6D11':'#A32D2D'; }, borderRadius: [3,3,0,0]}}]
+    });
+  }
+}
+
+// ===== PAGE 5: Scenario Comparison =====
+function renderCompare(){
+  var h = '<div class="section"><h2>场景对比矩阵</h2><table>';
+  h += '<tr><th>指标</th><th>当前基准</th><th>牛市(+5%收益)</th><th>熊市(-3%收益+5%波动)</th><th>金发女孩</th></tr>';
+  
+  var scenarios = [
+    {name:'基准', fn:function(){ return JSON.parse(JSON.stringify(cmaBase)); }},
+    {name:'牛市', fn:function(){ var c=JSON.parse(JSON.stringify(cmaBase)); for(var k in c) c[k].ret+=5; return c; }},
+    {name:'熊市', fn:function(){ var c=JSON.parse(JSON.stringify(cmaBase)); for(var k in c){c[k].ret-=3;c[k].vol+=5;} return c; }},
+    {name:'金发女孩', fn:function(){ var c=JSON.parse(JSON.stringify(cmaBase)); for(var k in c){if(c[k].vol>15)c[k].ret+=3;c[k].vol-=2;} return c; }},
+  ];
+  
+  var metrics = [];
+  for(var s=0;s<scenarios.length;s++){
+    var cma = scenarios[s].fn();
+    var assets = Object.keys(cma);
+    var ret = 0, vol_sum = 0;
+    for(var i=0;i<assets.length;i++){
+      var w = (saaWeights[assets[i]]||0)/100;
+      ret += w * cma[assets[i]].ret;
+      vol_sum += w * cma[assets[i]].vol;
+    }
+    metrics.push({ret: ret.toFixed(1), vol: vol_sum.toFixed(1), sharpe: (ret/vol_sum).toFixed(2)});
+  }
+  
+  h += '<tr><td>SAA预期收益</td>'+metrics.map(function(m){return '<td style="color:#3B6D11">'+m.ret+'%</td>';}).join('')+'</tr>';
+  h += '<tr><td>SAA加权波动</td>'+metrics.map(function(m){return '<td>'+m.vol+'%</td>';}).join('')+'</tr>';
+  h += '<tr><td>简化夏普</td>'+metrics.map(function(m){return '<td>'+m.sharpe+'</td>';}).join('')+'</tr>';
+  h += '<tr><td>vs 目标10%</td>'+metrics.map(function(m){return '<td style="color:'+(parseFloat(m.ret)>=10?'#3B6D11':'#A32D2D')+'">'+(parseFloat(m.ret)-10).toFixed(1)+'%</td>';}).join('')+'</tr>';
+  h += '</table></div>';
+  return h;
+}
+
+function initTAAChart(){ updateTAA(); }
+function initRiskChart(){ if(document.getElementById('sc_chart')) setScenario('base'); }
+function initCompareChart(){}
+
+// Start
+renderNav();
+renderPage();
+</script>
+</body>
+</html>

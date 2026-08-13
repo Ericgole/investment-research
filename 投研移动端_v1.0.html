@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>投研移动端 v1.0</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,"Microsoft YaHei",sans-serif;background:#042C53;color:#fff;min-height:100vh;-webkit-font-smoothing:antialiased}
+.header{padding:16px 20px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(255,255,255,0.1)}
+.header h1{font-size:17px;font-weight:500}
+.header .badge{font-size:10px;background:rgba(255,255,255,0.12);padding:3px 10px;border-radius:10px;color:#85B7EB}
+.container{padding:16px}
+/* KPI Cards */
+.kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.kpi-card{background:rgba(255,255,255,0.07);border-radius:12px;padding:14px;text-align:center;border:1px solid rgba(255,255,255,0.06)}
+.kpi-card .kpi-val{font-size:28px;font-weight:600;line-height:1}
+.kpi-card .kpi-lbl{font-size:10px;color:#85B7EB;margin-top:4px}
+.kpi-card .kpi-change{font-size:10px;margin-top:2px}
+.kpi-card.warn{border-color:rgba(239,159,39,0.3)}
+/* Alert Section */
+.alert-section{margin-bottom:16px}
+.alert-section h3{font-size:13px;font-weight:500;margin-bottom:8px;color:#85B7EB}
+.alert-item{background:rgba(255,255,255,0.05);border-radius:8px;padding:10px 12px;margin-bottom:6px;display:flex;align-items:flex-start;gap:8px;font-size:11px;line-height:1.5}
+.alert-item .ai-icon{font-size:14px;flex-shrink:0}
+.alert-item .ai-body{flex:1}
+.alert-item .ai-tag{font-size:8px;padding:1px 6px;border-radius:3px;margin-top:2px;display:inline-block}
+.alert-severe{border-left:3px solid #D85A30}
+.alert-warning{border-left:3px solid #EF9F27}
+.alert-info{border-left:3px solid #185FA5}
+.ai-tag-red{background:rgba(216,90,48,0.2);color:#D85A30}
+.ai-tag-yellow{background:rgba(239,159,39,0.2);color:#EF9F27}
+.ai-tag-blue{background:rgba(24,95,165,0.2);color:#85B7EB}
+/* Suggestions */
+.suggestions{margin-bottom:16px}
+.suggestions h3{font-size:13px;font-weight:500;margin-bottom:8px;color:#85B7EB}
+.sugg-card{background:linear-gradient(135deg,rgba(24,95,165,0.2),rgba(24,95,165,0.05));border-radius:10px;padding:12px;margin-bottom:6px;border:1px solid rgba(24,95,165,0.2);font-size:11px;line-height:1.5}
+.sugg-card .sugg-title{font-weight:500;margin-bottom:2px}
+.sugg-card .sugg-desc{font-size:10px;color:#85B7EB}
+/* Quick Stats */
+.quick-stats{background:rgba(255,255,255,0.05);border-radius:12px;padding:14px;margin-bottom:16px}
+.quick-stats h3{font-size:13px;font-weight:500;margin-bottom:10px;color:#85B7EB}
+.stat-row{display:flex;justify-content:space-between;padding:6px 0;font-size:11px;border-bottom:1px solid rgba(255,255,255,0.04)}
+.stat-row:last-child{border-bottom:0}
+.stat-row .sr-label{color:#85B7EB}
+.stat-row .sr-val{font-weight:500}
+/* Refresh indicator */
+.refresh{text-align:center;font-size:9px;color:rgba(255,255,255,0.3);padding:10px}
+.pulse{display:inline-block;width:5px;height:5px;border-radius:50%;background:#639922;margin-right:4px;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+/* Tap highlight */
+.tap-active:active{opacity:0.7;transition:opacity 0.1s}
+/* Optimized for mobile */
+@media(min-width:480px){.kpi-grid{grid-template-columns:1fr 1fr}.container{max-width:480px;margin:0 auto}}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>投研移动端</h1>
+  <span class="badge">v1.0</span>
+</div>
+
+<div class="container">
+
+<!-- 4 KPI Cards -->
+<div class="kpi-grid">
+  <div class="kpi-card">
+    <div class="kpi-val">215%</div>
+    <div class="kpi-lbl">偿付能力充足率</div>
+    <div class="kpi-change" style="color:#639922">▲ 稳定</div>
+  </div>
+  <div class="kpi-card warn">
+    <div class="kpi-val" style="color:#EF9F27">+0.85</div>
+    <div class="kpi-lbl">TAA五维加权分</div>
+    <div class="kpi-change" style="color:#EF9F27">⚠ 触发调整线</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-val">10.2%</div>
+    <div class="kpi-lbl">组合预期年化收益</div>
+    <div class="kpi-change" style="color:#85B7EB">波动 7.8%</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-val">-3.2</div>
+    <div class="kpi-lbl">久期缺口(年)</div>
+    <div class="kpi-change" style="color:#85B7EB">目标 ≤-3.0</div>
+  </div>
+</div>
+
+<!-- Active Alerts -->
+<div class="alert-section">
+  <h3>🔔 预警通知 (3条活跃)</h3>
+  <div class="alert-item alert-severe tap-active">
+    <div class="ai-icon">🔴</div>
+    <div class="ai-body">
+      <b>信用利差数据断流</b><br>
+      已断流7天，SAA负债覆盖率精度下降
+      <div><span class="ai-tag ai-tag-red">严重</span> <span style="font-size:9px;color:#85B7EB;margin-left:4px">06:30触发</span></div>
+    </div>
+  </div>
+  <div class="alert-item alert-warning tap-active">
+    <div class="ai-icon">🟡</div>
+    <div class="ai-body">
+      <b>TAA +0.85 突破调整线</b><br>
+      政策+2.5极度正向 vs 估值-0.5拖累
+      <div><span class="ai-tag ai-tag-yellow">警告</span> <span style="font-size:9px;color:#85B7EB;margin-left:4px">06:30触发</span></div>
+    </div>
+  </div>
+  <div class="alert-item alert-warning tap-active">
+    <div class="ai-icon">🟡</div>
+    <div class="ai-body">
+      <b>权益仓位58%接近上限60%</b><br>
+      增配空间仅2pp，如需TAA增配需调上限
+      <div><span class="ai-tag ai-tag-yellow">警告</span> <span style="font-size:9px;color:#85B7EB;margin-left:4px">18:30触发</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- Action Suggestions -->
+<div class="suggestions">
+  <h3>💡 即时操作建议</h3>
+  <div class="sugg-card tap-active">
+    <div class="sugg-title">1. TAA触发 → 增配创业板+3%</div>
+    <div class="sugg-desc">政策维度+2.5极端正向，创业板9%→12%可放大政策红利。偿付能力预降至208%，仍高于200%</div>
+  </div>
+  <div class="sugg-card tap-active">
+    <div class="sugg-title">2. 补拉信用利差数据</div>
+    <div class="sugg-desc">Wind bond_data断流7天，影响D-1/D-4/D-6模块。调用 wind_refresh.py 手动补拉</div>
+  </div>
+  <div class="sugg-card tap-active">
+    <div class="sugg-title">3. 权益上限调至65%</div>
+    <div class="sugg-desc">当前58%距60%仅2pp。反向压力测试显示偿付≥200%时权益可到62%，建议先调至65%留足缓冲</div>
+  </div>
+</div>
+
+<!-- Quick Stats (compact) -->
+<div class="quick-stats">
+  <h3>📊 组合快照</h3>
+  <div class="stat-row"><span class="sr-label">权益总仓位</span><span class="sr-val">58%</span></div>
+  <div class="stat-row"><span class="sr-label">组合波动率</span><span class="sr-val" style="color:#639922">7.8%</span></div>
+  <div class="stat-row"><span class="sr-label">VaR (99%,10日)</span><span class="sr-val">-4.82%</span></div>
+  <div class="stat-row"><span class="sr-label">综合覆盖率</span><span class="sr-val" style="color:#639922">2.60x</span></div>
+  <div class="stat-row"><span class="sr-label">最大单资产</span><span class="sr-val">信用债 27%</span></div>
+  <div class="stat-row"><span class="sr-label">境外敞口(QDII)</span><span class="sr-val">23%</span></div>
+</div>
+
+<div class="refresh"><span class="pulse"></span>最后刷新: 2026-08-10 06:30 · 数据 ETL 64秒完成 · <span style="color:#639922">加载 0.8秒</span></div>
+
+</div>
+
+<script>
+// Lightweight tap feedback
+document.querySelectorAll('.tap-active').forEach(function(el) {
+  el.addEventListener('touchstart', function(){}, {passive:true});
+});
+// Pull-to-refresh visual indicator
+var lastTouch = 0;
+document.addEventListener('touchstart', function(e) { lastTouch = e.touches[0].clientY; });
+document.addEventListener('touchend', function(e) {
+  if (window.scrollY === 0 && e.changedTouches[0].clientY - lastTouch > 80) {
+    var r = document.querySelector('.refresh');
+    r.innerHTML = '<span class="pulse"></span>刷新中... (数据最新)';
+    setTimeout(function() {
+      r.innerHTML = '<span class="pulse"></span>最后刷新: 2026-08-10 06:30 · 数据 ETL 64秒完成 · <span style="color:#639922">加载 0.8秒</span>';
+    }, 800);
+  }
+});
+</script>
+</body>
+</html>

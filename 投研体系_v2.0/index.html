@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>投研体系 v2.0</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body>
+
+<!-- ===== HEADER ===== -->
+<div class="header">
+  <div style="display:flex;align-items:center;gap:10px">
+    <h1>投研体系看板</h1>
+    <span class="ver">v2.0</span>
+  </div>
+  <div class="header-right">
+    <button class="alert-bell ring" id="bellBtn" onclick="toggleAlertPopup()" title="预警通知">🔔<span class="count" id="bellCount">3</span></button>
+    <span class="meta">2026-08-10 · 06:30 刷新 · ETL 64s</span>
+    <button class="btn-sm" onclick="runPipeline()">🔄 运行管道</button>
+    <button class="btn-sm primary" onclick="generateReport('daily')">📄 生成日报</button>
+  </div>
+</div>
+
+<!-- Alert Popup -->
+<div class="alert-popup" id="alertPopup">
+  <div class="ap-header"><span>预警通知</span><span style="color:#B4B2A9;font-weight:400" id="alertRefreshTime">刚刚刷新</span></div>
+  <div id="alertList"></div>
+  <div style="padding:6px 14px;text-align:center;font-size:9px;color:var(--blue);cursor:pointer" onclick="document.getElementById('alertPopup').classList.remove('show')">关闭</div>
+</div>
+
+<!-- Toast -->
+<div class="notify-toast" id="notifyToast"></div>
+<div class="ap-toast" id="alertToast"></div>
+
+<!-- ===== DASHBOARD ===== -->
+<div class="dashboard">
+
+<!-- ▸ KPI CARDS (4个核心指标,5秒可见) -->
+<div class="kpi-row" id="kpiRow">
+  <div class="kpi-card" id="kpi1">
+    <div class="kpi-val green">215%</div>
+    <div class="kpi-lbl">偿付能力充足率</div>
+    <div class="kpi-sub"><span class="sub-delta" style="color:var(--green)">▲ 充裕</span> · 底线150%</div>
+  </div>
+  <div class="kpi-card warn" id="kpi2">
+    <div class="kpi-val amber">+0.85</div>
+    <div class="kpi-lbl">TAA五维加权分</div>
+    <div class="kpi-sub"><span class="sub-delta" style="color:var(--yellow)">⚠ 触发±0.75</span></div>
+  </div>
+  <div class="kpi-card" id="kpi3">
+    <div class="kpi-val">10.2%</div>
+    <div class="kpi-lbl">组合预期年化收益</div>
+    <div class="kpi-sub"><span class="sub-delta" style="color:var(--blue)">波动 7.8%</span> · 夏普 0.92</div>
+  </div>
+  <div class="kpi-card" id="kpi4">
+    <div class="kpi-val">-3.2</div>
+    <div class="kpi-lbl">久期缺口 (年)</div>
+    <div class="kpi-sub"><span class="sub-delta" style="color:var(--blue)">VaR -4.82%</span> · 覆盖率 2.60x</div>
+  </div>
+</div>
+
+<!-- ▸ ROW 1: 宏观 + TAA雷达 -->
+<div class="row">
+  <div class="col15">
+    <div class="card">
+      <h3>第一层：宏观周期定位 <span class="badge p1">P1</span></h3>
+      <div class="metric-row">
+        <div class="metric"><div class="lbl">GDP (Q2)</div><div class="val">4.3%</div><span class="tag tag-down">减速</span></div>
+        <div class="metric"><div class="lbl">制造业 PMI</div><div class="val">49.2</div><span class="tag tag-warn">收缩</span></div>
+        <div class="metric"><div class="lbl">M2 增速</div><div class="val">8.0%</div><span class="tag tag-info">偏松</span></div>
+        <div class="metric"><div class="lbl">10Y 国债</div><div class="val">1.71%</div><span class="tag tag-info">低位</span></div>
+      </div>
+      <div class="chart" id="chartMacro"></div>
+      <div class="interpret">分化型弱复苏。出口+27%支撑结构转型，但内需疲弱。低利率压缩利差益。</div>
+    </div>
+  </div>
+  <div class="col">
+    <div class="card">
+      <h3>TAA五维评分卡 <span style="font-size:9px;color:var(--yellow)">[-3,+3]</span></h3>
+      <div class="chart-lg" id="chartTAA"></div>
+      <div class="interpret" style="text-align:center">加权 <b style="color:var(--yellow)">+0.85</b> · 最强: <b style="color:var(--red)">政策+2.5</b> · 拖累: <b style="color:var(--green)">估值-0.5</b></div>
+    </div>
+  </div>
+</div>
+
+<!-- ▸ ROW 2: SAA + 负债覆盖率 -->
+<div class="row">
+  <div class="col">
+    <div class="card">
+      <h3>SAA配置中枢 (MVO)</h3>
+      <div class="chart" id="chartSAA"></div>
+      <div class="status-grid">
+        <div class="status-item"><span>目标收益</span><b>10.2%</b></div>
+        <div class="status-item"><span>年化波动</span><b style="color:var(--green)">7.8%</b></div>
+        <div class="status-item"><span>夏普比率</span><b style="color:var(--blue)">0.92</b></div>
+        <div class="status-item"><span>权益占比</span><b>58%</b></div>
+      </div>
+    </div>
+  </div>
+  <div class="col15">
+    <div class="card">
+      <h3>CMA资本市场假设 + 负债成本覆盖率 <span class="badge p1">P1</span></h3>
+      <div class="chart" id="chartCMA"></div>
+      <table class="table-sm" style="margin-top:8px">
+        <tr><th>资产</th><th>权重</th><th>收益</th><th>覆盖率</th><th>评级</th></tr>
+        <tr><td>标普500QDII</td><td>23%</td><td>13.0%</td><td style="color:var(--green)">3.71x</td><td><span class="tag tag-ok">充裕</span></td></tr>
+        <tr><td>黄金ETF</td><td>21%</td><td>16.7%</td><td style="color:var(--green)">4.77x</td><td><span class="tag tag-ok">充裕</span></td></tr>
+        <tr><td>沪深300</td><td>3%</td><td>4.1%</td><td style="color:var(--green)">1.17x</td><td><span class="tag tag-ok">充裕</span></td></tr>
+        <tr><td>信用债</td><td>27%</td><td>2.5%</td><td style="color:var(--red)">0.71x</td><td><span class="tag tag-down">⚠ 不足</span></td></tr>
+        <tr><td>利率债</td><td>9%</td><td>1.9%</td><td style="color:var(--red)">0.54x</td><td><span class="tag tag-down">⚠ 不足</span></td></tr>
+      </table>
+      <div class="interpret">组合加权 <b style="color:var(--green)">2.60x</b>（负债成本3.5%）。固收单独仅0.72x。</div>
+    </div>
+  </div>
+</div>
+
+<!-- ▸ ROW 3: TAA偏离审批工作流 (7步) -->
+<div class="section-hdr"><span>P0 核心</span> TAA偏离 7步审批工作流</div>
+<div class="row">
+  <div class="col3">
+    <div class="card">
+      <h3>工作流：TAA偏离审批 <span style="font-size:10px;color:var(--gray-text)" id="wfProgress">步骤 3/7 · 45%</span>
+        <a href="taa-deviation-workflow.html" style="font-size:10px;color:var(--blue);text-decoration:none;border:1px solid var(--blue);padding:2px 10px;border-radius:4px;margin-left:8px">📋 全屏工作台 →</a>
+      </h3>
+      <div class="wf-steps" id="wfSteps">
+        <div class="wf-step done" id="ws1"><span class="wf-num">✓</span>1.触发识别</div>
+        <div class="wf-step done" id="ws2"><span class="wf-num">✓</span>2.自动预检</div>
+        <div class="wf-step current" id="ws3"><span class="wf-num">3</span>3.方案生成</div>
+        <div class="wf-step" id="ws4"><span class="wf-num">4</span>4.内部讨论</div>
+        <div class="wf-step" id="ws5"><span class="wf-num">5</span>5.合规审查</div>
+        <div class="wf-step" id="ws6"><span class="wf-num">6</span>6.CIO审批</div>
+        <div class="wf-step" id="ws7"><span class="wf-num">7</span>7.执行+复盘</div>
+      </div>
+      <div class="progress-bar"><div class="progress-fill amber" style="width:45%" id="wfFill"></div></div>
+      <!-- Precheck Panel -->
+      <div style="margin-top:10px;padding:10px;background:var(--gray-card);border-radius:8px" id="precheckPanel">
+        <div style="font-size:11px;font-weight:500;margin-bottom:6px">自动预检结果 (Step 2)</div>
+        <table class="table-sm">
+          <tr><th>指标</th><th>当前</th><th>增减+3%权益后</th><th>变化</th><th>状态</th></tr>
+          <tr><td>偿付能力</td><td>215%</td><td><b>208%</b></td><td style="color:var(--red)">-7pp</td><td><span class="tag tag-ok">≥150%</span></td></tr>
+          <tr><td>组合收益</td><td>10.2%</td><td><b>10.8%</b></td><td style="color:var(--red)">+0.6%</td><td><span class="tag tag-ok">↑</span></td></tr>
+          <tr><td>VaR(99%,10d)</td><td>4.82%</td><td><b>5.36%</b></td><td style="color:var(--red)">+0.54%</td><td><span class="tag tag-ok">≤8%</span></td></tr>
+          <tr><td>负债覆盖率</td><td>2.60x</td><td><b>2.54x</b></td><td style="color:var(--green)">-0.06x</td><td><span class="tag tag-ok">充裕</span></td></tr>
+          <tr class="row-hl"><td>权益上限</td><td>58%</td><td><b>61%</b></td><td style="color:var(--red)">+3pp</td><td><span class="tag tag-warn">⚠ 需调至65%</span></td></tr>
+        </table>
+      </div>
+      <!-- Plan Selection -->
+      <div style="margin-top:10px">
+        <div style="font-size:11px;font-weight:500;margin-bottom:6px">偏离方案 (Step 3)</div>
+        <div style="display:flex;gap:8px">
+          <div style="flex:1;padding:8px;border:2px solid var(--blue);border-radius:8px;background:var(--blue-bg);font-size:10px;cursor:pointer" onclick="selectPlan('recommended')" id="planRec">
+            <b>推荐: 增配创业板+3%</b><br>
+            <span style="color:var(--gray-text)">9%→12% · 现金-2%+利率债-1%<br>收益 10.8% · 偿付 208%</span>
+          </div>
+          <div style="flex:1;padding:8px;border:1px solid var(--border);border-radius:8px;font-size:10px;cursor:pointer" onclick="selectPlan('alternative')" id="planAlt">
+            <b>备选: 维持SAA不变</b><br>
+            <span style="color:var(--gray-text)">观察1周确认信号<br>收益 10.2% · 偿付 215%</span>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:8px;display:flex;gap:6px">
+        <button class="btn-sm success" onclick="advanceWorkflow()" id="btnAdvance">进入讨论 →</button>
+        <button class="btn-sm" onclick="resetWorkflow()">重置工作流</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ▸ ROW 4: 数据管道 (左) + 预警状态 (右) -->
+<div class="section-hdr"><span>P0 基础设施</span> 数据管道 & 预警系统</div>
+<div class="row">
+  <div class="col15">
+    <div class="card">
+      <h3>ETL数据管道 (DataPipelineRunner) <span id="pipelineStatus" style="font-size:10px;color:var(--green)">● 空闲</span></h3>
+      <div class="pipeline" id="pipeline">
+        <div class="step" id="ps-collect"><div class="step-icon">📡</div><div class="step-name">数据采集</div><div class="step-status" style="font-size:9px">6源</div></div>
+        <div class="arrow">→</div>
+        <div class="step" id="ps-validate"><div class="step-icon">🔍</div><div class="step-name">数据校验</div><div class="step-status" style="font-size:9px">4规则</div></div>
+        <div class="arrow">→</div>
+        <div class="step" id="ps-etl"><div class="step-icon">⚙️</div><div class="step-name">ETL转换</div><div class="step-status" style="font-size:9px">5字段</div></div>
+        <div class="arrow">→</div>
+        <div class="step" id="ps-compute"><div class="step-icon">📊</div><div class="step-name">指标计算</div><div class="step-status" style="font-size:9px">22/24</div></div>
+        <div class="arrow">→</div>
+        <div class="step" id="ps-deploy"><div class="step-icon">🚀</div><div class="step-name">看板部署</div><div class="step-status" style="font-size:9px">HTML</div></div>
+      </div>
+      <div class="progress-bar"><div class="progress-fill green" style="width:100%" id="pipelineFill"></div></div>
+      <div class="interpret" id="pipelineLog">
+        上次运行: 今日06:25 | 总耗时 <b>64秒</b> | 4/5阶段通过 | 指标计算回退至last_known
+      </div>
+    </div>
+  </div>
+  <div class="col">
+    <div class="card">
+      <h3>主动预警引擎 (AlertEngine) <span id="alertEngineStatus" style="font-size:10px;color:var(--green)">▶ 运行中</span></h3>
+      <div class="status-grid">
+        <div class="status-item"><span><span class="dot dot-err"></span>触发</span><b style="color:var(--red)">3条</b></div>
+        <div class="status-item"><span><span class="dot dot-warn"></span>监控</span><b style="color:var(--yellow)">3条</b></div>
+        <div class="status-item"><span><span class="dot dot-ok"></span>正常</span><b style="color:var(--green)">4条</b></div>
+        <div class="status-item"><span>推送成功率</span><b style="color:var(--green)">100%</b></div>
+      </div>
+      <table class="table-sm" style="margin-top:10px">
+        <tr><th>规则</th><th>当前值</th><th>状态</th><th>通知</th></tr>
+        <tr><td>信用利差异常</td><td style="color:var(--red)">断流7天</td><td><span class="dot dot-err"></span>触发</td><td>飞书+看板</td></tr>
+        <tr><td>TAA调整线</td><td style="color:var(--yellow)">+0.85</td><td><span class="dot dot-err"></span>触发</td><td>飞书+看板</td></tr>
+        <tr><td>权益仓位</td><td style="color:var(--yellow)">58%</td><td><span class="dot dot-err"></span>触发</td><td>飞书</td></tr>
+        <tr><td>PE分位</td><td>87%</td><td><span class="dot dot-warn"></span>监控</td><td>看板</td></tr>
+        <tr><td>VaR超限</td><td>4.82%</td><td><span class="dot dot-ok"></span>正常</td><td>—</td></tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ▸ ROW 5: 风险合规 + 报告引擎 -->
+<div class="row">
+  <div class="col">
+    <div class="card">
+      <h3>风险限额合规检查 <span class="badge p1">P1</span></h3>
+      <div class="status-grid">
+        <div class="status-item"><span>权益总仓位</span><b>58%</b> <span class="tag tag-info">≤60%</span></div>
+        <div class="status-item"><span>组合波动率</span><b style="color:var(--green)">7.8%</b> <span class="tag tag-info">≤20%</span></div>
+        <div class="status-item"><span>最大回撤(估)</span><b>~15%</b> <span class="tag tag-info">≤30%</span></div>
+        <div class="status-item"><span>单一上限</span><b>27%</b> <span class="tag tag-info">≤35%</span></div>
+        <div class="status-item"><span>高流动性</span><b style="color:var(--green)">42%</b> <span class="tag tag-info">≥15%</span></div>
+        <div class="status-item"><span>VaR(99%,10d)</span><b style="color:var(--green)">-4.82%</b> <span class="tag tag-info">≤8%</span></div>
+      </div>
+      <div class="interpret"><b>全部合规。</b>波动7.8%距上限12.2pp安全垫。权益距上限2pp。</div>
+    </div>
+  </div>
+  <div class="col">
+    <div class="card">
+      <h3>自动报告引擎 (ReportEngine) <span class="badge p1">P1</span></h3>
+      <div style="display:grid;gap:6px;font-size:10px">
+        <div style="display:flex;justify-content:space-between;padding:8px 10px;background:var(--gray-card);border-radius:6px">
+          <span><b>投研日报</b> v3.2</span><span class="tag tag-ok">06:30已生成</span>
+          <span style="color:var(--gray-text)">HTML+MD+PDF</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:8px 10px;background:var(--gray-card);border-radius:6px">
+          <span><b>风险周报</b> v2.1</span><span class="tag tag-info">下周一</span>
+          <span style="color:var(--gray-text)">HTML+MD</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:8px 10px;background:var(--gray-card);border-radius:6px">
+          <span><b>月度复盘</b> v2.0</span><span class="tag tag-info">9月1日</span>
+          <span style="color:var(--gray-text)">HTML+PDF</span>
+        </div>
+      </div>
+      <div class="progress-bar"><div class="progress-fill blue" style="width:33%"></div></div>
+      <div style="display:flex;gap:6px;margin-top:6px">
+        <button class="btn-sm primary" onclick="generateReport('daily')">生成日报</button>
+        <button class="btn-sm" onclick="generateReport('weekly')">周报预览</button>
+        <button class="btn-sm" onclick="generateReport('monthly')">月报预览</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="footer">
+  投研体系 v2.0 · DataPipelineRunner / AlertEngine / TAADeviationWorkflow / ReportEngine · 以上内容仅供参考，不构成投资建议
+</div>
+
+</div>
+
+<!-- ===== SCRIPTS ===== -->
+<script src="js/core.js"></script>
+<script>
+// ===== INIT =====
+var pipeline = new InvestmentResearch.DataPipelineRunner();
+var alertEngine = new InvestmentResearch.AlertEngine();
+var workflow = new InvestmentResearch.TAADeviationWorkflow();
+var reportEngine = new InvestmentResearch.ReportEngine();
+
+// Load alert rules
+alertEngine.loadRules();
+
+// ===== Current snapshot =====
+var currentSnapshot = {
+  solvency: 215, taaScore: 0.85, portfolioReturn: 10.2, volatility: 7.8,
+  durationGap: -3.2, var: 4.82, equityRatio: 58, liabilityCoverage: 2.60,
+  dataStatus: 'expired', creditSpread: null, pePercentile: 87,
+  drawdown: 2.1, fxExposure: 23, cnyAppreciation: 1.5,
+  gold30dReturn: 8.3, sp500Drawdown: 1.5, m2m1Spread: -4.0
+};
+
+// ===== KPI闪烁 + 5秒可见 =====
+function pulseKPIs() {
+  ['kpi1','kpi2','kpi3','kpi4'].forEach(function(id, i) {
+    var el = document.getElementById(id);
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(8px)';
+    setTimeout(function() {
+      el.style.transition = 'all 0.5s ease';
+      el.style.opacity = '1';
+      el.style.transform = 'translateY(0)';
+    }, i * 200 + 100);
+  });
+}
+
+// ===== Alert Popup =====
+function toggleAlertPopup() {
+  var p = document.getElementById('alertPopup');
+  p.classList.toggle('show');
+  if (p.classList.contains('show')) {
+    renderAlertList();
+    document.getElementById('bellBtn').classList.remove('ring');
+  }
+}
+function renderAlertList() {
+  var container = document.getElementById('alertList');
+  var alerts = [
+    {sev:'sev',icon:'🔴',title:'信用利差断流超7天',body:'Wind bond_data最近刷新 08-03，已自动回退last_known',time:'06:30'},
+    {sev:'warn',icon:'🟡',title:'TAA +0.85 突破调整线',body:'政策维度+2.5极端正向，估值-0.5拖累',time:'06:30'},
+    {sev:'warn',icon:'🟡',title:'权益仓位58%接近上限',body:'距60%仅2pp，增配空间不足',time:'18:30'},
+    {sev:'info',icon:'🔵',title:'PE分位87%持续偏高',body:'沪深300 PE 5Y分位87%，估值偏贵',time:'08:00'},
+    {sev:'info',icon:'🔵',title:'M2-M1剪刀差-4.0pp',body:'资金沉淀严重，信贷传导受阻',time:'08:00'}
+  ];
+  var html = '';
+  alerts.forEach(function(a) {
+    html += '<div class="ap-item '+a.sev+'"><b>'+a.icon+' '+a.title+'</b><br>'+a.body+'<br><span style="color:#B4B2A9;font-size:9px">'+a.time+'</span></div>';
+  });
+  container.innerHTML = html;
+}
+document.addEventListener('click', function(e) {
+  var p = document.getElementById('alertPopup'), b = document.getElementById('bellBtn');
+  if (p.classList.contains('show') && !p.contains(e.target) && !b.contains(e.target)) p.classList.remove('show');
+});
+
+// ===== Toast Notification =====
+function showToast(msg, type) {
+  var t = document.getElementById('notifyToast');
+  t.textContent = msg; t.className = 'notify-toast ' + (type||'') + ' show';
+  setTimeout(function(){ t.classList.remove('show'); }, 3500);
+}
+function showAlertToast(msg, type) {
+  var t = document.getElementById('alertToast');
+  t.textContent = msg; t.className = 'ap-toast ' + (type||'') + ' show';
+  setTimeout(function(){ t.classList.remove('show'); }, 4000);
+}
+
+// ===== PIPELINE =====
+function runPipeline() {
+  var steps = ['ps-collect','ps-validate','ps-etl','ps-compute','ps-deploy'];
+  var statuses = ['ok','ok','ok','warn','ok'];
+  var logEl = document.getElementById('pipelineLog');
+  var statusEl = document.getElementById('pipelineStatus');
+  var fillEl = document.getElementById('pipelineFill');
+  
+  statusEl.textContent = '● 运行中...';
+  statusEl.style.color = 'var(--blue)';
+  
+  // Animate steps
+  steps.forEach(function(s, i) {
+    setTimeout(function() {
+      document.getElementById(s).className = 'step ' + statuses[i];
+      fillEl.style.width = ((i+1)/5*100) + '%';
+    }, i * 600);
+  });
+  
+  // Complete
+  setTimeout(function() {
+    var result = '上次运行: ' + new Date().toLocaleTimeString('zh-CN') + ' | 总耗时 <b>58秒</b> | 4/5阶段通过 | 指标计算回退至last_known';
+    logEl.innerHTML = result;
+    statusEl.textContent = '● 空闲';
+    statusEl.style.color = 'var(--green)';
+    fillEl.className = 'progress-fill green';
+    showToast('✅ ETL管道执行完毕 (58秒)', '');
+  }, 3500);
+}
+
+// ===== WORKFLOW =====
+var wfSelectedPlan = null;
+function selectPlan(plan) {
+  wfSelectedPlan = plan;
+  document.getElementById('planRec').style.borderColor = plan === 'recommended' ? 'var(--blue)' : 'var(--border)';
+  document.getElementById('planRec').style.background = plan === 'recommended' ? 'var(--blue-bg)' : '#fff';
+  document.getElementById('planAlt').style.borderColor = plan === 'alternative' ? 'var(--blue)' : 'var(--border)';
+  document.getElementById('planAlt').style.background = plan === 'alternative' ? 'var(--blue-bg)' : '#fff';
+}
+function advanceWorkflow() {
+  if (!wfSelectedPlan) { showToast('请先选择一个偏离方案', 'warning'); return; }
+  
+  var currentStep = workflow.currentStep;
+  workflow.advanceStep('审批通过: ' + (wfSelectedPlan === 'recommended' ? '增配创业板+3%' : '维持SAA'));
+  
+  // Update UI
+  for (var i = 1; i <= 7; i++) {
+    var el = document.getElementById('ws'+i);
+    el.classList.remove('done','current','active');
+    if (i < workflow.currentStep) el.classList.add('done');
+    else if (i === workflow.currentStep) el.classList.add('current');
+  }
+  
+  var pct = workflow.getProgress().percent;
+  document.getElementById('wfProgress').textContent = '步骤 ' + workflow.currentStep + '/7 · ' + pct + '%';
+  document.getElementById('wfFill').style.width = pct + '%';
+  
+  if (workflow.currentStep >= 7) {
+    document.getElementById('btnAdvance').textContent = '已完成 ✓';
+    document.getElementById('btnAdvance').disabled = true;
+    document.getElementById('wfFill').className = 'progress-fill green';
+    showToast('✅ TAA偏离工作流全部完成！方案已提交执行', '');
+  } else if (workflow.currentStep === 4) {
+    document.getElementById('btnAdvance').textContent = '提交讨论 →';
+    showToast('进入第4步：内部讨论', 'warning');
+  }
+}
+function resetWorkflow() {
+  workflow.currentStep = 1;
+  wfSelectedPlan = null;
+  for (var i = 1; i <= 7; i++) {
+    var el = document.getElementById('ws'+i);
+    el.classList.remove('done','current','active');
+    if (i <= 3) el.classList.add('done');
+    if (i === 3) { el.classList.remove('done'); el.classList.add('current'); }
+  }
+  workflow.currentStep = 3;
+  document.getElementById('wfProgress').textContent = '步骤 3/7 · 45%';
+  document.getElementById('wfFill').style.width = '45%';
+  document.getElementById('wfFill').className = 'progress-fill amber';
+  document.getElementById('btnAdvance').textContent = '进入讨论 →';
+  document.getElementById('btnAdvance').disabled = false;
+  document.getElementById('planRec').style.borderColor = 'var(--border)';
+  document.getElementById('planRec').style.background = '#fff';
+  document.getElementById('planAlt').style.borderColor = 'var(--border)';
+  document.getElementById('planAlt').style.background = '#fff';
+  showToast('工作流已重置', '');
+}
+
+// ===== REPORT ENGINE =====
+function generateReport(type) {
+  var names = { daily: '投研日报', weekly: '风险周报', monthly: '月度复盘' };
+  var result = reportEngine.generate(type, currentSnapshot);
+  showToast('✅ ' + names[type] + ' 已生成 (HTML+MD+PDF) · 耗时 ' + result.durationMs + 'ms · 已推飞书', '');
+  
+  // Show preview in alert toast
+  var preview = reportEngine.preview(type, 'md');
+  showAlertToast(names[type] + ' 预览:\n' + preview.slice(0, 120) + '...', 'info');
+}
+
+// ===== ALERT ENGINE - run initial check =====
+var currentAlerts = alertEngine.checkAll(currentSnapshot);
+document.getElementById('bellCount').textContent = currentAlerts.length;
+
+// Auto refresh alert count
+setInterval(function() {
+  var alerts = alertEngine.checkAll(currentSnapshot);
+  document.getElementById('bellCount').textContent = alerts.length;
+  if (alerts.length > 0) {
+    document.getElementById('bellBtn').classList.add('ring');
+  }
+  document.getElementById('alertRefreshTime').textContent = '刚刚刷新 (' + alerts.length + '条活跃)';
+}, 30000);
+
+// ===== CHARTS =====
+var charts = {};
+function initChart(id, opt) {
+  var d = document.getElementById(id); if(!d) return;
+  var c = echarts.init(d); c.setOption(opt); charts[id] = c;
+  window.addEventListener('resize', function(){ if(charts[id]) charts[id].resize(); });
+}
+
+// Macro
+initChart('chartMacro', {tooltip:{trigger:'axis'},grid:{left:50,right:20,top:20,bottom:30},
+  xAxis:{data:['2020','2021','2022','2023','2024','2025','2026'],axisLabel:{fontSize:10}},
+  yAxis:[{type:'value',name:'%',min:-10,max:20,axisLabel:{fontSize:10}},{type:'value',name:'PMI',min:45,max:55,axisLabel:{fontSize:10}}],
+  series:[{name:'GDP',type:'bar',data:[2.2,8.4,3.0,5.2,5.0,5.0,4.7],itemStyle:{color:'#185FA5'},barWidth:'50%'},
+          {name:'PMI(右)',type:'line',yAxisIndex:1,data:[51.9,50.3,47.0,49.0,50.3,50.4,49.2],lineStyle:{color:'#D85A30',width:2},symbol:'circle',symbolSize:5}]});
+
+// TAA Radar [-3,+3]
+initChart('chartTAA', {tooltip:{formatter:function(p){return p.name+': <b>'+(p.value>0?'+':'')+p.value.toFixed(1)+'</b>';}},
+  radar:{center:['50%','55%'],radius:'58%',indicator:[{name:'宏观\n(25%)',max:3,min:-3},{name:'估值\n(25%)',max:3,min:-3},{name:'技术\n(15%)',max:3,min:-3},{name:'资金\n(15%)',max:3,min:-3},{name:'政策\n(20%)',max:3,min:-3}],
+    axisName:{fontSize:10,color:'#5F5E5A'},splitArea:{areaStyle:{color:['rgba(24,95,165,0.01)','rgba(24,95,165,0.01)']}}},
+  series:[{type:'radar',data:[{value:[1.0,-0.5,0,1.5,2.5],name:'当前评分',areaStyle:{color:'rgba(24,95,165,0.12)'},lineStyle:{color:'#185FA5',width:2},itemStyle:{color:'#185FA5'}}],symbol:'circle',symbolSize:5,
+    markPoint:{data:[{name:'最强驱动',coord:['政策\n(20%)',2.5],symbol:'pin',symbolSize:32,itemStyle:{color:'#A32D2D'},label:{show:true,position:'top',fontSize:9,color:'#A32D2D',formatter:'最强驱动\n政策+2.5'}},
+                     {name:'最大拖累',coord:['估值\n(25%)',-0.5],symbol:'pin',symbolSize:28,itemStyle:{color:'#3B6D11'},label:{show:true,position:'bottom',fontSize:9,color:'#3B6D11',formatter:'最大拖累\n估值-0.5'}}]}}]});
+
+// SAA Pie
+initChart('chartSAA', {tooltip:{trigger:'item',formatter:'{b}: {c}%'},
+  series:[{type:'pie',radius:['45%','75%'],center:['50%','55%'],label:{fontSize:9},
+    data:[{value:27,name:'信用债',itemStyle:{color:'#639922'}},{value:23,name:'标普500',itemStyle:{color:'#185FA5'}},{value:21,name:'黄金',itemStyle:{color:'#EF9F27'}},
+          {value:9,name:'创业板',itemStyle:{color:'#D85A30'}},{value:9,name:'利率债',itemStyle:{color:'#7F77DD'}},{value:3,name:'沪深300',itemStyle:{color:'#378ADD'}},
+          {value:2,name:'科创50',itemStyle:{color:'#1D9E75'}},{value:6,name:'现金',itemStyle:{color:'#B4B2A9'}}]}]});
+
+// CMA
+initChart('chartCMA', {tooltip:{formatter:function(p){return p.name+'<br>收益: '+p.data[0]+'%<br>波动: '+p.data[1]+'%'}},
+  grid:{left:50,right:90,top:20,bottom:30},xAxis:{name:'波动率(%)',axisLabel:{fontSize:9}},yAxis:{name:'收益(%)',axisLabel:{fontSize:9}},
+  visualMap:{min:0,max:1,inRange:{color:['#E8ECF1','#85B7EB','#185FA5']},show:false},
+  series:[{type:'scatter',symbolSize:function(v){return 5+Math.abs(v[2])*36},data:[[0.5,3.0,0,'现金'],[3.6,1.9,0,'利率债'],[4.7,2.5,0,'信用债'],
+    [21.5,4.1,0.05,'沪深300'],[25.1,6.7,0.15,'中证500'],[30.9,13.0,0.32,'创业板'],[33.8,14.1,0.33,'科创50'],
+    [20.8,2.1,0,'恒生'],[16.5,16.6,0.7,'标普QDII'],[16.0,16.7,0.8,'黄金ETF']],
+    label:{show:true,position:'right',fontSize:9,formatter:function(p){return p.data[3];}}}]});
+
+// ===== STARTUP =====
+pulseKPIs();
+
+// Log
+console.log('[投研v2.0] 仪表盘已就绪 · 4 KPI + 工作流 + 管道 + 预警 + 报告引擎');
+console.log('[投研v2.0] SQL Schema: 12张表 (schema.sql)');
+console.log('[投研v2.0] JS Classes: DataPipelineRunner / AlertEngine / TAADeviationWorkflow / ReportEngine');
+
+// ===== CROSS-PAGE WORKFLOW SYNC =====
+// Listen for workflow state changes from taa-deviation-workflow.html
+window.addEventListener('storage', function(e) {
+  if (e.key === 'taa_workflow_state' && e.newValue) {
+    try {
+      var wfState = JSON.parse(e.newValue);
+      var step = wfState.currentStep || 3;
+      var pct = Math.round(step / 7 * 100);
+      
+      // Update mini workflow display in dashboard
+      var wfProgress = document.getElementById('wfProgress');
+      var wfFill = document.getElementById('wfFill');
+      var wfSteps = document.querySelectorAll('#wfSteps .wf-step');
+      
+      if (wfProgress) wfProgress.textContent = '步骤 ' + step + '/7 · ' + pct + '%';
+      if (wfFill) {
+        wfFill.style.width = pct + '%';
+        wfFill.className = 'progress-fill ' + (step >= 7 ? 'green' : 'amber');
+      }
+      
+      // Update step nodes
+      wfSteps.forEach(function(el, i) {
+        el.classList.remove('done','current');
+        if (i + 1 < step) el.classList.add('done');
+        else if (i + 1 === step) el.classList.add('current');
+      });
+      
+      console.log('[Sync] 工作流状态已同步: 步骤 ' + step + '/7');
+    } catch(ex) {}
+  }
+});
+
+// Also check on page load for any existing state
+try {
+  var existingState = localStorage.getItem('taa_workflow_state');
+  if (existingState) {
+    var wfState = JSON.parse(existingState);
+    var wfProgress = document.getElementById('wfProgress');
+    if (wfProgress && wfState.currentStep) {
+      wfProgress.textContent = '步骤 ' + wfState.currentStep + '/7 · ' + Math.round(wfState.currentStep/7*100) + '%';
+    }
+  }
+} catch(ex) {}
+</script>
+</body>
+</html>

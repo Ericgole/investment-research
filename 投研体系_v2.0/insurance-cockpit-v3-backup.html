@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>保险资金投资决策驾驶舱</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<style>
+body{margin:0;background:#0f172a;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Microsoft YaHei",sans-serif;padding-bottom:80px}
+
+/* ===== PAGE HEADER ===== */
+.page-header{display:flex;justify-content:space-between;align-items:center;padding:16px 32px;border-bottom:1px solid rgba(255,255,255,0.05)}
+.page-header h1{font-size:16px;font-weight:500;margin:0;color:#e2e8f0}
+.page-header .hdr-meta{font-size:10px;color:#64748b;display:flex;gap:20px}
+.page-header .hdr-meta span{color:#4caf50}
+
+/* ===== TOP KPI GRID ===== */
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr) 200px;gap:20px;padding:24px 32px}
+.kpi-card{
+  background:rgba(255,255,255,0.04);border-radius:14px;padding:24px;
+  border:1px solid rgba(255,255,255,0.06);position:relative;cursor:default;
+  transition:transform 0.2s,box-shadow 0.2s
+}
+.kpi-card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,0.4)}
+.kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:14px 14px 0 0}
+.kpi-card.safe::before{background:#4caf50}
+.kpi-card.attn::before{background:#ff9800}
+.kpi-card .lineage{position:relative;cursor:help;font-size:8px;color:#475569;background:rgba(255,255,255,0.04);padding:2px 6px;border-radius:3px}
+.kpi-card .lineage .fresh-dot{width:6px;height:6px;border-radius:50%;display:inline-block;margin-right:3px;vertical-align:middle}
+.kpi-card .lineage .fresh-dot.green{background:#4caf50}
+.kpi-card .lineage .fresh-dot.amber{background:#ff9800}
+.kpi-card .lineage .fresh-dot.red{background:#f44336;animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+/* Tooltip */
+.kpi-card .lineage .tooltip{display:none;position:absolute;top:calc(100% + 6px);right:0;background:rgba(30,41,59,0.98);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:10px 12px;min-width:200px;font-size:10px;z-index:50;color:#94a3b8;line-height:1.7;white-space:nowrap}
+.kpi-card .lineage:hover .tooltip{display:block}
+@media(hover:none){.kpi-card .lineage .tooltip{display:none!important}}
+.kpi-card .label{font-size:12px;color:#94a3b8;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.kpi-card .label .icon{font-size:18px}
+.kpi-card .value{font-size:42px;font-weight:700;line-height:1;margin-bottom:6px}
+.kpi-card .value .unit{font-size:22px;font-weight:400;color:#94a3b8}
+.kpi-card .status{font-size:10px;color:#94a3b8;margin-bottom:8px;display:flex;align-items:center;gap:4px}
+.kpi-card .status .dot{width:7px;height:7px;border-radius:50%}
+.kpi-card .detail{font-size:10px;color:#64748b;margin-bottom:6px;display:flex;gap:8px}
+.kpi-card .trend{font-size:10px;margin-bottom:12px}
+.kpi-card .trend span{display:inline-block;padding:2px 8px;border-radius:4px;font-weight:500}
+.kpi-card .trend .up{background:rgba(76,175,80,0.12);color:#4caf50}
+.kpi-card .trend .down{background:rgba(244,67,54,0.12);color:#f44336}
+.kpi-card .btn{width:100%;padding:6px 0;background:transparent;border:1px solid rgba(255,255,255,0.08);border-radius:6px;color:#64748b;font-size:10px;cursor:pointer;font-family:inherit;transition:all 0.2s}
+.kpi-card .btn:hover{background:rgba(255,255,255,0.05);color:#94a3b8;border-color:rgba(255,255,255,0.15)}
+
+/* ===== MAIN CONTENT ===== */
+.main{display:flex;padding:0 32px 24px;gap:20px;max-width:1400px}
+.col-left{flex:6;min-width:0}
+.col-right{flex:4;min-width:0;max-width:480px}
+
+.card{background:rgba(255,255,255,0.03);border-radius:14px;padding:24px;border:1px solid rgba(255,255,255,0.06);margin-bottom:20px}
+.card h3{font-size:14px;font-weight:500;margin:0 0 16px 0;color:#e2e8f0}
+.card h3 .sub{font-size:10px;font-weight:400;color:#64748b;margin-left:8px}
+
+/* SAA Chart */
+.chart-saa{width:100%;height:350px}
+
+/* Compliance table */
+.check-table{width:100%;border-collapse:collapse;font-size:11px;margin-top:8px}
+.check-table th{text-align:left;padding:6px 8px;color:#64748b;font-weight:400;border-bottom:1px solid rgba(255,255,255,0.05);font-size:10px}
+.check-table td{padding:7px 8px;border-bottom:1px solid rgba(255,255,255,0.03);color:#94a3b8}
+.check-table .td-ok{color:#4caf50;font-weight:500}
+.check-table .td-warn{color:#ff9800;font-weight:500}
+.tag{display:inline-block;padding:1px 7px;border-radius:3px;font-size:9px;font-weight:500}
+.tag-gn{background:rgba(76,175,80,0.12);color:#4caf50}
+.tag-am{background:rgba(255,152,0,0.12);color:#ff9800}
+
+/* TAA */
+.chart-taa{width:100%;height:220px}
+.taa-bars{margin-top:8px}
+.taa-row{display:flex;align-items:center;gap:10px;margin-bottom:7px;font-size:10px}
+.taa-row .tl{width:36px;text-align:right;color:#94a3b8;flex-shrink:0}
+.taa-row .tb{flex:1;height:5px;border-radius:3px;background:rgba(255,255,255,0.06);overflow:hidden}
+.taa-row .tbf{height:100%;border-radius:3px}
+.taa-row .tv{width:30px;color:#64748b;flex-shrink:0;font-size:9px}
+
+.advice{margin-top:14px;padding:12px 14px;border-radius:8px;border:1px solid rgba(33,150,243,0.12);background:rgba(33,150,243,0.04);font-size:11px;line-height:1.7;color:#e2e8f0}
+.advice .ah{font-size:9px;color:#2196F3;margin-bottom:4px;text-transform:uppercase}
+
+.notes{font-size:10px;color:#94a3b8;line-height:1.8;margin-top:12px}
+.notes span{color:#ff9800}
+
+/* Footer */
+.ft{text-align:center;font-size:9px;color:#334155;padding:12px 0 20px}
+
+/* Responsive */
+@media(max-width:1200px){.kpi-grid{grid-template-columns:repeat(2,1fr) 200px}.main{flex-direction:column}.col-right{max-width:100%}}
+@media(max-width:800px){.kpi-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:640px){.kpi-grid{grid-template-columns:1fr}.kpi-card{padding:18px}.kpi-card .value{font-size:32px}.main{padding:0 16px 16px}}
+
+/* ===== ALERT BANNER ===== */
+.alert-banner{background:rgba(255,152,0,0.05);border:1px solid rgba(255,152,0,0.15);border-radius:12px;margin:0 32px 20px;overflow:hidden}
+.alert-header{display:flex;align-items:center;gap:8px;padding:12px 16px;cursor:pointer;font-size:11px}
+.alert-header .alert-count{font-weight:500;color:#ff9800}
+.alert-item{display:flex;gap:10px;padding:8px 16px;font-size:10px}
+.alert-item .alert-bar{width:3px;border-radius:2px;flex-shrink:0}
+.alert-item.critical .alert-bar{background:#f44336}
+.alert-item.warning .alert-bar{background:#ff9800}
+#alert-toggle{color:#64748b;margin-left:auto;transition:transform 0.3s}
+#alert-toggle.open{transform:rotate(180deg)}
+
+/* ===== DATA QUALITY CARD ===== */
+.dq-card{background:rgba(255,255,255,0.04);border-radius:14px;padding:20px;border:1px solid rgba(255,255,255,0.06)}
+.dq-card h4{font-size:12px;font-weight:500;margin:0 0 12px 0;color:#e2e8f0}
+.dq-row{font-size:10px;color:#94a3b8;padding:4px 0;display:flex;justify-content:space-between}
+.dq-row .dq-v{color:#e2e8f0;font-weight:500}
+.dq-status{margin-top:10px;font-size:10px;color:#4caf50}
+
+/* ===== BOTTOM NAV ===== */
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:rgba(15,23,42,0.95);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-top:1px solid rgba(255,255,255,0.06);display:flex;justify-content:space-around;padding:8px 0;z-index:100}
+.nav-item{display:flex;flex-direction:column;align-items:center;color:#64748b;text-decoration:none;font-size:9px;padding:4px 8px;transition:color 0.2s}
+.nav-item:hover{color:#94a3b8}
+.nav-item.active{color:#2196f3}
+.nav-item .icon{font-size:18px;margin-bottom:2px}
+
+/* Liability metrics table */
+.liab-table{width:100%;border-collapse:collapse;font-size:11px}
+.liab-table th{text-align:left;padding:6px 8px;color:#64748b;font-weight:400;border-bottom:1px solid rgba(255,255,255,0.05);font-size:10px}
+.liab-table td{padding:7px 8px;border-bottom:1px solid rgba(255,255,255,0.03);color:#94a3b8}
+.liab-table .td-gn{color:#4caf50}
+.liab-table .td-am{color:#ff9800}
+</style>
+</head>
+<body>
+
+<!-- ============================================ -->
+<!-- 0. PAGE HEADER -->
+<!-- ============================================ -->
+<div class="page-header">
+  <h1>保险资金投资决策驾驶舱</h1>
+  <div class="hdr-meta">数据更新: 2026-08-10 15:30 <span>|</span> 数据质量: 32/37 DB计算 <span>✅</span></div>
+</div>
+
+<!-- ============================================ -->
+<!-- ALERT BANNER (collapsible) -->
+<!-- ============================================ -->
+<div class="alert-banner" id="alert-banner">
+  <div class="alert-header" onclick="toggleAlerts()">
+    <span>⚠️</span>
+    <span class="alert-count">2项预警需要关注</span>
+    <span id="alert-toggle">▼</span>
+  </div>
+  <div id="alert-body" style="display:none;">
+    <div class="alert-item critical">
+      <div class="alert-bar"></div>
+      <div>
+        <div style="color:#f44336;font-weight:500">🔴 数据过时</div>
+        <div style="color:#94a3b8">SQLite日度数据已9小时未更新</div>
+      </div>
+    </div>
+    <div class="alert-item warning">
+      <div class="alert-bar"></div>
+      <div>
+        <div style="color:#ff9800;font-weight:500">🟡 久期缺口</div>
+        <div style="color:#94a3b8">+2.1年超目标±1.5年</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- 1. TOP — 4 KPI CARDS -->
+<!-- ============================================ -->
+<div class="kpi-grid">
+
+  <!-- KPI 1: 偿付能力充足率 -->
+  <div class="kpi-card safe">
+    <div class="lineage"><span class="fresh-dot green"></span>Wind · 15:30 · 高置信度<div class="tooltip">系统: Wind<br>表: solvency_report<br>字段: core_ratio<br>更新时间: 2026-08-10 15:30<br>置信度: 高 (DB计算)</div></div>
+    <div class="label"><span class="icon">🛡️</span>偿付能力充足率</div>
+    <div class="value">132<span class="unit">%</span></div>
+    <div class="status"><div class="dot" style="background:#4caf50;box-shadow:0 0 6px rgba(76,175,80,0.5)"></div>安全运行 (≥120%)</div>
+    <div class="detail"><span>核心: 118%</span><span style="color:rgba(255,255,255,0.08)">|</span><span>综合: 132%</span></div>
+    <div class="trend"><span class="up">↑ 2%</span> 较上月</div>
+    <button class="btn" onclick="alert('偿付能力模拟: 增配权益1%→偿付下降2.3pp')">模拟影响</button>
+  </div>
+
+  <!-- KPI 2: 资产负债久期缺口 -->
+  <div class="kpi-card attn">
+    <div class="lineage"><span class="fresh-dot red"></span>SQLite · 06:25 · 准实时<div class="tooltip">系统: SQLite<br>表: index_kline<br>字段: duration_gap<br>更新时间: 2026-08-10 06:25<br>置信度: 中 (本地计算)</div></div>
+    <div class="label"><span class="icon">⏱️</span>资产负债久期缺口</div>
+    <div class="value">+2.1<span class="unit">年</span></div>
+    <div class="status"><div class="dot" style="background:#ff9800;box-shadow:0 0 6px rgba(255,152,0,0.5)"></div>关注 (目标±1.5年)</div>
+    <div class="detail"><span>资产: 8.2年</span><span style="color:rgba(255,255,255,0.08)">|</span><span>负债: 6.1年</span></div>
+    <div class="trend"><span class="down">↓ 0.3年</span> 较上月</div>
+    <button class="btn" onclick="alert('久期策略: 建议增配10Y+国债3-5pp,缺口可压缩至+1.6年')">模拟影响</button>
+  </div>
+
+  <!-- KPI 3: 利差 -->
+  <div class="kpi-card safe">
+    <div class="lineage"><span class="fresh-dot green"></span>Wind · 15:30 · 高置信度<div class="tooltip">系统: Wind<br>表: bond_yields<br>字段: spread<br>更新时间: 2026-08-10 15:30<br>置信度: 高 (DB计算)</div></div>
+    <div class="label"><span class="icon">💹</span>利差</div>
+    <div class="value">+70<span class="unit">bp</span></div>
+    <div class="status"><div class="dot" style="background:#4caf50;box-shadow:0 0 6px rgba(76,175,80,0.5)"></div>利差益 (≥0bp)</div>
+    <div class="detail"><span>负债成本: 3.50%</span><span style="color:rgba(255,255,255,0.08)">|</span><span>收益率: 4.20%</span></div>
+    <div class="trend"><span class="up">↑ 15bp</span> 较上月</div>
+    <button class="btn" onclick="alert('利率敏感性: 10Y上行10bp→利差扩大8bp')">模拟影响</button>
+  </div>
+
+  <!-- KPI 4: 综合投资收益率 -->
+  <div class="kpi-card safe">
+    <div class="lineage"><span class="fresh-dot red"></span>SQLite · 06:25 · 准实时<div class="tooltip">系统: SQLite<br>表: perf_metrics<br>字段: ytd_return<br>更新时间: 2026-08-10 06:25<br>置信度: 中 (本地计算)</div></div>
+    <div class="label"><span class="icon">📈</span>综合投资收益率</div>
+    <div class="value">4.20<span class="unit">%</span></div>
+    <div class="status"><div class="dot" style="background:#4caf50;box-shadow:0 0 6px rgba(76,175,80,0.5)"></div>达标 (≥3.5%)</div>
+    <div class="detail"><span>YTD: +1.4%</span><span style="color:rgba(255,255,255,0.08)">|</span><span>1年: +4.2%</span></div>
+    <div class="trend"><span class="up">↑ 0.3%</span> 较上月</div>
+    <button class="btn" onclick="alert('收益归因: 固收贡献60% | 权益30% | 另类10%')">模拟影响</button>
+  </div>
+
+  <!-- DATA QUALITY CARD (5th column) -->
+  <div class="dq-card">
+    <h4>📊 数据质量</h4>
+    <div class="dq-row"><span>实时指标</span><span class="dq-v" style="color:#4caf50">2/4</span></div>
+    <div class="dq-row"><span>DB计算</span><span class="dq-v" style="color:#ff9800">2/4</span></div>
+    <div class="dq-row"><span>人工估算</span><span class="dq-v" style="color:#64748b">0/4</span></div>
+    <div class="dq-status">🟢 状态: 正常</div>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- 2. MAIN — SAA (左60%) + TAA (右40%) -->
+<!-- ============================================ -->
+<div class="main">
+
+  <!-- LEFT: SAA -->
+  <div class="col-left">
+    <div class="card">
+      <h3>📊 SAA 战略配置中枢</h3>
+      <div class="chart-saa" id="chartSAA"></div>
+      <table class="check-table">
+        <tr><th>约束项</th><th>当前</th><th>上限/下限</th><th>余量</th><th>状态</th></tr>
+        <tr>
+          <td>权益类</td><td>18%</td><td>≤45%</td><td class="td-ok">27% ✅</td><td><span class="tag tag-gn">充足</span></td>
+        </tr>
+        <tr>
+          <td>单一集中度</td><td>8%</td><td>≤10%</td><td class="td-ok">2% ✅</td><td><span class="tag tag-gn">合规</span></td>
+        </tr>
+        <tr>
+          <td>境外投资</td><td>12%</td><td>≤15%</td><td class="td-ok">3% ✅</td><td><span class="tag tag-gn">合规</span></td>
+        </tr>
+        <tr>
+          <td>不动产</td><td>8%</td><td>≤30%</td><td class="td-ok">22% ✅</td><td><span class="tag tag-gn">充足</span></td>
+        </tr>
+        <tr>
+          <td>流动性</td><td>5%</td><td>≥5%</td><td class="td-warn">0% ⚠️</td><td><span class="tag tag-am">临界</span></td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- RIGHT: TAA -->
+  <div class="col-right">
+    <div class="card">
+      <h3>🎯 TAA 战术评分卡<span class="sub">五维评估</span></h3>
+      <div class="chart-taa" id="chartTAA"></div>
+      <div class="taa-bars">
+        <div class="taa-row"><span class="tl">宏观</span><div class="tb"><div class="tbf" style="width:60%;background:#4caf50"></div></div><span class="tv">60%</span></div>
+        <div class="taa-row"><span class="tl">估值</span><div class="tb"><div class="tbf" style="width:55%;background:#2196F3"></div></div><span class="tv">55%</span></div>
+        <div class="taa-row"><span class="tl">政策</span><div class="tb"><div class="tbf" style="width:50%;background:#ff9800"></div></div><span class="tv">50%</span></div>
+        <div class="taa-row"><span class="tl">资金</span><div class="tb"><div class="tbf" style="width:45%;background:#2196F3"></div></div><span class="tv">45%</span></div>
+        <div class="taa-row"><span class="tl">技术</span><div class="tb"><div class="tbf" style="width:52%;background:#2196F3"></div></div><span class="tv">52%</span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>📋 负债约束</h3>
+      <div class="notes">
+        <span>⚠</span> 久期缺口+2.1年，超±1.5年目标<br>
+        <span>⚠</span> 流动性5%处于监管红线<br>
+        <span style="color:#4caf50">✓</span> 利差+70bp覆盖负债成本3.50%
+      </div>
+    </div>
+
+    <!-- NEW: 负债端核心指标 -->
+    <div class="card">
+      <h3>💰 负债端核心指标</h3>
+      <table class="liab-table">
+        <tr><th>指标</th><th>当前值</th><th>目标/阈值</th><th>状态</th></tr>
+        <tr><td>负债成本</td><td>3.50%</td><td>≤4.0%</td><td class="td-gn">✅ 可控</td></tr>
+        <tr><td>负债久期</td><td>6.1年</td><td>—</td><td style="color:#94a3b8">—</td></tr>
+        <tr><td>新单成本</td><td>3.2%</td><td>跟踪</td><td class="td-am">🟡 下行</td></tr>
+        <tr><td>退保率</td><td>2.1%</td><td>&lt;5%</td><td class="td-gn">✅ 健康</td></tr>
+        <tr><td>保费增长率</td><td>+8.5%</td><td>正增长</td><td class="td-gn">✅ 良好</td></tr>
+      </table>
+    </div>
+
+    <div class="advice">
+      <div class="ah">💡 今日建议</div>
+      <b>维持SAA，久期缺口偏高，关注长久期利率债。</b>
+      在利率上行至1.8%以上时增配10Y+国债3-5pp，可将久期缺口压缩至+1.6年。信用债以短久期AAA为主，警惕利差反弹。
+    </div>
+  </div>
+</div>
+
+<div class="ft">保险资金投资决策驾驶舱 v2.0 · Wind / SQLite / westock-data · 以上不构成投资建议</div>
+
+<script>
+// ===== ALERT TOGGLE =====
+function toggleAlerts(){
+  var body=document.getElementById('alert-body');
+  var toggle=document.getElementById('alert-toggle');
+  var isOpen=body.style.display==='block';
+  body.style.display=isOpen?'none':'block';
+  toggle.classList.toggle('open',!isOpen);
+}
+
+// ===== SAA Donut =====
+var cSAA = echarts.init(document.getElementById('chartSAA'));
+cSAA.setOption({
+  tooltip:{trigger:'item',formatter:'{b}: {c}%'},
+  series:[{
+    type:'pie',radius:['50%','78%'],center:['50%','48%'],
+    label:{color:'#94a3b8',fontSize:11,formatter:'{b}\n{d}%'},
+    data:[
+      {value:65,name:'固收',itemStyle:{color:'#2196F3'}},
+      {value:18,name:'权益',itemStyle:{color:'#4caf50'}},
+      {value:12,name:'另类',itemStyle:{color:'#ff9800'}},
+      {value:5, name:'流动性',itemStyle:{color:'#64748b'}}
+    ]
+  }]
+});
+
+// ===== TAA Gauge =====
+var cTAA = echarts.init(document.getElementById('chartTAA'));
+cTAA.setOption({
+  series:[{
+    type:'gauge',center:['50%','62%'],radius:'90%',
+    startAngle:210,endAngle:-30,min:-1,max:1,
+    axisLine:{lineStyle:{width:16,color:[[0.3,'#f44336'],[0.45,'#ff9800'],[0.6,'#2196F3'],[1,'#4caf50']]}},
+    pointer:{length:'60%',width:4,itemStyle:{color:'#e2e8f0'}},
+    axisTick:{distance:-18,length:5},
+    splitLine:{distance:-22,length:16,lineStyle:{color:'#fff',width:2}},
+    axisLabel:{color:'#94a3b8',fontSize:9,distance:28},
+    detail:{valueAnimation:true,formatter:'+{value}',fontSize:24,fontWeight:600,color:'#fff',offsetCenter:[0,'58%']},
+    data:[{value:0.24,name:'TAA总评分'}]
+  }]
+});
+
+window.addEventListener('resize',function(){cSAA.resize();cTAA.resize()});
+</script>
+
+<!-- ============================================ -->
+<!-- 4. BOTTOM NAVIGATION -->
+<!-- ============================================ -->
+<nav class="bottom-nav">
+  <a href="#" class="nav-item" onclick="event.preventDefault();alert('跳转：负债仪表盘')"><span class="icon">💰</span><span>负债仪表盘</span></a>
+  <a href="#" class="nav-item" onclick="event.preventDefault();alert('跳转：SAA工作台')"><span class="icon">📊</span><span>SAA工作台</span></a>
+  <a href="#" class="nav-item active" onclick="event.preventDefault();alert('跳转：TAA评分卡')"><span class="icon">🎯</span><span>TAA评分卡</span></a>
+  <a href="#" class="nav-item" onclick="event.preventDefault();alert('跳转：交易指令')"><span class="icon">⚡</span><span>交易指令</span></a>
+  <a href="#" class="nav-item" onclick="event.preventDefault();alert('跳转：风险看板')"><span class="icon">🛡️</span><span>风险看板</span></a>
+  <a href="#" class="nav-item" onclick="event.preventDefault();alert('跳转：绩效归因')"><span class="icon">📈</span><span>绩效归因</span></a>
+  <a href="#" class="nav-item" onclick="event.preventDefault();alert('跳转：决策日志')"><span class="icon">📝</span><span>决策日志</span></a>
+</nav>
+
+</body>
+</html>

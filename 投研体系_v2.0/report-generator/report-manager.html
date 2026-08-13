@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>报告管理 - 保险资金投研系统</title>
+<style>
+:root{--primary:#0F4C81;--safe:#10b981;--warn:#f59e0b;--danger:#ef4444;--text:#1e293b;--text2:#64748b;--bg:#f5f7fa;--border:#e2e8f0}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,"Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text);height:100vh;display:flex;flex-direction:column}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:12px 24px;background:#fff;border-bottom:1px solid var(--border);z-index:10}
+.topbar h1{font-size:15px;color:var(--primary);margin:0}
+.topbar .actions{display:flex;gap:8px}
+.btn{padding:8px 16px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;border:1px solid var(--border);background:#fff;color:var(--text2);transition:all 0.2s}
+.btn:hover{background:var(--bg)}
+.btn-primary{background:var(--primary);color:#fff;border-color:var(--primary)}
+.btn-primary:hover{background:#0d3e6b}
+.btn-danger{background:var(--danger);color:#fff;border-color:var(--danger)}
+.main-layout{display:flex;flex:1;overflow:hidden}
+.sidebar{width:260px;background:#fff;border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto}
+.sidebar h3{font-size:12px;color:var(--text2);padding:16px 16px 8px;text-transform:uppercase;letter-spacing:0.5px}
+.sidebar-list{flex:1;overflow-y:auto}
+.sidebar-item{padding:12px 16px;cursor:pointer;border-bottom:1px solid #f1f5f9;font-size:12px;transition:background 0.15s;display:flex;justify-content:space-between;align-items:center}
+.sidebar-item:hover{background:#f8fafc}
+.sidebar-item.active{background:rgba(15,76,129,0.06);border-left:3px solid var(--primary)}
+.sidebar-item .rpt-date{color:var(--text2);font-size:10px}
+.sidebar-item .rpt-type{font-size:9px;padding:1px 6px;border-radius:3px}
+.sidebar-item .rpt-type.daily{background:rgba(15,76,129,0.08);color:var(--primary)}
+.sidebar-item .rpt-type.weekly{background:rgba(16,185,129,0.08);color:#059669}
+.sidebar-item .rpt-type.merged{background:rgba(99,102,241,0.08);color:#6366f1}
+.preview{flex:1;overflow-y:auto;padding:24px;background:#fff;margin:12px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.06)}
+.preview-empty{display:flex;align-items:center;justify-content:center;height:100%;color:#94a3b8;font-size:14px;flex-direction:column;gap:16px}
+/* Report Styles */
+.report-header{text-align:center;padding:24px 0 20px;border-bottom:3px double var(--primary);margin-bottom:24px}
+.report-header h1{font-size:22px;color:var(--primary);margin-bottom:4px}
+.report-header h2{font-size:18px;color:var(--text2);font-weight:400;margin-bottom:8px}
+.report-header p{font-size:11px;color:var(--text2)}
+.report-section{margin-bottom:28px}
+.report-section h3{font-size:15px;color:var(--primary);margin-bottom:12px;padding-bottom:6px;border-bottom:2px solid #e8f0f8}
+.rpt-table{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:12px}
+.rpt-table th{background:#e8f0f8;color:var(--primary);border-bottom:2px solid var(--primary);padding:8px 12px;text-align:left;font-weight:600}
+.rpt-table td{padding:8px 12px;border-bottom:1px solid var(--border)}
+.rpt-table tr:nth-child(even){background:#f8fafc}
+/* Merged Report */
+.merged-report-header{display:flex;justify-content:space-between;align-items:center;text-align:left;padding:24px 0 20px;border-bottom:3px double var(--primary);margin-bottom:24px}
+.merged-report-header h1{font-size:22px;color:var(--primary);margin-bottom:4px}
+.merged-report-header h2{font-size:18px;color:var(--text2);font-weight:400;margin-bottom:8px}
+.merged-report-header p{font-size:11px;color:var(--text2);margin:0}
+.merged-header-badge{display:inline-block;padding:2px 10px;border-radius:4px;font-size:10px;font-weight:600;margin-right:6px}
+.merged-header-badge.research{background:rgba(99,102,241,0.1);color:#6366f1}
+.merged-header-badge.invest{background:rgba(15,76,129,0.1);color:var(--primary)}
+.rpt-divider{text-align:center;margin:24px 0;position:relative}
+.rpt-divider:before{content:'';position:absolute;top:50%;left:0;right:0;height:1px;background:var(--border)}
+.rpt-divider span{position:relative;display:inline-block;padding:4px 16px;background:#fff;color:var(--primary);font-size:12px;font-weight:700;border:1px solid var(--border);border-radius:20px}
+.rpt-insight{padding:12px 16px;background:#f0f4ff;border-left:3px solid var(--primary);border-radius:0 6px 6px 0;font-size:12px;color:#475569;line-height:1.7;margin:12px 0}
+.macro-score,.sentiment-score,.industry-composite{font-size:11px;font-weight:600;margin-left:8px;padding:2px 8px;border-radius:4px}
+.macro-score.warm,.sentiment-score.optimistic{background:rgba(239,68,68,0.1);color:#dc2626}
+.macro-score.cold,.sentiment-score.cautious{background:rgba(16,185,129,0.1);color:#059669}
+.macro-score.neutral,.sentiment-score.neutral{background:rgba(100,116,139,0.1);color:#64748b}
+.trend-up{color:#ef4444;font-weight:600}
+.trend-down{color:#10b981;font-weight:600}
+.trend-stable{color:#64748b}
+.comment-area{min-height:80px;border:1px dashed #cbd5e1;border-radius:8px;padding:12px;font-size:12px;color:var(--text2);background:#fafbfc;outline:none}
+.comment-area:empty:before{content:attr(placeholder);color:#cbd5e1}
+.comment-area:focus{border-color:var(--primary);background:#fff}
+/* Print */
+@media print{
+  body{background:#fff}
+  .topbar,.sidebar{display:none!important}
+  .preview{margin:0;box-shadow:none;border-radius:0;padding:0}
+  .report-section{page-break-inside:avoid}
+}
+/* Toast */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--primary);color:#fff;padding:10px 20px;border-radius:8px;font-size:12px;z-index:1000;animation:fadeIn 0.3s}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>📄 报告管理</h1>
+  <div class="actions">
+    <button class="btn btn-primary" onclick="generateReport('daily')">📅 生成日报</button>
+    <button class="btn btn-primary" onclick="generateReport('weekly')">📊 生成周报</button>
+    <button class="btn btn-accent" onclick="generateReport('merged')" style="background:linear-gradient(135deg,#0F4C81,#6366f1);color:#fff;border-color:transparent">📋 合并版晨报</button>
+    <button class="btn" onclick="printReport()">🖨 打印</button>
+    <button class="btn" onclick="window.open('insurance-cockpit.html','_self')">← 返回驾驶舱</button>
+  </div>
+</div>
+
+<div class="main-layout">
+  <div class="sidebar">
+    <h3>报告列表</h3>
+    <div class="sidebar-list" id="sidebar-list">
+      <div style="text-align:center;color:#94a3b8;padding:40px 0;font-size:12px">暂无报告<br><br>点击上方按钮生成</div>
+    </div>
+  </div>
+  <div class="preview" id="preview">
+    <div class="preview-empty">
+      <div style="font-size:48px">📄</div>
+      <div>选择或生成报告开始预览</div>
+    </div>
+  </div>
+</div>
+
+<script src="data-pipeline/mock-generator.js"></script>
+<script src="data-pipeline/etl-core.js"></script>
+<script src="alert-engine/history.js"></script>
+<script src="../../nomi-tasks/research/market/macro-tracker.js"></script>
+<script src="../../nomi-tasks/research/market/industry-tracker.js"></script>
+<script src="../../nomi-tasks/research/market/sentiment-tracker.js"></script>
+<script src="../../nomi-tasks/research/market/pipeline-bridge.js"></script>
+<script src="report-generator/templates.js"></script>
+<script src="report-generator/aggregator.js"></script>
+<script>
+// ============ 报告存储 ============
+var STORAGE_KEY = 'saved_reports';
+
+function getSavedReports() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+  catch(e) { return []; }
+}
+
+function saveReport(report) {
+  var reports = getSavedReports();
+  reports.unshift(report);
+  if (reports.length > 50) reports = reports.slice(0, 50);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(reports));
+  refreshSidebar();
+}
+
+// ============ 生成报告 ============
+async function generateReport(type) {
+  var data = {};
+  if (type === 'daily') {
+    data = await ReportAggregator.aggregateDaily();
+  } else if (type === 'weekly') {
+    data = await ReportAggregator.aggregateWeekly();
+  } else if (type === 'merged') {
+    data = await ReportAggregator.aggregateMerged();
+  }
+
+  var html = ReportTemplates.render(type, data);
+  var now = new Date();
+  var report = {
+    id: 'RPT-' + now.toISOString().slice(0,10).replace(/-/g,'') + '-' + type,
+    type: type,
+    date: now.toISOString().slice(0,10),
+    time: now.toLocaleTimeString('zh-CN'),
+    data: data,
+    html: html
+  };
+
+  saveReport(report);
+  showReport(report);
+  showToast((type === 'daily' ? '日报' : type === 'weekly' ? '周报' : '合并版晨报') + '已生成');
+}
+
+// ============ 预览 ============
+function showReport(report) {
+  var preview = document.getElementById('preview');
+  var fullHTML = '<!DOCTYPE html><html><head><meta charset="UTF-8"><style>' + getReportCSS() + '</style></head><body>' + report.html + '</body></html>';
+  preview.innerHTML = fullHTML;
+
+  // 高亮侧边栏
+  document.querySelectorAll('.sidebar-item').forEach(function(item) {
+    item.classList.remove('active');
+    if (item.dataset.id === report.id) item.classList.add('active');
+  });
+}
+
+function getReportCSS() {
+  return '.report-header{text-align:center;padding:24px 0 20px;border-bottom:3px double #0F4C81;margin-bottom:24px}' +
+    '.report-header h1{font-size:22px;color:#0F4C81;margin-bottom:4px}' +
+    '.report-header h2{font-size:18px;color:#64748b;font-weight:400;margin-bottom:8px}' +
+    '.report-header p{font-size:11px;color:#64748b}' +
+    '.merged-report-header{display:flex;justify-content:space-between;align-items:center;text-align:left;padding:24px 0 20px;border-bottom:3px double #0F4C81;margin-bottom:24px}' +
+    '.merged-report-header h1{font-size:22px;color:#0F4C81;margin-bottom:4px}' +
+    '.merged-report-header h2{font-size:18px;color:#64748b;font-weight:400;margin-bottom:8px}' +
+    '.merged-report-header p{font-size:11px;color:#64748b;margin:0}' +
+    '.merged-header-badge{display:inline-block;padding:2px 10px;border-radius:4px;font-size:10px;font-weight:600;margin-right:6px}' +
+    '.merged-header-badge.research{background:rgba(99,102,241,0.1);color:#6366f1}' +
+    '.merged-header-badge.invest{background:rgba(15,76,129,0.1);color:#0F4C81}' +
+    '.rpt-divider{text-align:center;margin:24px 0;position:relative}' +
+    '.rpt-divider:before{content:"";position:absolute;top:50%;left:0;right:0;height:1px;background:#e2e8f0}' +
+    '.rpt-divider span{position:relative;display:inline-block;padding:4px 16px;background:#fff;color:#0F4C81;font-size:12px;font-weight:700;border:1px solid #e2e8f0;border-radius:20px}' +
+    '.rpt-insight{padding:12px 16px;background:#f0f4ff;border-left:3px solid #0F4C81;border-radius:0 6px 6px 0;font-size:12px;color:#475569;line-height:1.7;margin:12px 0}' +
+    '.macro-score,.sentiment-score,.industry-composite{font-size:11px;font-weight:600;margin-left:8px;padding:2px 8px;border-radius:4px}' +
+    '.macro-score.warm,.sentiment-score.optimistic{background:rgba(239,68,68,0.1);color:#dc2626}' +
+    '.macro-score.cold,.sentiment-score.cautious{background:rgba(16,185,129,0.1);color:#059669}' +
+    '.macro-score.neutral,.sentiment-score.neutral{background:rgba(100,116,139,0.1);color:#64748b}' +
+    '.trend-up{color:#ef4444;font-weight:600}' +
+    '.trend-down{color:#10b981;font-weight:600}' +
+    '.trend-stable{color:#64748b}' +
+    '.report-section{margin-bottom:28px}' +
+    '.report-section h3{font-size:15px;color:#0F4C81;margin-bottom:12px;padding-bottom:6px;border-bottom:2px solid #e8f0f8}' +
+    '.rpt-table{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:12px}' +
+    '.rpt-table th{background:#e8f0f8;color:#0F4C81;border-bottom:2px solid #0F4C81;padding:8px 12px;text-align:left;font-weight:600}' +
+    '.rpt-table td{padding:8px 12px;border-bottom:1px solid #e2e8f0}' +
+    '.rpt-table tr:nth-child(even){background:#f8fafc}' +
+    '.flow-card{transition:transform 0.2s}' +
+    '.flow-card:hover{transform:translateY(-2px)}' +
+    '.comment-area{min-height:80px;border:1px dashed #cbd5e1;border-radius:8px;padding:12px;font-size:12px;color:#64748b;background:#fafbfc}' +
+    'body{font-family:-apple-system,BlinkMacSystemFont,"Microsoft YaHei",sans-serif;color:#1e293b;line-height:1.6;max-width:900px;margin:0 auto;padding:20px}' +
+    '@media print{body{padding:0}.report-section{page-break-inside:avoid}}';
+}
+
+// ============ 侧边栏 ============
+function refreshSidebar() {
+  var reports = getSavedReports();
+  var list = document.getElementById('sidebar-list');
+
+  if (reports.length === 0) {
+    list.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:40px 0;font-size:12px">暂无报告</div>';
+    return;
+  }
+
+  list.innerHTML = reports.map(function(r, i) {
+    var typeLabel = r.type === 'daily' ? '日报' : r.type === 'weekly' ? '周报' : '晨报';
+    return '<div class="sidebar-item' + (i === 0 ? ' active' : '') + '" data-id="' + r.id + '" onclick="loadReport(\'' + r.id + '\')">' +
+      '<div><div>' + typeLabel + '</div><div class="rpt-date">' + r.date + ' ' + r.time + '</div></div>' +
+      '<span class="rpt-type ' + r.type + '">' + typeLabel + '</span>' +
+      '</div>';
+  }).join('');
+}
+
+function loadReport(id) {
+  var reports = getSavedReports();
+  var report = reports.find(function(r) { return r.id === id; });
+  if (report) showReport(report);
+}
+
+// ============ 打印 ============
+function printReport() {
+  window.print();
+}
+
+// ============ Toast ============
+function showToast(msg) {
+  var toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.textContent = msg;
+  document.body.appendChild(toast);
+  setTimeout(function() { toast.remove(); }, 2000);
+}
+
+// ============ 初始化 ============
+refreshSidebar();
+
+// 自动生成今日日报（如无历史）
+var reports = getSavedReports();
+if (reports.length === 0) {
+  setTimeout(function() { generateReport('daily'); }, 500);
+}
+</script>
+</body>
+</html>

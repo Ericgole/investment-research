@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>TAA偏离审批工作流</title>
+<style>
+:root{--navy:#042C53;--blue:#185FA5;--blue-lt:#85B7EB;--blue-bg:#E6F1FB;--red:#A32D2D;--red-bg:#FCEBEB;--green:#3B6D11;--green-bg:#EAF3DE;--amber:#854F0B;--amber-bg:#FAEEDA;--gray:#F0F2F5;--gray-card:#F8F9FB;--gray-tx:#5F5E5A;--border:#E8ECF1;--white:#fff}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,"Microsoft YaHei",sans-serif;background:var(--gray);color:#1a1a1a;min-height:100vh}
+
+/* Header */
+.header{background:var(--navy);color:#fff;padding:12px 28px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.header h1{font-size:16px;font-weight:500}
+.header .back{color:var(--blue-lt);text-decoration:none;font-size:11px;padding:4px 12px;border:1px solid rgba(255,255,255,0.2);border-radius:5px;transition:all 0.2s}
+.header .back:hover{background:rgba(255,255,255,0.08)}
+.header .meta{font-size:10px;color:var(--blue-lt)}
+
+/* Container */
+.container{max-width:1300px;margin:0 auto;padding:20px 24px}
+
+/* Workflow info bar */
+.wf-info{background:var(--white);border-radius:10px;padding:14px 20px;margin-bottom:16px;border:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
+.wf-info .wf-summary{font-size:12px}
+.wf-info .wf-summary b{color:var(--navy)}
+.wf-info .wf-trigger{font-size:10px;color:var(--gray-tx);max-width:400px}
+
+/* 7-step progress bar */
+.steps-bar{display:flex;margin-bottom:20px;background:var(--white);border-radius:10px;padding:14px 16px;border:0.5px solid var(--border);overflow-x:auto}
+.step-node{flex:1;text-align:center;position:relative;cursor:pointer;min-width:80px;padding:0 2px}
+.step-node .step-circle{width:32px;height:32px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;border:2px solid var(--border);background:var(--white);color:var(--gray-tx);transition:all 0.3s;position:relative;z-index:2}
+.step-node .step-label{font-size:9px;color:var(--gray-tx);margin-top:4px;line-height:1.3;transition:color 0.3s}
+.step-node.done .step-circle{background:var(--green);border-color:var(--green);color:#fff}
+.step-node.done .step-label{color:var(--green)}
+.step-node.current .step-circle{background:var(--white);border-color:var(--amber);color:var(--amber);box-shadow:0 0 0 4px rgba(239,159,39,0.15);animation:stepPulse 2s infinite}
+.step-node.current .step-label{color:var(--amber);font-weight:500}
+.step-node.pending .step-circle{background:var(--gray-card);border-color:var(--border);color:#B4B2A9}
+/* Connector lines */
+.step-node::after{content:'';position:absolute;top:16px;left:60%;width:80%;height:2px;background:var(--border);z-index:1}
+.step-node:last-child::after{display:none}
+.step-node.done::after{background:var(--green)}
+.step-node.current::after{background:var(--amber)}
+@keyframes stepPulse{0%,100%{box-shadow:0 0 0 4px rgba(239,159,39,0.15)}50%{box-shadow:0 0 0 8px rgba(239,159,39,0.05)}}
+
+/* Sub-steps inside current */
+.step-progress{margin-bottom:16px;font-size:10px;color:var(--gray-tx)}
+.step-progress .sp-title{font-weight:500;color:var(--navy);margin-bottom:4px}
+.progress-bar{height:5px;border-radius:3px;background:var(--border);overflow:hidden;margin:4px 0}
+.progress-fill{height:100%;border-radius:3px;transition:width 0.5s}
+.progress-fill.green{background:linear-gradient(90deg,var(--green),#52991A)}
+.progress-fill.amber{background:linear-gradient(90deg,#EF9F27,#F5C260)}
+.progress-fill.blue{background:linear-gradient(90deg,var(--blue),var(--blue-lt))}
+
+/* Dual column */
+.content-grid{display:flex;gap:16px}
+.col-main{flex:1.6;min-width:0}
+.col-side{flex:1;min-width:0;max-width:420px}
+
+/* Card */
+.card{background:var(--white);border-radius:10px;padding:18px 20px;border:0.5px solid var(--border);margin-bottom:16px;transition:box-shadow 0.2s}
+.card:hover{box-shadow:0 2px 12px rgba(0,0,0,0.04)}
+.card h3{font-size:13px;font-weight:500;color:var(--navy);margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.card h3 .badge{font-size:9px;padding:1px 7px;border-radius:3px;font-weight:400}
+.badge-system{background:var(--blue-bg);color:var(--blue)}
+.badge-human{background:var(--amber-bg);color:var(--amber)}
+
+/* Form elements */
+.form-group{margin-bottom:10px}
+.form-group label{display:block;font-size:10px;font-weight:500;color:var(--gray-tx);margin-bottom:3px}
+.form-group select,.form-group textarea,.form-group input{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:11px;font-family:inherit;transition:border 0.2s}
+.form-group select:focus,.form-group textarea:focus,.form-group input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 2px rgba(24,95,165,0.1)}
+.form-group textarea{resize:vertical;min-height:80px}
+.form-row{display:flex;gap:8px}
+.form-row .form-group{flex:1}
+
+/* Tables */
+.table-sm{width:100%;border-collapse:collapse;font-size:10px}
+.table-sm th{background:var(--gray-card);padding:6px 8px;text-align:left;font-weight:500;color:var(--gray-tx);white-space:nowrap}
+.table-sm td{padding:5px 8px;border-bottom:1px solid var(--border)}
+.table-sm .row-pass{background:var(--green-bg)}
+.table-sm .row-fail{background:var(--red-bg)}
+.table-sm .row-warn{background:var(--amber-bg)}
+
+/* Tags */
+.tag{display:inline-block;padding:1px 7px;border-radius:3px;font-size:9px}
+.tag-ok{background:var(--green-bg);color:var(--green)}
+.tag-warn{background:var(--amber-bg);color:var(--amber)}
+.tag-err{background:var(--red-bg);color:var(--red)}
+.tag-info{background:var(--blue-bg);color:var(--blue)}
+
+/* Plan cards */
+.plan-cards{display:flex;gap:8px;flex-wrap:wrap}
+.plan-card{flex:1;min-width:180px;padding:12px;border:2px solid var(--border);border-radius:10px;cursor:pointer;transition:all 0.2s;font-size:10px}
+.plan-card:hover{border-color:var(--blue-lt);transform:translateY(-1px)}
+.plan-card.selected{border-color:var(--blue);background:var(--blue-bg);box-shadow:0 0 0 3px rgba(24,95,165,0.08)}
+.plan-card .plan-name{font-weight:500;color:var(--navy);margin-bottom:4px}
+.plan-card .plan-detail{color:var(--gray-tx);line-height:1.5}
+.plan-card .plan-meta{margin-top:6px;display:flex;gap:8px;font-size:9px}
+.plan-card .plan-confidence{font-size:9px;color:var(--gray-tx);margin-top:4px}
+
+/* Approval timeline */
+.timeline{position:relative;padding-left:20px}
+.timeline::before{content:'';position:absolute;left:7px;top:4px;bottom:4px;width:2px;background:var(--border)}
+.timeline-item{position:relative;margin-bottom:12px;font-size:10px}
+.timeline-item::before{content:'';position:absolute;left:-17px;top:3px;width:10px;height:10px;border-radius:50%;background:var(--border)}
+.timeline-item.done::before{background:var(--green)}
+.timeline-item.current::before{background:var(--amber);box-shadow:0 0 0 3px rgba(239,159,39,0.2)}
+.timeline-item .tl-time{font-size:8px;color:#B4B2A9}
+.timeline-item .tl-user{font-weight:500;color:var(--navy)}
+
+/* Impact indicator */
+.impact-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}
+.impact-item{padding:10px;border-radius:8px;text-align:center;font-size:10px;background:var(--gray-card)}
+.impact-item .imp-before{font-size:9px;color:var(--gray-tx)}
+.impact-item .imp-after{font-size:16px;font-weight:600;color:var(--navy)}
+.impact-item .imp-delta{font-size:9px;margin-top:2px}
+.impact-item .imp-delta.pos{color:var(--green)}
+.impact-item .imp-delta.neg{color:var(--red)}
+
+/* Actions bar */
+.actions{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
+.btn{padding:8px 20px;border-radius:6px;font-size:11px;cursor:pointer;border:1px solid var(--border);background:var(--white);font-family:inherit;transition:all 0.2s}
+.btn:hover{transform:translateY(-1px)}
+.btn.primary{background:var(--blue);color:#fff;border-color:var(--blue)}
+.btn.success{background:var(--green);color:#fff;border-color:var(--green)}
+.btn.warn{background:#EF9F27;color:#fff;border-color:#EF9F27}
+.btn.danger{background:var(--red);color:#fff;border-color:var(--red)}
+.btn:disabled{opacity:0.4;cursor:not-allowed;transform:none}
+
+/* Approval panel */
+.checklist-item{display:flex;align-items:center;gap:8px;padding:6px 8px;font-size:10px;border-radius:4px;margin-bottom:4px;background:var(--gray-card)}
+.checklist-item input[type=checkbox]{width:14px;height:14px}
+.checklist-item.checked{background:var(--green-bg);text-decoration:line-through;color:var(--gray-tx)}
+
+/* Signature box */
+.sig-box{border:2px dashed var(--border);border-radius:8px;padding:16px;text-align:center;margin-top:10px}
+.sig-box.signed{border-color:var(--green);background:var(--green-bg)}
+
+/* Toast */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;padding:10px 24px;border-radius:8px;font-size:11px;z-index:999;display:none;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,0.3)}
+.toast.show{display:block;animation:toastUp 0.3s ease}
+@keyframes toastUp{from{transform:translateX(-50%) translateY(20px);opacity:0}to{transform:translateX(-50%) translateY(0);opacity:1}}
+
+/* Mobile */
+@media(max-width:768px){
+  .content-grid{flex-direction:column}
+  .col-side{max-width:100%}
+  .plan-cards{flex-direction:column}
+  .steps-bar{flex-wrap:wrap;justify-content:center}
+  .step-node{flex:0 0 auto;min-width:60px;margin-bottom:8px}
+  .step-node::after{display:none}
+  .form-row{flex-direction:column}
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div style="display:flex;align-items:center;gap:16px">
+    <a href="index.html" class="back">← 返回看板</a>
+    <h1>TAA偏离审批工作流</h1>
+  </div>
+  <div class="meta">触发: TAA +0.85 · 2026-08-10 06:30</div>
+</div>
+
+<div class="container">
+
+<!-- WORKFLOW INFO -->
+<div class="wf-info">
+  <div class="wf-summary">
+    工作流状态: <b id="wfStatus" style="color:var(--amber)">进行中</b> ·
+    当前步骤: <b id="wfStepLabel">3/7 — 方案生成</b> ·
+    创建者: <b>System</b>
+  </div>
+  <div class="wf-trigger">触发条件: TAA五维加权分 +0.85 突破 ±0.75调整线。政策维度+2.5极度正向，估值-0.5偏弱。</div>
+</div>
+
+<!-- 7-STEP PROGRESS BAR -->
+<div class="steps-bar" id="stepsBar">
+  <div class="step-node done" onclick="goToStep(1)">
+    <div class="step-circle">✓</div>
+    <div class="step-label">1.触发识别</div>
+  </div>
+  <div class="step-node done" onclick="goToStep(2)">
+    <div class="step-circle">✓</div>
+    <div class="step-label">2.自动预检</div>
+  </div>
+  <div class="step-node current" onclick="goToStep(3)">
+    <div class="step-circle">3</div>
+    <div class="step-label">3.方案生成</div>
+  </div>
+  <div class="step-node pending">
+    <div class="step-circle">4</div>
+    <div class="step-label">4.内部讨论</div>
+  </div>
+  <div class="step-node pending">
+    <div class="step-circle">5</div>
+    <div class="step-label">5.合规审查</div>
+  </div>
+  <div class="step-node pending">
+    <div class="step-circle">6</div>
+    <div class="step-label">6.CIO审批</div>
+  </div>
+  <div class="step-node pending">
+    <div class="step-circle">7</div>
+    <div class="step-label">7.执行+复盘</div>
+  </div>
+</div>
+
+<!-- PROGRESS BAR -->
+<div class="step-progress">
+  <div class="sp-title">工作流进度</div>
+  <div class="progress-bar"><div class="progress-fill amber" id="wfProgFill" style="width:45%"></div></div>
+  <span id="wfProgText">步骤 3/7 — 方案生成 (45%)</span>
+</div>
+
+<!-- DUAL COLUMN CONTENT -->
+<div class="content-grid">
+
+<!-- LEFT: Main content -->
+<div class="col-main" id="mainContent">
+  <!-- Step 3 content: Plan Generation (current) -->
+  <div class="card">
+    <h3><span class="badge badge-system">Step 3</span> 方案生成 — 选择偏离方案</h3>
+    <div style="font-size:10px;color:var(--gray-tx);margin-bottom:10px">系统已自动生成 3 套偏离方案。请选择推荐方案后进入下一阶段。</div>
+    
+    <div class="plan-cards" id="planCards">
+      <div class="plan-card selected" onclick="selectPlan(0)" id="planCard0">
+        <div class="plan-name">推荐: 增配创业板+3%</div>
+        <div class="plan-detail">创业板 9%→12%<br>资金来源: 现金-2% + 利率债-1%<br>预期收益: 10.8% | 偿付: 208%</div>
+        <div class="plan-meta">
+          <span class="tag tag-ok">低风险</span>
+          <span class="tag tag-info">保守</span>
+        </div>
+        <div class="plan-confidence">方案置信度: <span style="color:var(--blue)">58%</span></div>
+      </div>
+      <div class="plan-card" onclick="selectPlan(1)" id="planCard1">
+        <div class="plan-name">备选: 增配权益+5%</div>
+        <div class="plan-detail">创业板+3% + 科创50+2%<br>资金来源: 信用债-5%<br>预期收益: 11.2% | 偿付: 198%</div>
+        <div class="plan-meta">
+          <span class="tag tag-warn">中风险</span>
+          <span class="tag tag-info">激进</span>
+        </div>
+        <div class="plan-confidence">方案置信度: <span style="color:var(--amber)">35%</span></div>
+      </div>
+      <div class="plan-card" onclick="selectPlan(2)" id="planCard2">
+        <div class="plan-name">保守: 维持SAA不变</div>
+        <div class="plan-detail">不调整，观察1周<br>等 TAA 回落或进一步确认<br>预期收益: 10.2% | 偿付: 215%</div>
+        <div class="plan-meta">
+          <span class="tag tag-ok">极低风险</span>
+          <span class="tag tag-info">观望</span>
+        </div>
+        <div class="plan-confidence">方案置信度: <span style="color:var(--green)">72%</span></div>
+      </div>
+    </div>
+
+    <div class="form-group" style="margin-top:12px">
+      <label>偏离理由 (必填)</label>
+      <textarea id="deviationReason" placeholder="请简述选择该方案的理由...">TAA加权+0.85已触发±0.75调整线。政策维度(+2.5)极度正向——大基金三期3440亿+AI政策+科创再贷款1.2万亿为最大驱动力。虽然估值(-0.5)偏贵，但ERP 5.3%仍有安全边际。建议增配创业板+3pp，利用政策红利同时控制风险（偿付仅从215%降至208%，远高于150%底线）。</textarea>
+    </div>
+
+    <div class="form-group">
+      <label>执行窗口</label>
+      <select id="execWindow">
+        <option>立即执行（T+0）</option>
+        <option selected>次日开盘（T+1）</option>
+        <option>本周内（T+5）</option>
+        <option>下周一（T+7）</option>
+      </select>
+    </div>
+
+    <div class="actions">
+      <button class="btn primary" onclick="advanceStep()">提交方案 → 进入讨论</button>
+      <button class="btn" onclick="saveDraft()">💾 暂存草稿</button>
+      <button class="btn danger" onclick="resetWorkflow()">↺ 重置工作流</button>
+    </div>
+  </div>
+</div>
+
+<!-- RIGHT: Sidebar (Approval Timeline + Pre-check) -->
+<div class="col-side">
+  <!-- Pre-check Summary -->
+  <div class="card">
+    <h3><span class="badge badge-system">Step 2</span> 自动预检结果</h3>
+    <div class="impact-grid">
+      <div class="impact-item">
+        <div class="imp-before">偿付能力充足率</div>
+        <div class="imp-after" style="color:var(--green)">208%</div>
+        <div class="imp-delta neg">▼ -7pp (215%→208%)</div>
+      </div>
+      <div class="impact-item">
+        <div class="imp-before">组合预期收益</div>
+        <div class="imp-after" style="color:var(--red)">10.8%</div>
+        <div class="imp-delta pos">▲ +0.6%</div>
+      </div>
+      <div class="impact-item">
+        <div class="imp-before">VaR(99%,10日)</div>
+        <div class="imp-after" style="color:var(--blue)">5.36%</div>
+        <div class="imp-delta neg">▲ +0.54%</div>
+      </div>
+      <div class="impact-item">
+        <div class="imp-before">负债成本覆盖率</div>
+        <div class="imp-after" style="color:var(--blue)">2.54x</div>
+        <div class="imp-delta neg">▼ -0.06x</div>
+      </div>
+    </div>
+    <div style="font-size:10px;margin-top:8px">
+      <b>约束检查:</b><br>
+      <span style="color:var(--red)">⚠ 权益上限: 61% > 60% → 需先调至65%</span><br>
+      <span style="color:var(--green)">✓ 偿付≥150%: 208% 通过</span><br>
+      <span style="color:var(--green)">✓ VaR≤8%: 5.36% 通过</span>
+    </div>
+  </div>
+
+  <!-- Approval Timeline -->
+  <div class="card">
+    <h3>审批流转记录</h3>
+    <div class="timeline">
+      <div class="timeline-item done">
+        <div class="tl-time">2026-08-10 06:30:05</div>
+        <div class="tl-user">System</div>
+        <div>TAA评分突破±0.75，自动触发工作流</div>
+      </div>
+      <div class="timeline-item done">
+        <div class="tl-time">2026-08-10 06:30:08</div>
+        <div class="tl-user">AutoCheck</div>
+        <div>自动预检完成: 偿付208%≥150% ✓ | 权益上限违规 ⚠</div>
+      </div>
+      <div class="timeline-item current">
+        <div class="tl-time">2026-08-10 06:30:10</div>
+        <div class="tl-user">System</div>
+        <div>3套方案已生成，等待选择</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAA Score Card -->
+  <div class="card">
+    <h3>TAA当前评分</h3>
+    <table class="table-sm">
+      <tr><th>维度</th><th>权重</th><th>评分</th><th>趋势</th></tr>
+      <tr><td>宏观</td><td>25%</td><td style="color:var(--blue)">+1.0</td><td>→</td></tr>
+      <tr><td>估值</td><td>25%</td><td style="color:var(--green)">-0.5</td><td>↓</td></tr>
+      <tr><td>技术</td><td>15%</td><td>0.0</td><td>→</td></tr>
+      <tr><td>资金</td><td>15%</td><td style="color:var(--red)">+1.5</td><td>↑</td></tr>
+      <tr style="background:var(--amber-bg)"><td>政策</td><td>20%</td><td style="color:var(--red);font-weight:600">+2.5</td><td>↑↑</td></tr>
+      <tr><td colspan="2"><b>加权总分</b></td><td style="color:var(--amber);font-weight:600">+0.85</td><td>⚠ 触发</td></tr>
+    </table>
+  </div>
+</div>
+
+</div><!-- /content-grid -->
+</div><!-- /container -->
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script src="js/data-access.js"></script>
+<script>
+// ===== STATE (persisted via localStorage) =====
+var currentStep = 3;
+var selectedPlan = 0;
+var planNames = ['增配创业板+3%', '增配权益+5%', '维持SAA不变'];
+var stepNames = ['触发识别','自动预检','方案生成','内部讨论','合规审查','CIO审批','执行+复盘'];
+var stepRoles = ['system','system','system','analyst','compliance','director','trader'];
+var workflowHistory = [
+  {time:'2026-08-10 06:30:05', user:'System', action:'TAA评分突破±0.75，自动触发工作流'},
+  {time:'2026-08-10 06:30:08', user:'AutoCheck', action:'自动预检完成: 偿付208%≥150% ✓ | 权益上限违规 ⚠'},
+  {time:'2026-08-10 06:30:10', user:'System', action:'3套方案已生成，等待选择'}
+];
+
+// === DATA BINDING: Load real values from DA layer ===
+var realKPI = null;
+var realTAA = 0.85;
+var realSolvency = 215;
+var realCoverage = 2.60;
+var realVaR = -4.82;
+
+function initDataLayer() {
+  if (window.DA && DA.isReady()) {
+    realKPI = DA.getKPI();
+    realTAA = DA.getTAAWeighted();
+    realSolvency = realKPI.solvency_ratio || 215;
+    realCoverage = realKPI.liability_coverage || 2.60;
+    realVaR = realKPI.var_99_10d || -4.82;
+  } else {
+    // Fallback: use static baseline
+    realKPI = { solvency_ratio:215, taa_weighted_score:0.85, equity_ratio:58, duration_gap:-3.2, var_99_10d:-4.82 };
+  }
+}
+
+// ===== UI HELPERS =====
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(function(){ t.classList.remove('show'); }, 3000);
+}
+
+function updateProgressBar() {
+  var pct = Math.round(currentStep / 7 * 100);
+  document.getElementById('wfProgFill').style.width = pct + '%';
+  document.getElementById('wfProgText').textContent = '步骤 ' + currentStep + '/7 — ' + stepNames[currentStep-1] + ' (' + pct + '%)';
+  document.getElementById('wfStepLabel').textContent = currentStep + '/7 — ' + stepNames[currentStep-1];
+  
+  if (currentStep >= 7) {
+    document.getElementById('wfStatus').textContent = '已完成';
+    document.getElementById('wfStatus').style.color = 'var(--green)';
+    document.getElementById('wfProgFill').className = 'progress-fill green';
+  }
+}
+
+// ===== STEP NAVIGATION =====
+function goToStep(n) {
+  if (n > currentStep) { showToast('请先完成当前步骤'); return; }
+  currentStep = n;
+  renderContent();
+  updateStepNodes();
+  updateProgressBar();
+}
+
+function advanceStep() {
+  if (currentStep >= 7) return;
+  
+  // Step-specific validation
+  if (currentStep === 3) {
+    var reason = document.getElementById('deviationReason').value.trim();
+    if (!reason) { showToast('请填写偏离理由'); return; }
+    workflowHistory.push({time: new Date().toLocaleString('zh-CN'), user: 'Analyst', action: '选择方案: ' + planNames[selectedPlan] + ' — 偏离理由已记录'});
+  }
+  if (currentStep === 4) {
+    var comment = document.getElementById('discussionComment');
+    if (comment && !comment.value.trim()) { showToast('请填写讨论意见'); return; }
+    workflowHistory.push({time: new Date().toLocaleString('zh-CN'), user: 'Analyst', action: '内部讨论完成，提交合规审查'});
+  }
+  if (currentStep === 5) {
+    var checks = document.querySelectorAll('.compliance-check:checked');
+    var total = document.querySelectorAll('.compliance-check').length;
+    if (checks.length < total) { showToast('请完成所有合规检查项 (' + checks.length + '/' + total + ')'); return; }
+    workflowHistory.push({time: new Date().toLocaleString('zh-CN'), user: 'Compliance', action: '合规审查全部通过 (' + total + '/' + total + '项)'});
+  }
+  if (currentStep === 6) {
+    var sig = document.getElementById('cioSignature');
+    if (!sig.value.trim()) { showToast('CIO签名为必填项'); return; }
+    workflowHistory.push({time: new Date().toLocaleString('zh-CN'), user: 'CIO', action: '审批通过，签名: ' + sig.value.trim()});
+  }
+  
+  currentStep++;
+  renderContent();
+  updateStepNodes();
+  updateProgressBar();
+  persistState();  // Auto-save after each step
+  
+  if (currentStep === 7) {
+    workflowHistory.push({time: new Date().toLocaleString('zh-CN'), user: 'Trader', action: '交易指令已下达，15天后自动复盘'});
+    showToast('✅ TAA偏离工作流全部完成！方案已提交执行');
+  }
+}
+
+function updateStepNodes() {
+  var nodes = document.querySelectorAll('.step-node');
+  nodes.forEach(function(node, i) {
+    node.classList.remove('done','current','pending');
+    if (i + 1 < currentStep) node.classList.add('done');
+    else if (i + 1 === currentStep) node.classList.add('current');
+    else node.classList.add('pending');
+  });
+}
+
+function selectPlan(n) {
+  selectedPlan = n;
+  document.querySelectorAll('.plan-card').forEach(function(c, i) {
+    c.classList.toggle('selected', i === n);
+  });
+}
+
+// ===== RENDER CONTENT PER STEP =====
+function renderContent() {
+  var main = document.getElementById('mainContent');
+  var html = '';
+  
+  switch(currentStep) {
+    case 1: // 触发识别
+      html = '<div class="card">';
+      html += '<h3><span class="badge badge-system">Step 1</span> 触发识别 — 事件确认</h3>';
+      html += '<div style="font-size:10px;color:var(--gray-tx);margin-bottom:10px">系统已自动识别触发条件，请确认后进入预检阶段。</div>';
+      html += '<table class="table-sm"><tr><th>触发条件</th><th>当前值</th><th>阈值</th><th>状态</th></tr>';
+      html += '<tr><td>TAA五维加权分</td><td style="color:var(--amber);font-weight:500">+0.85</td><td>±0.75</td><td><span class="tag tag-warn">突破</span></td></tr>';
+      html += '<tr><td>政策维度</td><td style="color:var(--red)">+2.5</td><td>±2.0</td><td><span class="tag tag-warn">极端</span></td></tr>';
+      html += '<tr><td>估值维度</td><td style="color:var(--green)">-0.5</td><td>±2.0</td><td><span class="tag tag-ok">正常</span></td></tr>';
+      html += '</table>';
+      html += '<div class="interpret" style="font-size:10px;margin-top:10px;color:var(--gray-tx)">触发原因: TAA+0.85突破±0.75调整线。政策维度+2.5为最强驱动力(大基金三期3440亿+AI政策)，估值-0.5构成拖累但未构成否决。</div>';
+      html += '<div class="actions"><button class="btn primary" onclick="advanceStep()">确认触发 → 进入预检</button></div>';
+      html += '</div>';
+      break;
+      
+    case 2: // 自动预检
+      html = '<div class="card">';
+      html += '<h3><span class="badge badge-system">Step 2</span> 自动预检 — 风险影响评估</h3>';
+      html += '<div style="font-size:10px;color:var(--gray-tx);margin-bottom:10px">系统自动模拟增配3%权益后的组合影响。所有核心指标均未触发否决条件。</div>';
+      html += '<table class="table-sm"><tr><th>指标</th><th>当前</th><th>调整后</th><th>变化</th><th>是否通过</th></tr>';
+      html += '<tr class="row-pass"><td>偿付能力</td><td>215%</td><td>208%</td><td>-7pp</td><td><span class="tag tag-ok">≥150% ✓</span></td></tr>';
+      html += '<tr class="row-pass"><td>组合收益</td><td>10.2%</td><td>10.8%</td><td style="color:var(--red)">+0.6%</td><td><span class="tag tag-ok">↑ ✓</span></td></tr>';
+      html += '<tr class="row-pass"><td>VaR(99%,10d)</td><td>4.82%</td><td>5.36%</td><td style="color:var(--red)">+0.54%</td><td><span class="tag tag-ok">≤8% ✓</span></td></tr>';
+      html += '<tr class="row-pass"><td>负债覆盖率</td><td>2.60x</td><td>2.54x</td><td style="color:var(--green)">-0.06x</td><td><span class="tag tag-ok">≥1.1x ✓</span></td></tr>';
+      html += '<tr class="row-warn"><td><b>权益上限</b></td><td>58%</td><td><b>61%</b></td><td style="color:var(--red)">+3pp</td><td><span class="tag tag-warn">⚠ 需先调至65%</span></td></tr>';
+      html += '</table>';
+      html += '<div class="form-group" style="margin-top:10px"><label>预检备注</label><textarea id="precheckNotes" placeholder="补充预检发现...">权益上限60%→61%违规。建议在Step 4讨论中确认: A) 调高上限至65%; B) 缩小增配幅度至+2%; C) 以现金作为权益来源(不增加权益占比)。</textarea></div>';
+      html += '<div class="actions"><button class="btn primary" onclick="advanceStep()">预检通过 → 生成方案</button></div>';
+      html += '</div>';
+      break;
+      
+    case 3: // 方案生成 (DEFAULT - already rendered inline)
+      // Already in the static HTML
+      break;
+      
+    case 4: // 内部讨论
+      html = '<div class="card">';
+      html += '<h3><span class="badge badge-human">Step 4</span> 内部讨论 — 投研团队评审</h3>';
+      html += '<div class="form-group"><label>讨论纪要</label><textarea id="discussionComment" placeholder="记录团队讨论要点...">支持意见: 政策维度+2.5为结构性强信号，大基金三期+AI政策是长期主线。增配创业板可放大政策红利，且偿付208%仍远高于150%底线。\n\n反对/顾虑: 估值分位87%偏高，技术维度中性无方向。信用利差数据断流7天影响SAA精度。\n\n结论: 建议通过，但需: ①调高权益上限至65%; ②补拉信用利差数据; ③设定止损线: 创业板回撤>5%则减仓至原始比例。</textarea></div>';
+      html += '<div class="form-row"><div class="form-group"><label>参会人员</label><input value="分析师A, 投资经理B, 研究员C"></div><div class="form-group"><label>讨论日期</label><input type="date" value="2026-08-10"></div></div>';
+      html += '<div class="actions"><button class="btn primary" onclick="advanceStep()">讨论完成 → 提交合规</button><button class="btn" onclick="saveDraft()">💾 暂存</button></div>';
+      html += '</div>';
+      break;
+      
+    case 5: // 合规审查
+      html = '<div class="card">';
+      html += '<h3><span class="badge badge-human">Step 5</span> 合规审查 — 限额与监管检查</h3>';
+      html += '<div style="font-size:10px;margin-bottom:10px">请逐项确认以下合规检查:</div>';
+      
+      var checks = [
+        '权益总仓位61%不超调整后上限65% ← 需Step 4确认调高上限',
+        '偿付能力208% ≥ 150%监管底线 (附加缓冲58pp)',
+        'VaR 5.36% ≤ 8% 内部限额',
+        '单一资产集中度 (标普23% ≤ 35%)',
+        '境外敞口23% 未增加',
+        'QDII额度: 标普500ETF博时额度充足',
+        'IFRS17影响: FVTPL占比34%→38%，损益波动+~5% (可接受)',
+        '交易成本: ETF申赎费率0.2-0.8% (可控)'
+      ];
+      html += '<div style="margin-bottom:12px">';
+      checks.forEach(function(c, i) {
+        html += '<div class="checklist-item" id="checklistItem' + i + '" onclick="toggleCheck(' + i + ')"><input type="checkbox" class="compliance-check" onchange="toggleCheckItem(' + i + ')">' + c + '</div>';
+      });
+      html += '</div>';
+      html += '<div class="form-group"><label>合规意见</label><textarea id="complianceNotes" placeholder="合规部补充意见...">经审查，权益上限调整方案需董事会备案。其余7项指标均合规。</textarea></div>';
+      html += '<div class="actions"><button class="btn primary" onclick="advanceStep()">合规通过 → 提交CIO</button></div>';
+      html += '</div>';
+      break;
+      
+    case 6: // CIO审批
+      html = '<div class="card">';
+      html += '<h3><span class="badge badge-human">Step 6</span> CIO审批 — 最终决策</h3>';
+      html += '<div style="font-size:10px;color:var(--gray-tx);margin-bottom:10px">投资总监审批最终偏离方案。确认后方案进入执行阶段。</div>';
+      
+      html += '<div style="background:var(--gray-card);padding:12px;border-radius:8px;margin-bottom:12px;font-size:10px;line-height:1.6">';
+      html += '<b>方案摘要:</b><br>';
+      html += '• 偏离方向: ' + planNames[selectedPlan] + '<br>';
+      html += '• 胜率: 58% | 偿付后: 208% | 收益: 10.8%<br>';
+      html += '• 风险控制: 止损线创业板回撤>5%减仓至原始比例<br>';
+      html += '</div>';
+      
+      html += '<div class="form-row"><div class="form-group"><label>CIO签名 (必填)</label><input id="cioSignature" placeholder="键入姓名确认"></div><div class="form-group"><label>审批日期</label><input type="date" value="2026-08-10"></div></div>';
+      html += '<div class="form-group"><label>审批意见</label><textarea id="cioComment" placeholder="CIO补充意见...">批准。注意: ①密切监控创业板回撤 ②若TAA评分回落至+0.5以下启动反向操作 ③权益上限调整后设为永久65%适用后续审批。</textarea></div>';
+      
+      html += '<div class="sig-box" id="sigPreview"><div style="font-size:11px;color:var(--gray-tx)">待CIO签名确认...</div></div>';
+      
+      html += '<div class="actions"><button class="btn primary" onclick="advanceStep()">CIO审批通过 → 执行</button><button class="btn danger" onclick="showToast(\'审批已拒绝\')">❌ 否决</button></div>';
+      html += '</div>';
+      break;
+      
+    case 7: // 执行+复盘
+      html = '<div class="card">';
+      html += '<h3><span class="badge badge-human">Step 7</span> 执行+复盘 — 交易与后评估</h3>';
+      html += '<div style="text-align:center;padding:20px;font-size:28px">✅</div>';
+      html += '<div style="text-align:center;font-size:13px;font-weight:500;color:var(--green);margin-bottom:8px">工作流全部完成</div>';
+      html += '<table class="table-sm"><tr><th>项目</th><th>详情</th></tr>';
+      html += '<tr><td>偏离方案</td><td>' + planNames[selectedPlan] + '</td></tr>';
+      html += '<tr><td>执行窗口</td><td>次日开盘 T+1</td></tr>';
+      html += '<tr><td>交易指令</td><td>买入创业板ETF 3% · 卖出货币基金2% · 卖出国债ETF 1%</td></tr>';
+      html += '<tr><td>止损线</td><td>创业板回撤>5% → 减仓至原始9%</td></tr>';
+      html += '<tr><td>复盘节点</td><td>2026-08-25 (15个交易日后)</td></tr>';
+      html += '<tr><td>归档编号</td><td>WF-2026-0810-001</td></tr>';
+      html += '</table>';
+      html += '<div class="actions"><button class="btn success" onclick="window.location.href=\'index.html\'">返回看板</button><button class="btn" onclick="printWorkflow()">🖨 打印审批记录</button></div>';
+      html += '</div>';
+      break;
+  }
+  
+  if (html) main.innerHTML = html;
+  
+  // Special: CIO signature listener
+  if (currentStep === 6) {
+    setTimeout(function() {
+      var sigInput = document.getElementById('cioSignature');
+      if (sigInput) {
+        sigInput.addEventListener('input', function() {
+          var sigBox = document.getElementById('sigPreview');
+          if (sigBox) {
+            sigBox.innerHTML = '<div style="font-size:13px;font-weight:500;color:var(--green)">✓ CIO签名确认: ' + this.value + '</div><div style="font-size:9px;color:var(--gray-tx)">2026-08-10 12:00</div>';
+            sigBox.classList.add('signed');
+          }
+        });
+      }
+    }, 100);
+  }
+}
+
+// ===== COMPLIANCE CHECK =====
+function toggleCheck(i) {
+  var cb = document.querySelectorAll('.compliance-check')[i];
+  if (cb) { cb.checked = !cb.checked; toggleCheckItem(i); }
+}
+function toggleCheckItem(i) {
+  var item = document.getElementById('checklistItem' + i);
+  var cb = document.querySelectorAll('.compliance-check')[i];
+  if (item && cb) {
+    item.classList.toggle('checked', cb.checked);
+  }
+}
+
+// ===== UTILS =====
+function saveDraft() {
+  var data = {
+    step: currentStep,
+    plan: selectedPlan,
+    reason: document.getElementById('deviationReason') ? document.getElementById('deviationReason').value : '',
+    time: new Date().toISOString()
+  };
+  if (window.DA) { DA.saveDraft(currentStep, data); }
+  showToast('💾 草稿已保存 (步骤' + currentStep + ')');
+}
+
+// ===== PERSISTENCE: Auto-save state on every navigation =====
+function persistState() {
+  var state = {
+    currentStep: currentStep,
+    selectedPlan: selectedPlan,
+    history: workflowHistory,
+    savedAt: new Date().toISOString()
+  };
+  if (window.DA) { DA.saveWorkflowState(state); }
+  // Also save individual draft for current step
+  saveDraft();
+}
+
+function restoreState() {
+  if (!window.DA) return null;
+  var state = DA.restoreWorkflowState();
+  if (state) {
+    currentStep = state.currentStep || 3;
+    selectedPlan = state.selectedPlan || 0;
+    workflowHistory = state.history || workflowHistory.slice(0, 3);
+    document.getElementById('wfStatus').textContent = state.savedAt ? '恢复: ' + state.savedAt.slice(11,19) : '进行中';
+    return state;
+  }
+  return null;
+}
+
+// Auto-persist on page close
+window.addEventListener('beforeunload', function() { persistState(); });
+
+function resetWorkflow() {
+  currentStep = 3;
+  selectedPlan = 0;
+  workflowHistory = workflowHistory.slice(0, 3);
+  
+  // Reset plan selection
+  document.querySelectorAll('.plan-card').forEach(function(c, i) {
+    c.classList.toggle('selected', i === 0);
+  });
+  if (document.getElementById('deviationReason')) {
+    document.getElementById('deviationReason').value = '';
+  }
+  
+  renderContent();
+  updateStepNodes();
+  updateProgressBar();
+  showToast('↺ 工作流已重置至步骤 3');
+}
+
+function printWorkflow() {
+  var log = workflowHistory.map(function(h) {
+    return h.time + ' | ' + h.user + ' | ' + h.action;
+  }).join('\n');
+  showToast('审批记录已复制到控制台 (可在Console查看)');
+  console.log('===== TAA偏离工作流审批记录 =====');
+  console.log('方案: ' + planNames[selectedPlan]);
+  console.log(log);
+  console.log('===== END =====');
+}
+
+// ===== INIT =====
+// 1. Initialize data layer
+DA.init().then(function() {
+  initDataLayer();
+  // 2. Try to restore previous state
+  var restored = restoreState();
+  if (restored) {
+    console.log('[WF] 已恢复工作流状态: 步骤 ' + restored.currentStep + ', 保存时间 ' + restored.savedAt);
+  }
+  // 3. Update UI with real data
+  updateStepNodes();
+  updateProgressBar();
+  renderContent();
+}).catch(function() {
+  // Fallback: use hardcoded baseline
+  initDataLayer();
+  updateStepNodes();
+  updateProgressBar();
+});
+</script>
+</body>
+</html>

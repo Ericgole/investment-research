@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>保险资金投研体系 · 研究门户 v2.0</title>
+<style>
+:root{--bg:#F5F5F7;--t:#1d1d1f;--t2:#6e6e73;--t3:#aeaeb2;--bdr:rgba(0,0,0,0.08);--blue:#007AFF;--gn:#34C759;--rd:#FF3B30;--am:#FF9500;--pu:#AF52DE}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,"SF Pro Display","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--t);line-height:1.5;-webkit-font-smoothing:antialiased;min-height:100vh}
+.container{max-width:1100px;margin:0 auto;padding:24px 18px 40px}
+
+/* Header */
+.hd{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;padding-bottom:16px;border-bottom:0.5px solid var(--bdr);margin-bottom:20px}
+.hd .brand{font-size:22px;font-weight:700;letter-spacing:-0.3px}
+.hd .brand span{font-weight:400;font-size:11px;color:var(--t3);margin-left:8px}
+.hd .nav{display:flex;gap:4px;flex-wrap:wrap}
+.hd .nav a{padding:6px 14px;border-radius:20px;font-size:11px;font-weight:500;text-decoration:none;color:var(--t2);transition:all .2s;border:0.5px solid transparent}
+.hd .nav a:hover,.hd .nav a.active{color:var(--blue);background:rgba(0,122,255,0.06);border-color:rgba(0,122,255,0.15)}
+
+/* KPI Strip */
+.kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px}
+.kpi-box{background:rgba(255,255,255,0.78);backdrop-filter:blur(20px);border-radius:14px;border:0.5px solid var(--bdr);padding:16px 18px;text-align:center;box-shadow:0 2px 12px rgba(0,0,0,0.04);position:relative;overflow:hidden}
+.kpi-box .ks{position:absolute;top:0;left:0;width:4px;height:100%}
+.kpi-box .kv{font-size:28px;font-weight:700;letter-spacing:-0.5px}
+.kpi-box .kl{font-size:11px;font-weight:500;color:var(--t2);margin-top:2px}
+.kpi-box .ksb{font-size:9px;color:var(--t3);margin-top:2px}
+@media(max-width:700px){.kpi{grid-template-columns:repeat(2,1fr)}}.modules[style*="repeat(5,"]{@media(max-width:1000px){grid-template-columns:repeat(3,1fr)!important}}@media(max-width:600px){.modules[style*="repeat(5,"]{grid-template-columns:repeat(2,1fr)!important}}
+
+/* Module Grid */
+.modules{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px}
+@media(max-width:800px){.modules{grid-template-columns:1fr 1fr}}
+@media(max-width:500px){.modules{grid-template-columns:1fr}}
+.mod-card{background:rgba(255,255,255,0.78);backdrop-filter:blur(20px);border-radius:14px;border:0.5px solid var(--bdr);padding:24px 20px;text-decoration:none;color:var(--t);transition:all .2s;box-shadow:0 2px 12px rgba(0,0,0,0.04);display:block}
+.mod-card:hover{transform:translateY(-2px);box-shadow:0 4px 24px rgba(0,0,0,0.08)}
+.mod-card .mi{font-size:32px;margin-bottom:8px}
+.mod-card .mn{font-size:15px;font-weight:600;margin-bottom:4px}
+.mod-card .md{font-size:11px;color:var(--t2);line-height:1.6}
+.mod-card .mt{display:flex;gap:4px;flex-wrap:wrap;margin-top:10px}
+.tag{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:9px;font-weight:500}
+.tg{background:rgba(52,199,89,0.08);color:var(--gn)}.tr{background:rgba(255,59,48,0.08);color:var(--rd)}
+.ta{background:rgba(255,149,0,0.08);color:var(--am)}.tb{background:rgba(0,122,255,0.08);color:var(--blue)}
+.tp{background:rgba(175,82,222,0.08);color:var(--pu)}
+
+/* Quick Nav */
+.quick{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;font-size:10px}
+.quick a{color:var(--t2);text-decoration:none;padding:3px 10px;border-radius:10px;background:rgba(0,0,0,0.03);transition:all .2s}
+.quick a:hover{background:rgba(0,122,255,0.06);color:var(--blue)}
+
+.foot{text-align:center;font-size:9px;color:var(--t3);padding:20px}
+</style>
+</head>
+<body>
+<div class="container">
+
+<!-- Header -->
+<div class="hd">
+  <div>
+    <div class="brand">保险资金投研体系<span>v2.0</span></div>
+    <div style="font-size:10px;color:var(--t3);margin-top:2px">资产负债驱动 · 偿付能力约束 · 研究驱动配置</div>
+  </div>
+  <div class="nav">
+    <a href="research-portal.html" class="active">研究门户</a>
+    <a href="投研体系_v2.0/insurance-cockpit.html">决策驾驶舱</a>
+    <a href="投研门户.html">统一门户</a>
+  </div>
+</div>
+
+<!-- KPI Strip -->
+<div class="kpi">
+  <div class="kpi-box"><div class="ks" style="background:var(--gn)"></div><div class="kv" style="color:var(--gn)">132%</div><div class="kl">偿付充足率</div><div class="ksb">综合 132% · 核心 118% · 底线120%</div></div>
+  <div class="kpi-box"><div class="ks" style="background:var(--am)"></div><div class="kv" style="color:var(--am)">-3.2</div><div class="kl">久期缺口（年）</div><div class="ksb">资产 3.8 · 负债 7.0 · 目标 ±1.5</div></div>
+  <div class="kpi-box"><div class="ks" style="background:var(--gn)"></div><div class="kv" style="color:var(--gn)">+4.2%</div><div class="kl">综合投资收益率</div><div class="ksb">滚动 1 年 · 覆盖负债成本 3.5%</div></div>
+  <div class="kpi-box" onclick="toggleTAADetail()" style="cursor:pointer"><div class="ks" style="background:var(--am)"></div><div class="kv" style="color:var(--am)">+0.85 ▾</div><div class="kl">TAA 加权总分（点击展开）</div><div class="ksb">宏观+1.0 估值-0.5 政策+2.5 资金+1.5 技术0</div></div>
+</div>
+
+
+<div id="taaDetail" style="display:none;background:rgba(255,255,255,0.78);border-radius:14px;border:0.5px solid var(--bdr);padding:14px 18px;margin-bottom:16px;box-shadow:0 2px 12px rgba(0,0,0,0.04)">
+  <div style="font-size:12px;font-weight:600;margin-bottom:10px">🔍 TAA +0.85 溯源 · 16 个驱动专题</div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;font-size:10px">
+    <span style="padding:3px 8px;background:rgba(52,199,89,0.08);border-radius:8px;color:var(--gn)">宏观 +1.0</span>
+    <span style="padding:3px 8px;background:rgba(255,59,48,0.08);border-radius:8px;color:var(--rd)">估值 -0.5</span>
+    <span style="padding:3px 8px;background:rgba(52,199,89,0.08);border-radius:8px;color:var(--gn)">政策 +2.5</span>
+    <span style="padding:3px 8px;background:rgba(52,199,89,0.08);border-radius:8px;color:var(--gn)">资金 +1.5</span>
+    <span style="padding:3px 8px;background:rgba(175,82,222,0.08);border-radius:8px;color:var(--pu)">技术 0.0</span>
+    <span>→ 加权 = 1.0×0.25 + (-0.5)×0.25 + 2.5×0.20 + 1.5×0.15 + 0×0.15 = <b style="color:var(--gn)">+0.85</b></span>
+    <a href="topic-detail.html" style="color:var(--blue);text-decoration:none;margin-left:auto">查看完整映射 ▸</a>
+  </div>
+</div>
+
+
+<!-- Quick Nav -->
+<div class="quick">
+  <span style="color:var(--t3)">快速入口：</span>
+  <a href="投研体系_v2.0/insurance-cockpit.html">🎯 决策驾驶舱</a>
+  <a href="投研门户.html">◉ 统一门户（六模块）</a>
+  <a href="投研专题_数据驱动版.html">📊 专题全集 (75项)</a>
+  <a href="投研体系_v2.0/insurance-cockpit.html">🛡️ 风险管理</a>
+  <a href="绩效评估看板.html">📋 绩效评估</a>
+  <a href="交互式CMA试算.html">🎮 交互试算</a>
+  <a href="关键事件日历.html">📅 事件日历</a>
+</div>
+
+<!-- SECTION 1: Research Headlines -->
+<div style="font-size:12px;font-weight:600;color:var(--t);margin:16px 0 10px">📰 研究头条</div>
+<div class="modules" style="grid-template-columns:repeat(4,1fr);gap:10px">
+  <div class="mod-card" style="padding:14px 16px;border-left:3px solid var(--rd)">
+    <div class="mi" style="font-size:22px;margin-bottom:2px">🔥</div>
+    <div class="mn" style="font-size:13px">PMI 急跌至 49.2</div>
+    <div class="md">7 月 PMI 跌破荣枯线，新订单 48.5 两个月降 2.7pp</div>
+    <div class="mt"><span class="tag tr">TAA: -0.15</span><span class="tag" style="background:rgba(0,0,0,0.04);color:var(--t3)">估值↓</span></div>
+  </div>
+  <div class="mod-card" style="padding:14px 16px;border-left:3px solid var(--am)">
+    <div class="mi" style="font-size:22px;margin-bottom:2px">📊</div>
+    <div class="mn" style="font-size:13px">出口 +23.9% 抢出口</div>
+    <div class="md">H1 贸易顺差创新高，但关税窗口期可持续性存疑</div>
+    <div class="mt"><span class="tag ta">TAA: +0.10</span><span class="tag" style="background:rgba(0,0,0,0.04);color:var(--t3)">宏观↑</span></div>
+  </div>
+  <div class="mod-card" style="padding:14px 16px;border-left:3px solid var(--gn)">
+    <div class="mi" style="font-size:22px;margin-bottom:2px">💡</div>
+    <div class="mn" style="font-size:13px">M1-M2 剪刀差改善</div>
+    <div class="md">-4.0pp → 连续 36 月改善，历史规律领先 A 股 6 月</div>
+    <div class="mt"><span class="tag tg">TAA: +0.10</span><span class="tag" style="background:rgba(0,0,0,0.04);color:var(--t3)">资金↑</span></div>
+  </div>
+  <div class="mod-card" style="padding:14px 16px;border-left:3px solid var(--pu)">
+    <div class="mi" style="font-size:22px;margin-bottom:2px">🏛️</div>
+    <div class="mn" style="font-size:13px">大基金三期落地</div>
+    <div class="md">产业政策持续发力，半导体/装备制造逆势扩张</div>
+    <div class="mt"><span class="tag tp">TAA: +0.20</span><span class="tag" style="background:rgba(0,0,0,0.04);color:var(--t3)">政策↑</span></div>
+  </div>
+</div>
+
+<!-- SECTION 2: Key Topics This Week -->
+<div style="font-size:12px;font-weight:600;color:var(--t);margin:16px 0 10px">🔍 本周重点专题 · TAA 贡献度排序</div>
+<div class="modules" style="grid-template-columns:repeat(5,1fr);gap:8px">
+  <div class="mod-card" style="padding:12px 14px;text-align:center">
+    <div style="font-size:20px;margin-bottom:2px">🏛️</div>
+    <div class="mn" style="font-size:11px">大基金三期</div>
+    <div class="md" style="font-size:9px">3440亿 · 政策+2.5</div>
+    <div class="mt" style="justify-content:center"><span class="tag tg">+0.20</span></div>
+  </div>
+  <div class="mod-card" style="padding:12px 14px;text-align:center">
+    <div style="font-size:20px;margin-bottom:2px">🏦</div>
+    <div class="mn" style="font-size:11px">政策宽松</div>
+    <div class="md" style="font-size:9px">降准降息 · 宏观+2.0</div>
+    <div class="mt" style="justify-content:center"><span class="tag tg">+0.15</span></div>
+  </div>
+  <div class="mod-card" style="padding:12px 14px;text-align:center">
+    <div style="font-size:20px;margin-bottom:2px">🤖</div>
+    <div class="mn" style="font-size:11px">AI 产业政策</div>
+    <div class="md" style="font-size:9px">政策+2.5 · 持续发力</div>
+    <div class="mt" style="justify-content:center"><span class="tag tg">+0.15</span></div>
+  </div>
+  <div class="mod-card" style="padding:12px 14px;text-align:center">
+    <div style="font-size:20px;margin-bottom:2px">📈</div>
+    <div class="mn" style="font-size:11px">公募超低配</div>
+    <div class="md" style="font-size:9px">科技超配 · 资金+2.0</div>
+    <div class="mt" style="justify-content:center"><span class="tag tg">+0.12</span></div>
+  </div>
+  <div class="mod-card" style="padding:12px 14px;text-align:center">
+    <div style="font-size:20px;margin-bottom:2px">💹</div>
+    <div class="mn" style="font-size:11px">PE/PB 分位</div>
+    <div class="md" style="font-size:9px">HS300 87% · 估值-1.0</div>
+    <div class="mt" style="justify-content:center"><span class="tag tr">-0.10</span></div>
+  </div>
+</div>
+
+<!-- SECTION 3: Signal Converter -->
+<div style="font-size:12px;font-weight:600;color:var(--t);margin:16px 0 10px">🔄 研究 → 决策信号转换器</div>
+<div class="modules" style="grid-template-columns:repeat(5,1fr);gap:8px">
+  <div class="mod-card" style="padding:12px;text-align:center">
+    <div style="font-size:14px;font-weight:700;color:var(--t)">16 项专题</div>
+    <div style="font-size:9px;color:var(--t3)">原始信号</div>
+    <div class="mt" style="justify-content:center"><span class="tag" style="background:rgba(0,0,0,0.04);color:var(--t3)">研究层</span></div>
+  </div>
+  <div style="display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--t3)">→</div>
+  <div class="mod-card" style="padding:12px;text-align:center">
+    <div style="font-size:14px;font-weight:700;color:var(--pu)">五维评分</div>
+    <div style="font-size:9px;color:var(--t3)">宏观+1 估值-0.5 政策+2.5</div>
+    <div class="mt" style="justify-content:center"><span class="tag tp">TAA层</span></div>
+  </div>
+  <div style="display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--t3)">→</div>
+  <div class="mod-card" style="padding:12px;text-align:center">
+    <div style="font-size:14px;font-weight:700;color:var(--gn)">TAA +0.85</div>
+    <div style="font-size:9px;color:var(--t3)">加权总分 · 不触发</div>
+    <div class="mt" style="justify-content:center"><span class="tag tg">决策层</span></div>
+  </div>
+</div>
+<div style="font-size:10px;color:var(--t3);margin:4px 0 0;text-align:center">
+  <a href="decision.html" style="color:var(--blue);text-decoration:none;font-weight:500">→ 打开决策仪表盘查看完整方案 ←</a>
+</div>
+
+<!-- SECTION 4: Topic Matrix -->
+<div style="font-size:12px;font-weight:600;color:var(--t);margin:16px 0 10px">📚 专题矩阵概览 · 点击筛选</div>
+<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;font-size:10px">
+  <button onclick="filterMatrix('all')" class="mbtn active" style="padding:4px 12px;border:0.5px solid var(--bdr);border-radius:20px;cursor:pointer;background:rgba(0,122,255,0.08);color:var(--blue);font-weight:500">全部</button>
+  <button onclick="filterMatrix('保险')" class="mbtn" style="padding:4px 12px;border:0.5px solid var(--bdr);border-radius:20px;cursor:pointer;color:var(--t2);background:rgba(255,255,255,0.5)">🛡 保险专属</button>
+  <button onclick="filterMatrix('宏观')" class="mbtn" style="padding:4px 12px;border:0.5px solid var(--bdr);border-radius:20px;cursor:pointer;color:var(--t2);background:rgba(255,255,255,0.5)">📊 宏观研判</button>
+  <button onclick="filterMatrix('估值')" class="mbtn" style="padding:4px 12px;border:0.5px solid var(--bdr);border-radius:20px;cursor:pointer;color:var(--t2);background:rgba(255,255,255,0.5)">💰 市场估值</button>
+  <button onclick="filterMatrix('技术')" class="mbtn" style="padding:4px 12px;border:0.5px solid var(--bdr);border-radius:20px;cursor:pointer;color:var(--t2);background:rgba(255,255,255,0.5)">📈 技术动量</button>
+  <button onclick="filterMatrix('资金')" class="mbtn" style="padding:4px 12px;border:0.5px solid var(--bdr);border-radius:20px;cursor:pointer;color:var(--t2);background:rgba(255,255,255,0.5)">💵 资金流向</button>
+</div>
+<div class="modules" id="topicMatrix" style="grid-template-columns:repeat(5,1fr);gap:8px">
+  <div class="mod-card cat-保险" style="padding:10px 12px;text-align:center">
+    <div class="mn" style="font-size:11px">久期缺口</div><div class="md" style="font-size:9px">-3.2 年 · -1</div>
+  </div>
+  <div class="mod-card cat-保险" style="padding:10px 12px;text-align:center">
+    <div class="mn" style="font-size:11px">C-ROSS II</div><div class="md" style="font-size:9px">132% · +0.5</div>
+  </div>
+  <div class="mod-card cat-宏观" style="padding:10px 12px;text-align:center">
+    <div class="mn" style="font-size:11px">GDP 分解</div><div class="md" style="font-size:9px">4.3% · -0.5</div>
+  </div>
+  <div class="mod-card cat-宏观" style="padding:10px 12px;text-align:center">
+    <div class="mn" style="font-size:11px">PMI 解读</div><div class="md" style="font-size:9px">49.2 · -0.5</div>
+  </div>
+  <div class="mod-card cat-宏观" style="padding:10px 12px;text-align:center">
+    <div class="mn" style="font-size:11px">CPI 通胀</div><div class="md" style="font-size:9px">1.0% · +0.5</div>
+  </div>
+  <div class="mod-card cat-宏观" style="padding:10px 12px;text-align:center">
+    <div class="mn" style="font-size:11px">M1-M2</div><div class="md" style="font-size:9px">-4.0pp · -1</div>
+  </div>
+  <div class="mod-card cat-宏观" style="padding:10px 12px;text-align:center">
+    <div class="mn" style="font-size:11px">社融结构</div><div class="md" style="font-size:9px">7.4% · -0.5</div>
+  </div>
+  <div class="mod-card cat-估值" style="padding:10px 12px;text-align:center">
+    <div class="mn" style="font-size:11px">PE 分位</div><div class="md" style="font-size:9px">87% · -1</div>
+  </div>
+  <div class="mod-card cat-估值" style="padding:10px 12px;text-align:center">
+    <div class="mn" style="font-size:11px">ERP 溢价</div><div class="md" style="font-size:9px">5.3% · +0.5</div>
+  </div>
+  <div class="mod-card cat-估值" style="padding:10px 12px;text-align:center">
+    <div class="mn" style="font-size:11px">股债比价</div><div class="md" style="font-size:9px">强偏股 · +1</div>
+  </div>
+  <div class="mod-card cat-技术" style="padding:10px 12px;text-align:center">
+    <div class="mn" style="font-size:11px">均线系统</div><div class="md" style="font-size:9px">空头 · -1</div>
+  </div>
+  <div class="mod-card cat-技术" style="padding:10px 12px;text-align:center">
+    <div class="mn" style="font-size:11px">MACD</div><div class="md" style="font-size:9px">底背离 · +0.5</div>
+  </div>
+  <div class="mod-card cat-技术" style="padding:10px 12px;text-align:center">
+    <div class="mn" style="font-size:11px">ADX</div><div class="md" style="font-size:9px">20.4 · 0</div>
+  </div>
+  <div class="mod-card cat-资金" style="padding:10px 12px;text-align:center">
+    <div class="mn" style="font-size:11px">公募仓位</div><div class="md" style="font-size:9px">88% · -0.5</div>
+  </div>
+  <div class="mod-card cat-资金" style="padding:10px 12px;text-align:center">
+    <div class="mn" style="font-size:11px">行业超低配</div><div class="md" style="font-size:9px">超配 +1</div>
+  </div>
+</div>
+
+<!-- Module Grid: 七大模块入口 -->
+<div class="modules">
+  <a class="mod-card" href="投研门户.html" style="border-left:3px solid var(--blue)">
+    <div class="mi">◉</div><div class="mn">宏观研判</div>
+    <div class="md">美林时钟+三周期共振+库存周期 · 18项宏观专题+15年回溯 · 6类经济指标分类跟踪</div>
+    <div class="mt"><span class="tag tg">20 专题实时</span><span class="tag tb">Wind+SQLite</span></div>
+  </a>
+  <a class="mod-card" href="投研体系_v2.0/insurance-cockpit.html" style="border-left:3px solid var(--pu)">
+    <div class="mi">◈</div><div class="mn">资产配置</div>
+    <div class="md">SAA五大类配置+保险合规引擎 · TAA五维评分(宏观25%/估值25%/政策20%/资金15%/技术15%) · LDI驱动</div>
+    <div class="mt"><span class="tag tg">SAA 100%合规</span><span class="tag tp">LDI驱动</span></div>
+  </a>
+  <a class="mod-card" href="投研体系_v2.0/insurance-cockpit.html" style="border-left:3px solid var(--am)">
+    <div class="mi">🛡️</div><div class="mn">风险监控</div>
+    <div class="md">六维风险(市场/利率/信用/流动性/集中度/偿付) · 事件冲击模拟 · 智能预警三级 · 30天时间轴</div>
+    <div class="mt"><span class="tag tg">六维雷达</span><span class="tag ta">久期缺口预警</span></div>
+  </a>
+  <a class="mod-card" href="绩效评估看板.html" style="border-left:3px solid var(--gn)">
+    <div class="mi">📋</div><div class="mn">绩效评估</div>
+    <div class="md">Brinson归因(配置/选择/交互) · 多周期收益评估 · 决策质量追踪(胜率/盈亏比/机会成本)</div>
+    <div class="mt"><span class="tag tg">Brinson</span><span class="tag tb">多周期</span></div>
+  </a>
+  <a class="mod-card" href="投研专题_数据驱动版.html" style="border-left:3px solid var(--rd)">
+    <div class="mi">📊</div><div class="mn">专题全集</div>
+    <div class="md">75项研究专题(含2项保险专属) · 32项DB/Wind实时 · 9模块深度分析 · 专题→五维→TAA透明链路</div>
+    <div class="mt"><span class="tag tg">32/75实时</span><span class="tag tb">⑨模块</span></div>
+  </a>
+  <a class="mod-card" href="关键事件日历.html" style="border-left:3px solid var(--pu)">
+    <div class="mi">📅</div><div class="mn">事件日历</div>
+    <div class="md">关键宏观/政策/财报事件日历 · 事件冲击假设分析 · 前瞻风险提示</div>
+    <div class="mt"><span class="tag tp">事件驱动</span><span class="tag tb">前瞻</span></div>
+  </a>
+  <a class="mod-card" href="交互式CMA试算.html" style="border-left:3px solid var(--gn)">
+    <div class="mi">🎮</div><div class="mn">交互试算</div>
+    <div class="md">CMA参数调整+MVO实时重算 · 场景对比(基准/牛市/熊市/金发女孩) · TAA评分调试</div>
+    <div class="mt"><span class="tag tp">交互式</span><span class="tag tb">5 标签页</span></div>
+  </a>
+</div>
+
+<div class="foot">保险资金投研体系 v2.0 · 研究门户 · GitHub Pages · 2026-08-09</div>
+</div>
+
+<script>
+function filterMatrix(cat){
+  document.querySelectorAll(".mbtn").forEach(function(b){b.classList.remove("active")});
+  event.target.classList.add("active");
+  document.querySelectorAll("#topicMatrix > div").forEach(function(d){
+    d.style.display = (cat==="all" || d.classList.contains("cat-"+cat)) ? "block" : "none";
+  });
+}
+</script>
+
+
+<script>
+function toggleTAADetail(){
+  var d=document.getElementById('taaDetail');
+  d.style.display=d.style.display==='none'?'block':'none';
+}
+</script>
+
+</body>
+</html>

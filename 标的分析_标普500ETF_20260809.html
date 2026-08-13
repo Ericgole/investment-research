@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>标的分析 · 标普500 ETF (513500)</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,"Microsoft YaHei",sans-serif;background:#f0f2f5;color:#1a1a1a;line-height:1.8}
+.header{background:linear-gradient(135deg,#042C53,#185FA5);color:#fff;padding:20px 32px}
+.header h1{font-size:17px;font-weight:500}
+.header .meta{font-size:11px;color:#85B7EB;margin-top:4px}
+.container{max-width:1000px;margin:0 auto;padding:20px}
+
+.card{background:#fff;border-radius:12px;border:0.5px solid #E8ECF1;margin:14px 0;padding:16px 20px}
+.card h2{font-size:14px;color:#042C53;border-bottom:0.5px solid #F0F2F5;padding-bottom:8px;margin-bottom:12px}
+.card h3{font-size:12px;color:#5F5E5A;margin:12px 0 6px}
+
+.grid2{display:flex;gap:12px;flex-wrap:wrap}
+.metric{flex:1;min-width:140px;background:#F8F9FB;border-radius:8px;padding:12px;text-align:center;border:0.5px solid #E8ECF1}
+.metric .mv{font-size:20px;font-weight:600;color:#042C53}
+.metric .ml{font-size:10px;color:#888780;margin-top:3px}
+
+table{width:100%;font-size:11px;border-collapse:collapse;margin:8px 0}
+th{background:#F1F5F9;padding:6px 8px;text-align:left;font-weight:500;font-size:10px;color:#5F5E5A}
+td{padding:5px 8px;border-bottom:0.5px solid #F0F2F5}
+.tag{display:inline-block;padding:1px 6px;border-radius:3px;font-size:9px}
+.t-r{background:#FCEBEB;color:#A32D2D}.t-g{background:#EAF3DE;color:#3B6D11}.t-b{background:#E6F1FB;color:#185FA5}.t-a{background:#FAEEDA;color:#854F0B}
+
+.conclusion{background:linear-gradient(135deg,#EAF3DE,#E6F1FB);border-radius:10px;padding:14px 18px;margin:12px 0;font-size:12px}
+.conclusion .big{font-size:18px;font-weight:600;color:#042C53}
+.review{background:#FFFBF0;border:1px solid #FAEEDA;border-radius:10px;padding:14px 18px;margin:12px 0;font-size:11px}
+.review b{color:#854F0B}
+
+.footer{text-align:center;font-size:11px;color:#B4B2A9;padding:24px}
+</style>
+</head>
+<body>
+<div class="header">
+<h1>标的分析: 标普500 ETF (sh513500)</h1>
+<div class="meta">框架 v1.5 流程验证 · 博时标普500 QDII · 数据截止 2026-08-07</div>
+</div>
+
+<div class="container">
+
+<!-- 第一步: 宏观定位 -->
+<div class="card">
+<h2>一、宏观定位</h2>
+<div class="grid2">
+<div class="metric"><div class="mv">4.3%</div><div class="ml">中国GDP Q2</div></div>
+<div class="metric"><div class="mv" style="color:#A32D2D">49.2</div><div class="ml">中国PMI(收缩)</div></div>
+<div class="metric"><div class="mv">1.71%</div><div class="ml">中国10Y国债</div></div>
+<div class="metric"><div class="mv" style="color:#3B6D11">6.80</div><div class="ml">USDCNY(升值)</div></div>
+<div class="metric"><div class="mv" style="color:#3B6D11">97.0</div><div class="ml">DXY(弱美元)</div></div>
+</div>
+<table>
+<tr><th>周期</th><th>判断</th><th>对标普500影响</th></tr>
+<tr><td>中国经济</td><td>弱收缩 (GDP 4.3%, PMI<50)</td><td><span class="tag t-g">间接利好</span> 内需弱→资金外溢至QDII</td></tr>
+<tr><td>信用周期</td><td>弱宽信用(社融7.4%↓)</td><td><span class="tag t-a">中性</span> 不影响美股权益</td></tr>
+<tr><td>美联储/美元</td><td>美元走弱(DXY 97), 降息预期</td><td><span class="tag t-g">直接利好</span> 弱美元→新兴市场+全球风险偏好↑</td></tr>
+<tr><td>人民币汇率</td><td>USDCNY 6.80, 升值通道</td><td><span class="tag t-r">汇率侵蚀</span> 人民币升值1%=QDII收益减1%</td></tr>
+<tr><td>中美利差</td><td>-2.5%(收窄中)</td><td><span class="tag t-g">边际改善</span> 利差收窄→CNY升值→但QDII的人民币回报受压缩</td></tr>
+</table>
+<p style="font-size:11px;color:#888780;margin-top:8px">
+<b>核心矛盾:</b> 弱美元利好美股(+)，但人民币升值压缩QDII人民币计价回报(-)。当前USDCNY 6.80较年初7.30已升值6.8%，意味着过去1年标普500的人民币回报被汇率吞噬约7个百分点。
+</p>
+</div>
+
+<!-- 第二步: 选标的理由 -->
+<div class="card">
+<h2>二、选标的理由</h2>
+<table>
+<tr><th>维度</th><th>数据</th><th>判断</th></tr>
+<tr><td>SAA权重</td><td>23% (方案B最大单一配置)</td><td>核心底仓，不可替代</td></tr>
+<tr><td>夏普比率</td><td>0.58 (全资产池最高，A股最高0.33)</td><td>风险调整收益最优</td></tr>
+<tr><td>与A股相关性</td><td>0.14 (几乎独立)</td><td>分散化价值显著</td></tr>
+<tr><td>最大回撤</td><td>33.9% (vs A股普遍 50%+)</td><td>波动可控</td></tr>
+<tr><td>1年回报</td><td>+23.9% (人民币计价, 含汇率)</td><td>显著跑赢沪深300(+13.1%)</td></tr>
+<tr><td>MTD回报</td><td>+7.1% (8月至今)</td><td>短期动能强</td></tr>
+</table>
+</div>
+
+<!-- 第三步: TAA评分 -->
+<div class="card">
+<h2>三、TAA五维对比评分</h2>
+<table>
+<tr><th>维度</th><th>组合整体</th><th>标普500 ETF 特判</th><th>偏离建议</th></tr>
+<tr>
+<td>宏观</td><td>+0 (中性)</td>
+<td><span class="tag t-g">+1</span> 弱美元+全球风险偏好↑</td>
+<td>宏观环境偏有利，但汇率是负向因子</td>
+</tr>
+<tr>
+<td>估值</td><td>-1 (偏贵)</td>
+<td><span class="tag t-a">±0</span> 标普500 PE约22x, 自身不便宜但相对A股合理</td>
+<td>A股更贵→QDII相对吸引力上升</td>
+</tr>
+<tr>
+<td>技术</td><td>-1 (偏空)</td>
+<td><span class="tag t-g">+0.5</span> 23.9%年涨幅+MTD7.1%, 趋势向上</td>
+<td>技术面强于A股</td>
+</tr>
+<tr>
+<td>资金</td><td>+1 (偏多)</td>
+<td><span class="tag t-g">+1</span> QDII额度稀缺性+全球资金流向美股</td>
+<td>结构性资金支撑</td>
+</tr>
+<tr>
+<td>政策</td><td>+2 (极强)</td>
+<td><span class="tag t-a">±0</span> 中国政策利好国内科技, 不影响美股</td>
+<td>无直接影响</td>
+</tr>
+<tr style="background:#F0F4F8;font-weight:500">
+<td><b>加权对比</b></td>
+<td><b>+0.15</b></td>
+<td><b>+0.50</b> (1×0.25+0×0.25+0.5×0.15+1×0.15+0×0.20)</td>
+<td><span class="tag t-g">标普500优于组合整体</span></td>
+</tr>
+</table>
+</div>
+
+<!-- 第四步: SAA对照 -->
+<div class="card">
+<h2>四、SAA对照与偏差评估</h2>
+<table>
+<tr><th>项目</th><th>SAA目标</th><th>当前假设配置</th><th>偏离</th></tr>
+<tr><td>标普500 ETF</td><td>23%</td><td>假设 23%</td><td><span class="tag t-g">±0</span></td></tr>
+<tr><td>触发TAA调整?</td><td>偏离>±5%</td><td>未触发</td><td>—</td></tr>
+</table>
+<div class="conclusion">
+<div class="big">维持 SAA 标配 23%</div>
+<p style="margin-top:4px">
+TAA评分 +0.50 优于组合整体(+0.15)，但未达到+1.0触发阈值，无需增配。
+弱美元(+)、强趋势(+)、汇率侵蚀(-)形成多空对冲格局，维持现仓位最为稳健。
+</p>
+</div>
+</div>
+
+<!-- 第五步: 风险提示 -->
+<div class="card">
+<h2>五、风险与关注点</h2>
+<table>
+<tr><th>风险</th><th>概率</th><th>影响</th><th>应对</th></tr>
+<tr><td>人民币加速升值(CNY→6.50)</td><td><span class="tag t-a">中</span></td><td>高(收益压缩~5%)</td><td>关注中美利差变化, 利差<1%时评估</td></tr>
+<tr><td>美联储意外加息</td><td><span class="tag t-r">低</span></td><td>高(美股回调10%+)</td><td>关注FOMC点阵图+CPI数据</td></tr>
+<tr><td>美股估值回调</td><td><span class="tag t-a">中</span></td><td>中(回调5-10%)</td><td>PE>25x时考虑减仓</td></tr>
+<tr><td>QDII额度限制</td><td><span class="tag t-r">低</span></td><td>低(流动性风险)</td><td>关注溢价/折价率</td></tr>
+<tr><td>中美关系恶化</td><td><span class="tag t-r">低</span></td><td>高(金融脱钩风险)</td><td>地缘事件发生后立即评估</td></tr>
+</table>
+</div>
+
+<!-- 第六步: 框架复盘 -->
+<div class="review">
+<b>🔍 框架复盘 (v1.5)</b><br><br>
+<table>
+<tr><th>复盘维度</th><th>发现</th><th>升级建议</th></tr>
+<tr><td>框架覆盖</td><td>「汇率风险」在TAA评分中权重不足。标普500 QDII的人民币回报受USDCNY显著影响。</td><td>在TAA中为跨境资产单独加「汇率」子维度(权重5%)</td></tr>
+<tr><td>指标有效</td><td>PE分位(87%)对A股的偏空信号在本次分析中验证有效，推动我们更看好QDII。</td><td>维持</td></tr>
+<tr><td>阈值合理</td><td>TAA +0.50未触发+1.0调整阈值，但已明显优于组合整体。阈值是否过宽？</td><td>考虑增设「相对强度」维度: 标的评分 vs 组合评分差值>0.5时触发关注</td></tr>
+<tr><td>数据可得</td><td>标普500 K线/PE/汇率数据均可获取(Wind+SQLite)。QDII溢价率数据缺失。</td><td>接入Wind获取ETF折溢价率</td></tr>
+<tr><td>决策质量</td><td>本次分析结论「维持标配23%」可在下季度验证。</td><td>Q3末回测验证</td></tr>
+</table>
+</div>
+
+<div class="footer">投研体系 v1.5 · 标的层分析 · 2026-08-09</div>
+
+</div>
+</body>
+</html>

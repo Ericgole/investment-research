@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>标的分析 · 黄金ETF + 信用债</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,"Microsoft YaHei",sans-serif;background:#f0f2f5;color:#1a1a1a;line-height:1.8}
+.header{background:linear-gradient(135deg,#8B6914,#C4A574);color:#fff;padding:20px 32px}
+.header h1{font-size:17px;font-weight:500}
+.header .meta{font-size:11px;color:#FAEEDA;margin-top:4px}
+.container{max-width:1000px;margin:0 auto;padding:20px}
+.card{background:#fff;border-radius:12px;border:0.5px solid #E8ECF1;margin:14px 0;padding:16px 20px}
+.card h2{font-size:14px;color:#042C53;border-bottom:0.5px solid #F0F2F5;padding-bottom:8px;margin-bottom:12px}
+.grid2{display:flex;gap:12px;flex-wrap:wrap}
+.metric{flex:1;min-width:140px;background:#F8F9FB;border-radius:8px;padding:12px;text-align:center;border:0.5px solid #E8ECF1}
+.metric .mv{font-size:20px;font-weight:600;color:#042C53}
+.metric .ml{font-size:10px;color:#888780;margin-top:3px}
+table{width:100%;font-size:11px;border-collapse:collapse;margin:8px 0}
+th{background:#F1F5F9;padding:6px 8px;text-align:left;font-weight:500;font-size:10px;color:#5F5E5A}
+td{padding:5px 8px;border-bottom:0.5px solid #F0F2F5}
+.tag{display:inline-block;padding:1px 6px;border-radius:3px;font-size:9px}
+.t-r{background:#FCEBEB;color:#A32D2D}.t-g{background:#EAF3DE;color:#3B6D11}.t-b{background:#E6F1FB;color:#185FA5}.t-a{background:#FAEEDA;color:#854F0B}
+.conclusion{background:linear-gradient(135deg,#FAEEDA,#EAF3DE);border-radius:10px;padding:14px 18px;margin:12px 0;font-size:12px}
+.conclusion .big{font-size:18px;font-weight:600;color:#854F0B}
+.divider{height:2px;background:#F0F2F5;margin:24px 0}
+.footer{text-align:center;font-size:11px;color:#B4B2A9;padding:24px}
+</style>
+</head>
+<body>
+<div class="header">
+<h1>标的分析: 黄金ETF + 信用债 · SAA核心配置</h1>
+<div class="meta">框架 v1.6 · 华安黄金ETF(518880) 21% + 信用债 27% · 数据截止 2026-08-07</div>
+</div>
+<div class="container">
+
+<!-- ===== 黄金 ETF ===== -->
+<div class="card">
+<h2>黄金 ETF (sh518880) · SAA 权重 21%</h2>
+
+<h3>一、宏观定位</h3>
+<div class="grid2">
+<div class="metric"><div class="mv" style="color:#3B6D11">1.0%</div><div class="ml">CPI同比(低通胀)</div></div>
+<div class="metric"><div class="mv">1.71%</div><div class="ml">10Y国债(低利率)</div></div>
+<div class="metric"><div class="mv" style="color:#3B6D11">97.0</div><div class="ml">DXY(弱美元)</div></div>
+<div class="metric"><div class="mv">6.80</div><div class="ml">USDCNY(升值)</div></div>
+<div class="metric"><div class="mv" style="color:#3B6D11">+20.8%</div><div class="ml">1年回报</div></div>
+</div>
+<table>
+<tr><th>驱动因子</th><th>当前状态</th><th>对黄金影响</th></tr>
+<tr><td>美元指数</td><td>DXY 97.0 (弱势)</td><td><span class="tag t-g">+利好</span> 弱美元=黄金涨</td></tr>
+<tr><td>实际利率</td><td>10Y 1.71% - CPI 1.0% = 0.71%</td><td><span class="tag t-g">+利好</span> 低实际利率=黄金持有成本低</td></tr>
+<tr><td>通胀环境</td><td>CPI 1.0% (低通胀)</td><td><span class="tag t-a">中性偏弱</span> 通胀保护需求低</td></tr>
+<tr><td>地缘风险</td><td>中美关系+全球不确定性</td><td><span class="tag t-g">+利好</span> 避险需求支撑</td></tr>
+<tr><td>人民币汇率</td><td>CNY升值</td><td><span class="tag t-r">-利空</span> 黄金以美元计价，CNY升值压缩人民币回报</td></tr>
+</table>
+
+<h3>二、TAA评分 vs 组合</h3>
+<table>
+<tr><th>维度</th><th>组合</th><th>黄金特判</th><th>理由</th></tr>
+<tr><td>宏观</td><td>+0</td><td><span class="tag t-g">+1</span></td><td>弱美元+低实际利率双驱动</td></tr>
+<tr><td>估值</td><td>-1</td><td><span class="tag t-a">±0</span></td><td>20.8%年涨幅不便宜，但5Y 80%分位合理</td></tr>
+<tr><td>技术</td><td>-1</td><td><span class="tag t-g">+0.5</span></td><td>趋势向上，MTD +4.1%，与A股负相关</td></tr>
+<tr><td>资金</td><td>+1</td><td><span class="tag t-g">+1</span></td><td>全球央行购金+地缘避险需求</td></tr>
+<tr><td>政策</td><td>+2</td><td><span class="tag t-a">±0</span></td><td>中国政策不影响黄金定价</td></tr>
+</table>
+
+<div class="conclusion">
+<div class="big">维持 SAA 标配 21%，评分 +0.50</div>
+<p style="margin-top:4px">
+黄金在 SAA 中的核心角色是<b>不相关分散化</b>（与沪深300相关系数~0），而非收益来源。
+弱美元+低利率当前利好黄金，但估值不便宜。维持标配，不增减。
+</p>
+</div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ===== 信用债 ===== -->
+<div class="card">
+<h2>信用债 · SAA 权重 27%（最大底仓）</h2>
+
+<h3>一、宏观定位</h3>
+<div class="grid2">
+<div class="metric"><div class="mv">2.4%</div><div class="ml">AAA信用债收益率</div></div>
+<div class="metric"><div class="mv" style="color:#A32D2D">0.4bp</div><div class="ml">AA-AAA利差(极低)</div></div>
+<div class="metric"><div class="mv">1.71%</div><div class="ml">10Y国债</div></div>
+<div class="metric"><div class="mv">0.69%</div><div class="ml">信用溢价(AAA-国债)</div></div>
+<div class="metric"><div class="mv" style="color:#A32D2D">-4.0pp</div><div class="ml">M1-M2剪刀差</div></div>
+</div>
+<table>
+<tr><th>因素</th><th>当前</th><th>对信用债影响</th></tr>
+<tr><td>信用环境</td><td>利差 0.4bp(历史<10%分位)</td><td><span class="tag t-r">-偏空</span> 利差收窄空间极小，反弹风险大</td></tr>
+<tr><td>利率环境</td><td>10Y 1.71% 低位</td><td><span class="tag t-a">中性</span> 票息收益低但利率上行风险小</td></tr>
+<tr><td>信用质量</td><td>GDP放缓+PMI收缩</td><td><span class="tag t-r">-警惕</span> 经济下行→违约风险上升</td></tr>
+<tr><td>流动性</td><td>DR007偏松</td><td><span class="tag t-g">+利好</span> 充裕流动性支撑债市</td></tr>
+<tr><td>票息收益</td><td>AAA 2.4% vs CPI 1.0%</td><td><span class="tag t-a">中性</span> 实际收益1.4%，勉强覆盖通胀</td></tr>
+</table>
+
+<h3>二、TAA评分</h3>
+<table>
+<tr><th>维度</th><th>组合</th><th>信用债特判</th><th>理由</th></tr>
+<tr><td>宏观</td><td>+0</td><td><span class="tag t-a">±0</span></td><td>经济偏弱不利信用，但流动性偏松有利</td></tr>
+<tr><td>估值</td><td>-1</td><td><span class="tag t-r">-0.5</span></td><td>信用利差极低(0.4bp)，超额收益空间极小</td></tr>
+<tr><td>技术</td><td>-1</td><td><span class="tag t-a">±0</span></td><td>债市波动低，趋势中性</td></tr>
+<tr><td>资金</td><td>+1</td><td><span class="tag t-g">+0.5</span></td><td>理财资金+银行配置需求稳定</td></tr>
+<tr><td>政策</td><td>+2</td><td><span class="tag t-g">+1</span></td><td>降准降息预期直接利好债市</td></tr>
+</table>
+
+<div class="conclusion">
+<div class="big">维持 SAA 标配 27%，评分 +0.20</div>
+<p style="margin-top:4px">
+信用债是组合最大的底仓，承担提供稳定票息+平滑波动的角色。
+当前票息 2.4% 虽低但稳定，利率上行风险可控(央行偏松)。主要警惕：利差极低→反弹时价格承压。
+<b>建议：偏好高评级(AAA) + 短久期(1-3Y)，减少信用下沉。</b>
+</p>
+</div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ===== 组合总览 ===== -->
+<div class="card">
+<h2>SAA 组合全貌 · 标的分析汇总</h2>
+<table>
+<tr><th>资产</th><th>权重</th><th>TAA评分</th><th>vs组合</th><th>建议</th><th>关键风险</th></tr>
+<tr><td>标普500 ETF</td><td>23%</td><td><span class="tag t-g">+0.50</span></td><td>+0.35</td><td>维持</td><td>CNY升值+美股估值</td></tr>
+<tr><td>信用债</td><td>27%</td><td><span class="tag t-a">+0.20</span></td><td>+0.05</td><td>维持</td><td>利差极低反弹</td></tr>
+<tr><td>黄金 ETF</td><td>21%</td><td><span class="tag t-g">+0.50</span></td><td>+0.35</td><td>维持</td><td>实际利率回升</td></tr>
+<tr><td>创业板 ETF</td><td>9%</td><td>待分析</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><td>沪深300</td><td>3%</td><td>待分析</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><td>利率债</td><td>9%</td><td>待分析</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><td>现金/货基</td><td>10%</td><td>待分析</td><td>—</td><td>—</td><td>—</td></tr>
+</table>
+<div class="conclusion" style="margin-top:12px">
+<div class="big">3/7 资产已分析 · 均维持SAA标配 · 无TAA偏离触发</div>
+<p style="margin-top:4px">所有已分析标的 TAA 评分均为正但未突破 +1.0 阈值。组合整体 +0.15，市场处于「不温不火」中的观望期。</p>
+</div>
+</div>
+
+<div class="footer">投研体系 v1.6 · 标的层分析 · 黄金+信用债 · 2026-08-09</div>
+</div>
+</body>
+</html>

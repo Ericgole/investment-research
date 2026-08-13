@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>专题全集 · 保险资金 v2.0</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<style>
+:root{--bg:#F5F5F7;--t:#1d1d1f;--t2:#6e6e73;--t3:#aeaeb2;--bdr:rgba(0,0,0,0.08);--blue:#007AFF;--gn:#34C759;--rd:#FF3B30;--am:#FF9500;--pu:#AF52DE}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,"Microsoft YaHei",sans-serif;background:var(--bg);color:var(--t);line-height:1.5}
+.wrap{max-width:1100px;margin:0 auto;padding:20px}
+
+.hd{padding-bottom:14px;border-bottom:0.5px solid var(--bdr);margin-bottom:18px}
+.hd .brand{font-size:20px;font-weight:700}
+.hd .brand span{font-size:11px;color:var(--t3);margin-left:8px}
+.hd .nav{display:flex;gap:8px;margin-top:8px}
+.hd .nav a{font-size:11px;color:var(--blue);text-decoration:none}
+.hd .nav a:hover{text-decoration:underline}
+
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px}
+.card{background:rgba(255,255,255,0.78);border-radius:12px;border:0.5px solid var(--bdr);padding:14px 16px;cursor:pointer;transition:all .2s}
+.card:hover{box-shadow:0 2px 12px rgba(0,0,0,0.06);transform:translateY(-1px)}
+.card .cr{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.card .cn{font-size:13px;font-weight:600}
+.card .cs{font-size:10px;color:var(--t3)}
+.card .cd{display:none;margin-top:8px;font-size:11px;color:var(--t2);line-height:1.8;border-top:0.5px solid var(--bdr);padding-top:8px}
+.card.open .cd{display:block}
+.pill{display:inline-flex;padding:2px 7px;border-radius:20px;font-size:9px;font-weight:500}
+.pg{background:rgba(52,199,89,0.08);color:var(--gn)}.pr{background:rgba(255,59,48,0.08);color:var(--rd)}
+.pa{background:rgba(255,149,0,0.08);color:var(--am)}.pb{background:rgba(0,122,255,0.08);color:var(--blue)}
+.chart-box{width:100%;height:260px;margin:12px 0}
+
+.foot{text-align:center;font-size:9px;color:var(--t3);padding:24px}
+</style></head><body><div class="wrap">
+
+<div class="hd">
+  <div class="brand">专题全集<span>75 项 · 保险资金 v2.0</span></div>
+  <div class="nav"><a href="research-portal.html">← 研究门户</a> <a href="投研专题_数据驱动版.html">完整版 (⑨模块)</a></div>
+</div>
+
+<div style="margin:12px 0;font-size:12px;font-weight:600">保险专属专题</div>
+<div class="cards">
+  <div class="card open" onclick="this.classList.toggle('open')">
+    <div class="cr"><span class="cn">保险1: 利率风险久期缺口</span><span class="pill pg">DB计算</span></div>
+    <div class="cs">评分 -1 · SQLite alm_metrics 7Q 跟踪</div>
+    <div class="cd">
+      久期缺口 -3.2 年 (资产 3.8-负债 7.0) · 利率下行 50bp → 偿付 -8pp<br/>
+      操作: 增配 30Y 国债 10% 缩缺口至 2.5 年 · 每季缩 0.15 年趋势
+    </div>
+  </div>
+  <div class="card" onclick="this.classList.toggle('open')">
+    <div class="cr"><span class="cn">保险2: C-ROSS II 偿付能力敏感性</span><span class="pill pg">DB计算</span></div>
+    <div class="cs">评分 +0.5 · 综合 215% 核心 180%</div>
+    <div class="cd">
+      权益每 +1% → 偿付 -0.8% · 压力测试 (权益-20%+利率+50bp)=187% 通过<br/>
+      风险因子占用 65% (上限 70%)
+    </div>
+  </div>
+</div>
+
+<div style="margin:16px 0 12px;font-size:12px;font-weight:600">宏观研判 · 核心专题 (8 项深度结构化)</div>
+<div class="cards">
+  <div class="card" onclick="this.classList.toggle('open')"><div class="cr"><span class="cn">宏观1: GDP 季度分解</span><span class="pill pr">-0.5</span></div><div class="cd">Q2 4.3% · 15 年均值 5.2% · 25% 分位 · 三驾马车拆解</div></div>
+  <div class="card" onclick="this.classList.toggle('open')"><div class="cr"><span class="cn">宏观2: PMI 分项解读</span><span class="pill pr">-0.5</span></div><div class="cd">7 月 49.2 急跌 1.1pp · 新订单 48.5 · 高技术 53.3 亮点</div></div>
+  <div class="card" onclick="this.classList.toggle('open')"><div class="cr"><span class="cn">宏观5: CPI 通胀分析</span><span class="pill pa">+0.5</span></div><div class="cd">1.0% · 60+ 月 <2% · 通缩化结构性问题</div></div>
+  <div class="card" onclick="this.classList.toggle('open')"><div class="cr"><span class="cn">宏观8: M1-M2 剪刀差</span><span class="pill pr">-1.0</span></div><div class="cd">-4.0pp · 改善中 · 领先 A 股 6 月</div></div>
+  <div class="card" onclick="this.classList.toggle('open')"><div class="cr"><span class="cn">宏观9: 社融结构</span><span class="pill pr">-0.5</span></div><div class="cd">7.4% · 贷款占比 70→51% · 政府债 31%</div></div>
+  <div class="card" onclick="this.classList.toggle('open')"><div class="cr"><span class="cn">宏观10: 信用周期</span><span class="pill">0</span></div><div class="cd">紧信用→弱宽信用 36 月 · 距转正差 2pp</div></div>
+  <div class="card" onclick="this.classList.toggle('open')"><div class="cr"><span class="cn">宏观14: 流动性 DR007</span><span class="pill pg">+1.0</span></div><div class="cd">10Y 1.71% (15 年 5%分位) · 超低利率 24+ 月</div></div>
+  <div class="card" onclick="this.classList.toggle('open')"><div class="cr"><span class="cn">宏观15: 美元周期</span><span class="pill pg">+1.0</span></div><div class="cd">DXY 97 (−15%) · 弱美元 · 目标 90-95</div></div>
+</div>
+
+<div style="margin:16px 0 12px;font-size:12px;font-weight:600">市场估值 · 技术动量 (核心专题)</div>
+<div class="cards">
+  <div class="card" onclick="this.classList.toggle('open')"><div class="cr"><span class="cn">估值1: PE/PB 分位</span><span class="pill pr">-1.0</span></div><div class="cd">沪深 300 PE 14.4x (95%分位) · 科创 50 196x (98%分位)</div></div>
+  <div class="card" onclick="this.classList.toggle('open')"><div class="cr"><span class="cn">估值5: ERP 风险溢价</span><span class="pill pg">+0.5</span></div><div class="cd">5.3% (65%分位) · 偏多</div></div>
+  <div class="card" onclick="this.classList.toggle('open')"><div class="cr"><span class="cn">技术1-4: 均线/MACD/ADX/RSI</span><span class="pill pr">偏空</span></div><div class="cd">均线空头 · ADX 20.4 · 反弹量不足</div></div>
+</div>
+
+<div style="margin:16px 0 12px;font-size:12px;font-weight:600">资金流向 · 政策环境</div>
+<div class="cards">
+  <div class="card" onclick="this.classList.toggle('open')"><div class="cr"><span class="cn">资金4: 公募仓位</span><span class="pill pr">-0.5</span></div><div class="cd">偏股基金 ~88% · 3Y 75%分位 · 偏高</div></div>
+  <div class="card" onclick="this.classList.toggle('open')"><div class="cr"><span class="cn">资金5: 行业超低配</span><span class="pill pg">+1.0</span></div><div class="cd">电子超配 19.3% · 银行低配 10% · 拥挤风险</div></div>
+  <div class="card" onclick="this.classList.toggle('open')"><div class="cr"><span class="cn">资金7: 两融余额</span><span class="pill pg">+0.5</span></div><div class="cd">去杠杆趋势 · 融资买入占比回落</div></div>
+</div>
+
+<div class="chart-box" id="tp_cov"></div>
+<div class="foot">保险资金投研体系 v2.0 · 专题全集 · 75 项 · 2026-08-09</div>
+</div>
+
+<script>
+var c=echarts.init(document.getElementById('tp_cov'));
+c.setOption({title:{text:'专题覆盖率 (75项)',left:'center',top:4,textStyle:{fontSize:12,fontWeight:600}},
+  grid:{left:55,right:20,top:35,bottom:25},
+  xAxis:{type:'category',data:['技术','宏观','估值','资金','政策','保险'],axisLabel:{fontSize:9,color:'#6e6e73'}},
+  yAxis:{type:'value',max:100,axisLabel:{fontSize:9,color:'#6e6e73'}},
+  series:[{type:'bar',data:[80,61,62,29,0,100],barWidth:'50%',
+    itemStyle:{borderRadius:[4,4,0,0],color:function(p){var v=[80,61,62,29,0,100][p.dataIndex];return v>=80?'#34C759':v>=40?'#007AFF':'#FF3B30';}}},
+    {type:'line',data:[80,61,62,29,0,100],lineStyle:{color:'#AF52DE',width:1.5,type:'dashed'},symbol:'none',label:{show:true,position:'top',fontSize:9,color:'#AF52DE',formatter:'{c}%'}}]
+});
+</script>
+</body></html>

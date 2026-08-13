@@ -1,0 +1,161 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>风险管理看板</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,"Microsoft YaHei",sans-serif;background:#f0f2f5;color:#1a1a1a;line-height:1.8}
+.header{background:linear-gradient(135deg,#A32D2D,#791F1F);color:#fff;padding:20px 32px}
+.header h1{font-size:17px;font-weight:500}
+.container{max-width:1200px;margin:0 auto;padding:20px}
+
+.alert-bar{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+.alert{flex:1;min-width:160px;border-radius:10px;padding:14px;text-align:center;border:0.5px solid #E8ECF1;background:#fff}
+.alert .av{font-size:22px;font-weight:600}
+.alert .al{font-size:10px;color:#888780;margin-top:3px}
+.alert-ok .av{color:#3B6D11}.alert-warn .av{color:#854F0B}.alert-err .av{color:#A32D2D}
+
+.chart-row{display:flex;gap:12px;flex-wrap:wrap;margin:12px 0}
+.cw{flex:1;min-width:360px;height:300px;background:#fff;border-radius:12px;border:0.5px solid #E8ECF1;overflow:hidden}
+
+.card{background:#fff;border-radius:12px;border:0.5px solid #E8ECF1;margin:12px 0;padding:16px 20px}
+.card h2{font-size:14px;color:#042C53;border-bottom:0.5px solid #F0F2F5;padding-bottom:8px;margin-bottom:10px}
+table{width:100%;font-size:11px;border-collapse:collapse}
+th{background:#F1F5F9;padding:6px 8px;text-align:left;font-weight:500;font-size:10px;color:#5F5E5A}
+td{padding:5px 8px;border-bottom:0.5px solid #F0F2F5}
+.tag{display:inline-block;padding:1px 6px;border-radius:3px;font-size:9px}
+.tg{background:#EAF3DE;color:#3B6D11}.tr{background:#FCEBEB;color:#A32D2D}.ta{background:#FAEEDA;color:#854F0B}
+
+.footer{text-align:center;font-size:11px;color:#B4B2A9;padding:24px}
+</style></head><body>
+<div class="header"><h1>风险管理看板</h1><div style="font-size:11px;color:#F7C1C1">框架 v1.6 · 第六章 · VaR/回撤/限额/汇率 · 基于500天SAA组合回测</div></div>
+<div class="container">
+
+<div class="alert-bar">
+<div class="alert alert-ok"><div class="av">-4.82%</div><div class="al">VaR99(10日) · 限额8%</div></div>
+<div class="alert alert-ok"><div class="av">-8.5%</div><div class="al">最大回撤 · 限额30%</div></div>
+<div class="alert alert-ok"><div class="av">35%</div><div class="al">权益总仓位 · 限额60%</div></div>
+<div class="alert alert-warn"><div class="av">27%</div><div class="al">最大单一仓位 · 限额10%</div></div>
+<div class="alert alert-warn"><div class="av">23%</div><div class="al">外汇敞口 · 限额20%</div></div>
+<div class="alert alert-ok"><div class="av">1.48</div><div class="al">组合夏普比率</div></div>
+</div>
+
+<div class="chart-row">
+<div class="cw" id="c_dd"></div>
+<div class="cw" id="c_var"></div>
+</div>
+<div class="chart-row">
+<div class="cw" id="c_risk"></div>
+<div class="cw" id="c_limits"></div>
+</div>
+
+<div class="card"><h2>五类风险监控状态</h2>
+<table>
+<tr><th>风险类型</th><th>指标</th><th>当前值</th><th>预警线</th><th>状态</th></tr>
+<tr><td>市场风险</td><td>VaR(99%,10日) / 最大回撤</td><td>-4.82% / -8.5%</td><td>≤8% / ≤30%</td><td><span class="tag tg">正常</span></td></tr>
+<tr><td>信用风险</td><td>AA-AAA信用利差</td><td>0.4bp</td><td>>50bp</td><td><span class="tag ta">利差极低</span></td></tr>
+<tr><td>流动性风险</td><td>高流动性资产占比</td><td>19% (利率债+现金)</td><td>≥15%</td><td><span class="tag tg">正常</span></td></tr>
+<tr><td>操作风险</td><td>交易记录留痕</td><td>—</td><td>—</td><td><span class="tag tg">人工监控</span></td></tr>
+<tr><td>汇率风险</td><td>QDII敞口</td><td>23% (标普500)</td><td>≤20%</td><td><span class="tag ta">略超标</span></td></tr>
+</table>
+</div>
+
+<div class="card"><h2>持仓风险矩阵</h2>
+<table>
+<tr><th>资产</th><th>权重</th><th>年化波动</th><th>最大回撤</th><th>风险贡献</th></tr>
+<tr><td>沪深300</td><td>3%</td><td>19.9%</td><td><span class='tag tg'>-15.7%</span></td><td>59.7</td></tr>
+<tr><td>创业板</td><td>9%</td><td>37.6%</td><td><span class='tag tg'>-29.1%</span></td><td>338.4</td></tr>
+<tr><td>标普500</td><td>23%</td><td>20.9%</td><td><span class='tag tg'>-24.7%</span></td><td>480.7</td></tr>
+<tr><td>黄金</td><td>21%</td><td>23.8%</td><td><span class='tag tg'>-30.5%</span></td><td>499.8</td></tr>
+</table></div>
+
+<div class="footer">投研体系 v1.6 · 风险管理 · 基于500天历史回测 · 2026-08-09</div>
+</div>
+
+<script>
+var dd_path = [-0.0, -0.1, -0.2, -0.5, -0.4, 0.0, -0.1, -0.1, -0.1, 0.0, 0.0, 0.0, -0.1, 0.0, 0.0, -0.1, -0.2, -0.3, -0.0, 0.0, -0.1, -0.0, 0.0, 0.0, 0.0, -0.2, 0.0, -0.4, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -0.1, -0.4, -0.2, 0.0, 0.0, 0.0, -0.0, -0.3, 0.0, 0.0, 0.0, -0.7, -0.6, -1.0, 0.0, 0.0, 0.0, 0.0, 0.0, -0.7, -1.0, -0.6, 0.0, -0.8, 0.0, -0.2, -0.4, -0.0, -0.9, -1.2, -0.9, -1.0, -0.3, -0.1, 0.0, 0.0, -0.9, -1.4, -2.2, -2.2, -1.9, -3.0, -2.6, -2.0, -1.3, -1.5, -1.0, -0.7, -0.9, -0.9, -1.0, -0.8, -0.7, -0.9, -0.6, -0.9, -0.3, -0.2, -1.0, -0.3, -0.5, -0.3, 0.0, 0.0, 0.0, -0.1, 0.0, -0.4, -0.8, -1.2, -0.0, 0.0, -0.1, -0.3, -0.1, 0.0, -0.2, 0.0, -0.0, -0.0, 0.0, -0.1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -1.4, -4.5, -3.1, -2.2, -3.1, -3.9, -2.4, -2.4, -2.3, -2.3, -2.9, -1.9, -1.9, -2.0, -2.0, -1.3, -1.8, -2.8, -2.4, -2.7, -3.3, -2.7, -2.5, -2.6, -3.1, -3.4, -3.6, -3.5, -4.8, -5.3, -8.5, -7.3, -6.1, -6.6, -6.5, -6.6, -6.9, -5.2, -6.3, -6.2, -6.2, -4.3, -4.8, -4.2, -4.4, -3.7, -3.4, -2.7, -2.8, -2.8, -2.7, -2.6, -2.9, -3.1, -2.9, -3.1, -3.1, -2.9, -2.1, -1.5, -1.6, -1.4, -1.4, -1.1, -1.3, -2.0, -2.5, -2.5, -2.9, -2.8, -2.1, -1.2, -1.5, -1.6, -2.1, -1.3, -1.1, -0.8, -1.0, -1.4, -1.8, -3.3, -2.5, -3.6, -4.4, -3.8, -2.2, -1.9, -1.8, -1.9, -1.9, -3.3, -3.1, -3.4, -3.9, -3.7, -3.6, -3.9, -4.1, -3.4, -3.6, -3.6, -4.1, -3.5, -3.9, -4.6, -4.2, -4.1, -4.3, -5.8, -5.7, -4.4, -4.5, -4.5, -5.3, -4.6, -5.9, -5.5, -6.2, -5.5, -5.5, -4.6, -3.1, -2.6, -2.2];
+var asset_data = {"\u6caa\u6df1300": {"vol": 19.9, "max_dd": -15.7, "weight": 3.0}, "\u521b\u4e1a\u677f": {"vol": 37.6, "max_dd": -29.1, "weight": 9.0}, "\u6807\u666e500": {"vol": 20.9, "max_dd": -24.7, "weight": 23.0}, "\u9ec4\u91d1": {"vol": 23.8, "max_dd": -30.5, "weight": 21.0}};
+var asset_names = Object.keys(asset_data);
+var chk = {"var": true, "equity": true, "single": false, "fx": false};
+var p = {"var_95_1d": -0.81, "var_99_10d": -4.82, "var_99_1d": -1.53, "max_dd": -8.5, "ann_return": 14.0, "ann_vol": 9.5, "sharpe": 1.48};
+var l = {"equity_total": 35, "single_max": 27, "fx_exposure": 23, "credit_spread": 0.4};
+
+// Chart 1: Drawdown
+(function() {
+  var c = echarts.init(document.getElementById('c_dd'));
+  c.setOption({
+    title: {text: '组合回撤路径 (250交易日)', left: 'center', top: 8, textStyle: {fontSize: 13, color: '#042C53'}},
+    tooltip: {trigger: 'axis'},
+    grid: {left: 55, right: 20, top: 45, bottom: 25},
+    xAxis: {type: 'category', data: dd_path.map(function(_,i){return i;}), axisLabel: {fontSize: 9}, show: false},
+    yAxis: {type: 'value', name: '回撤%', axisLabel: {fontSize: 9}, max: 0},
+    series: [{type: 'line', data: dd_path, lineStyle: {width: 1.5, color: '#A32D2D'}, symbol: 'none',
+      areaStyle: {color: 'rgba(163,45,45,0.1)'},
+      markLine: {silent: true, data: [
+        {yAxis: -15, label: {formatter: '预警线 -15%', fontSize: 9}, lineStyle: {color: '#854F0B', type: 'dashed'}},
+        {yAxis: -30, label: {formatter: '硬限额 -30%', fontSize: 9}, lineStyle: {color: '#A32D2D', type: 'dashed'}}
+      ]}
+    }]
+  });
+})();
+
+// Chart 2: VaR distribution
+(function() {
+  var c = echarts.init(document.getElementById('c_var'));
+  c.setOption({
+    title: {text: 'VaR风险预算', left: 'center', top: 8, textStyle: {fontSize: 13, color: '#042C53'}},
+    series: [{
+      type: 'gauge', min: -10, max: 0, startAngle: 210, endAngle: -30,
+      axisLine: {lineStyle: {width: 14, color: [[0.2, '#3B6D11'], [0.5, '#185FA5'], [0.8, '#854F0B'], [1, '#A32D2D']]}},
+      pointer: {length: '60%', width: 5, itemStyle: {color: 'auto'}},
+      detail: {valueAnimation: true, formatter: '{value}%', fontSize: 20, offsetCenter: [0, '60%']},
+      data: [{value: p.var_99_10d, name: 'VaR 99% 10D'}],
+      axisTick: {show: false}, splitLine: {show: false}, axisLabel: {show: false}
+    }]
+  });
+})();
+
+// Chart 3: Asset risk matrix
+(function() {
+  var c = echarts.init(document.getElementById('c_risk'));
+  c.setOption({
+    title: {text: '资产风险对比', left: 'center', top: 8, textStyle: {fontSize: 13, color: '#042C53'}},
+    tooltip: {trigger: 'axis'},
+    legend: {bottom: 0, data: ['年化波动', '最大回撤'], textStyle: {fontSize: 9}, itemWidth: 10, itemHeight: 6},
+    grid: {left: 55, right: 20, top: 45, bottom: 30},
+    xAxis: {type: 'category', data: asset_names, axisLabel: {fontSize: 9, rotate: 20}},
+    yAxis: {type: 'value', name: '%', axisLabel: {fontSize: 9}},
+    series: [
+      {name: '年化波动', type: 'bar', data: asset_names.map(function(n){return asset_data[n].vol;}), barWidth: '40%',
+        itemStyle: {color: '#185FA5', borderRadius: [3,3,0,0]}},
+      {name: '最大回撤', type: 'bar', data: asset_names.map(function(n){return Math.abs(asset_data[n].max_dd);}), barWidth: '40%',
+        itemStyle: {color: '#A32D2D', borderRadius: [3,3,0,0]}}
+    ]
+  });
+})();
+
+// Chart 4: Limit compliance
+(function() {
+  var c = echarts.init(document.getElementById('c_limits'));
+  var limits = [
+    {name: 'VaR <8%', actual: Math.abs(p.var_99_10d), limit: 8, ok: chk.var},
+    {name: '权益 <60%', actual: l.equity_total, limit: 60, ok: chk.equity},
+    {name: '单仓 <10%', actual: l.single_max, limit: 10, ok: chk.single},
+    {name: '外敞 <20%', actual: l.fx_exposure, limit: 20, ok: chk.fx}
+  ];
+  c.setOption({
+    title: {text: '限额合规检查', left: 'center', top: 8, textStyle: {fontSize: 13, color: '#042C53'}},
+    tooltip: {trigger: 'axis'},
+    legend: {bottom: 0, data: ['实际值', '限额'], textStyle: {fontSize: 9}, itemWidth: 10, itemHeight: 6},
+    grid: {left: 55, right: 20, top: 45, bottom: 30},
+    xAxis: {type: 'category', data: limits.map(function(d){return d.name;}), axisLabel: {fontSize: 9}},
+    yAxis: {type: 'value', axisLabel: {fontSize: 9}},
+    series: [
+      {name: '实际值', type: 'bar', data: limits.map(function(d){return d.actual;}), barWidth: '40%',
+        itemStyle: {color: function(p){return limits[p.dataIndex].ok ? '#3B6D11' : '#854F0B';}, borderRadius: [3,3,0,0]}},
+      {name: '限额', type: 'bar', data: limits.map(function(d){return d.limit;}), barWidth: '40%',
+        itemStyle: {color: '#E8ECF1', borderRadius: [3,3,0,0]}}
+    ]
+  });
+})();
+</script></body></html>

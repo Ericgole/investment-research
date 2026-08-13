@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>研究质量仪表盘 · 保险资金 v2.0</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<style>
+:root{--bg:#F5F5F7;--t:#1d1d1f;--t2:#6e6e73;--t3:#aeaeb2;--blue:#007AFF;--gn:#34C759;--rd:#FF3B30;--am:#FF9500;--pu:#AF52DE;--bdr:rgba(0,0,0,0.08)}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,"Microsoft YaHei",sans-serif;background:var(--bg);color:var(--t);line-height:1.5}
+.wrap{max-width:900px;margin:0 auto;padding:20px}
+.hd{padding-bottom:12px;border-bottom:0.5px solid var(--bdr);margin-bottom:16px;display:flex;justify-content:space-between;align-items:center}
+.hd .brand{font-size:18px;font-weight:700}.hd a{font-size:11px;color:var(--blue);text-decoration:none}
+.card{background:rgba(255,255,255,0.78);border-radius:14px;border:0.5px solid var(--bdr);padding:18px;margin-bottom:14px;box-shadow:0 2px 12px rgba(0,0,0,0.04)}
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.kpi-box{background:rgba(255,255,255,0.78);border-radius:12px;border:0.5px solid var(--bdr);padding:14px;text-align:center}
+.kpi-box .kv{font-size:24px;font-weight:700}.kpi-box .kl{font-size:10px;color:var(--t2);margin-top:2px}
+.tbl{width:100%;font-size:11px;border-collapse:collapse}
+.tbl th{text-align:left;padding:6px 10px;font-size:9px;color:var(--t3);border-bottom:0.5px solid var(--bdr)}
+.tbl td{padding:7px 10px;border-bottom:0.5px solid rgba(0,0,0,0.04)}
+.pill{display:inline-flex;padding:2px 7px;border-radius:20px;font-size:9px;font-weight:500}
+.pg{background:rgba(52,199,89,0.08);color:var(--gn)}.pr{background:rgba(255,59,48,0.08);color:var(--rd)}
+.pa{background:rgba(255,149,0,0.08);color:var(--am)}.pb{background:rgba(0,122,255,0.08);color:var(--blue)}
+.chart-box{width:100%;height:280px}
+.foot{text-align:center;font-size:9px;color:var(--t3);padding:20px}
+</style></head><body><div class="wrap">
+
+<div class="hd">
+  <div class="brand">研究质量仪表盘</div>
+  <div><a href="research-portal.html">← 研究门户</a> | <a href="topic-detail.html">专题溯源</a></div>
+</div>
+
+<div class="kpi-row">
+  <div class="kpi-box"><div class="kv" style="color:var(--gn)">78%</div><div class="kl">总体命中率</div></div>
+  <div class="kpi-box"><div class="kv" style="color:var(--gn)">2.3:1</div><div class="kl">盈亏比</div></div>
+  <div class="kpi-box"><div class="kv" style="color:var(--am)">+0.12pp</div><div class="kl">平均偏差</div></div>
+  <div class="kpi-box"><div class="kv" style="color:var(--gn)">+0.85pp</div><div class="kl">超额收益</div></div>
+</div>
+
+<div class="card">
+  <h3 style="font-size:13px;margin-bottom:10px;color:var(--pu)">各维度命中率排名</h3>
+  <table class="tbl">
+    <thead><tr><th>维度</th><th>命中率</th><th>偏差</th><th>排名</th><th>校正</th></tr></thead>
+    <tbody>
+      <tr><td>宏观研判</td><td><span class="pill pg">7/10</span></td><td>+0.3</td><td>#2</td><td>→ 中性校准</td></tr>
+      <tr><td>市场估值</td><td><span class="pill pg">8/10</span></td><td>-0.1</td><td>#1</td><td>→ 维持（最优）</td></tr>
+      <tr><td>政策环境</td><td><span class="pill pa">6/10</span></td><td>+0.5</td><td>#4</td><td>→ 下调权重</td></tr>
+      <tr><td>资金流向</td><td><span class="pill pg">8/10</span></td><td>0.0</td><td>#1</td><td>→ 维持</td></tr>
+      <tr><td>技术动量</td><td><span class="pill pr">5/10</span></td><td>-0.3</td><td>#5</td><td>→ 保险低权维持</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="card">
+  <h3 style="font-size:13px;margin-bottom:10px;color:var(--pu)">专题偏差热力图</h3>
+  <div class="chart-box" id="rq_chart"></div>
+</div>
+
+<div class="card">
+  <h3 style="font-size:13px;margin-bottom:10px;color:var(--pu)">Top 5 驱动专题 · 近期贡献</h3>
+  <table class="tbl">
+    <thead><tr><th>专题</th><th>维度</th><th>评分</th><th>TAA贡献</th><th>近期准确率</th></tr></thead>
+    <tbody>
+      <tr><td>PE/PB 历史分位</td><td>市场估值</td><td><span class="pill pr">-1.0</span></td><td><span class="pill pr">-0.120</span></td><td>8/10</td></tr>
+      <tr><td>大基金三期</td><td>政策环境</td><td><span class="pill pg">+2.0</span></td><td><span class="pill pg">+0.200</span></td><td>7/10</td></tr>
+      <tr><td>M1-M2 剪刀差</td><td>宏观研判</td><td><span class="pill pr">-1.0</span></td><td><span class="pill pr">-0.060</span></td><td>7/10</td></tr>
+      <tr><td>流动性 DR007</td><td>宏观研判</td><td><span class="pill pg">+1.0</span></td><td><span class="pill pg">+0.045</span></td><td>8/10</td></tr>
+      <tr><td>公募行业超低配</td><td>资金流向</td><td><span class="pill pg">+1.0</span></td><td><span class="pill pg">+0.060</span></td><td>6/10</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="foot">保险资金投研体系 v2.0 · 研究质量追踪 · 2026-08-09</div>
+</div>
+
+<script>
+var c1=echarts.init(document.getElementById('rq_chart'));
+c1.setOption({title:{text:'专题偏差热力',left:'center',top:4,textStyle:{fontSize:12,fontWeight:600}},
+  tooltip:{trigger:'item'},grid:{left:65,right:30,top:35,bottom:25},
+  xAxis:{type:'category',data:['PE分位','大基金','M1M2','DR007','超低配','PMI','GDP','均线','MACD','ADX'],axisLabel:{fontSize:9,color:'#6e6e73',rotate:30},axisLine:{show:false},axisTick:{show:false}},
+  yAxis:{type:'value',axisLabel:{fontSize:9},splitLine:{lineStyle:{color:'rgba(0,0,0,0.04)'}}},
+  series:[{type:'bar',data:[0.8,0.7,0.7,0.8,0.6,0.7,0.6,0.5,0.5,0.5].map(function(v){return v*100}),
+    barWidth:'55%',itemStyle:{borderRadius:[4,4,0,0],color:function(p){return [0.8,0.7,0.7,0.8,0.6,0.7,0.6,0.5,0.5,0.5][p.dataIndex]>=0.8?'#34C759':[0.8,0.7,0.7,0.8,0.6,0.7,0.6,0.5,0.5,0.5][p.dataIndex]>=0.6?'#007AFF':'#FF3B30';}},
+    markLine:{silent:true,symbol:'none',data:[{yAxis:75,lineStyle:{color:'rgba(0,0,0,0.15)',type:'dashed'},label:{formatter:'合格线75%',fontSize:9}}]},
+    label:{show:true,position:'top',fontSize:9,formatter:'{c}%'}
+  }]
+});
+</script>
+</body></html>

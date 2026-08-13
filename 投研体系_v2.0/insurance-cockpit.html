@@ -1,0 +1,1297 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>保险资金投资决策驾驶舱</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<script src="data-pipeline/mock-generator.js"></script>
+<script src="data-pipeline/lineage.js"></script>
+<script src="data-pipeline/quality.js"></script>
+<script src="data-pipeline/etl-core.js"></script>
+<script src="alert-engine/rules.js"></script>
+<script src="alert-engine/notifier.js"></script>
+<script src="alert-engine/history.js"></script>
+<script src="alert-engine/scheduler.js"></script>
+<style>
+:root{--bg:#f5f7fa;--card:#fff;--primary:#0F4C81;--safe:#10b981;--warn:#f59e0b;--danger:#ef4444;--text:#1e293b;--text2:#64748b;--border:#e2e8f0;--radius:12px}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,"Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:80px}
+
+/* ===== PAGE HEADER ===== */
+.page-header{display:flex;justify-content:space-between;align-items:center;padding:16px 32px;background:var(--card);border-bottom:1px solid var(--border)}
+.page-header h1{font-size:16px;font-weight:600;margin:0;color:var(--primary)}
+.page-header .hdr-meta{font-size:10px;color:var(--text2);display:flex;gap:16px}
+.page-header .hdr-meta span{color:var(--safe);font-weight:500}
+
+.container{max-width:1400px;margin:0 auto;padding:20px 32px}
+
+/* ===== HERO KPI: 偿付能力 ===== */
+.hero-kpi{background:linear-gradient(135deg,#0F4C81,#1a5fa0);border-radius:var(--radius);padding:32px 36px;margin-bottom:20px;color:#fff;display:flex;align-items:center;gap:40px;position:relative;min-height:280px}
+.hero-kpi .hero-left{flex:1}
+.hero-kpi .hero-label{font-size:14px;color:rgba(255,255,255,0.7);margin-bottom:6px;display:flex;align-items:center;gap:8px}
+.hero-kpi .hero-icon{font-size:24px}
+.hero-kpi .hero-value{font-size:60px;font-weight:700;line-height:1;margin-bottom:6px}
+.hero-kpi .hero-value .unit{font-size:32px;font-weight:400;color:rgba(255,255,255,0.6)}
+.hero-kpi .hero-detail{font-size:12px;color:rgba(255,255,255,0.7);display:flex;gap:16px;align-items:center;margin-bottom:6px}
+.hero-kpi .hero-trend{margin-bottom:12px}
+.hero-kpi .hero-trend span{display:inline-block;padding:2px 10px;border-radius:4px;font-size:11px;font-weight:500;background:rgba(16,185,129,0.2);color:#10b981}
+.hero-kpi .hero-btn{padding:8px 20px;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.25);border-radius:6px;color:#fff;font-size:11px;cursor:pointer;font-family:inherit}
+.hero-kpi .hero-btn:hover{background:rgba(255,255,255,0.22)}
+.hero-kpi .hero-lineage{position:absolute;top:16px;right:20px;font-size:9px;color:rgba(255,255,255,0.5);display:flex;align-items:center;gap:4px;cursor:help}
+.hero-kpi .hero-lineage .fresh-dot{width:7px;height:7px;border-radius:50%;display:inline-block;background:#10b981}
+.hero-kpi .hero-lineage .tooltip{display:none;position:absolute;top:calc(100% + 6px);right:0;background:rgba(15,23,42,0.98);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:10px 12px;min-width:200px;font-size:10px;z-index:50;color:#94a3b8;line-height:1.7;white-space:nowrap}
+.hero-kpi .hero-lineage:hover .tooltip{display:block}
+@media(hover:none){.hero-kpi .hero-lineage .tooltip{display:none!important}}
+
+/* ===== KPI ROW (3 cards below hero) ===== */
+.kpi-row{display:grid;grid-template-columns:repeat(3,1fr) 200px;gap:16px;margin-bottom:20px}
+
+/* ===== UNIFIED CARD ===== */
+.card{background:#fff;border-radius:12px;padding:24px;box-shadow:0 2px 8px rgba(0,0,0,0.06);margin-bottom:20px}
+.kpi-card{background:#fff;border-radius:12px;padding:20px 24px;box-shadow:0 2px 8px rgba(0,0,0,0.06);position:relative;cursor:default;transition:transform 0.2s,box-shadow 0.2s}
+.kpi-card:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,0.1)}
+.kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:12px 12px 0 0}
+.kpi-card.safe::before{background:var(--safe)}
+.kpi-card.attn::before{background:var(--warn)}
+.kpi-card .kpi-label{font-size:12px;color:var(--text2);margin-bottom:4px;display:flex;align-items:center;gap:6px}
+.kpi-card .kpi-label .icon{font-size:16px}
+.kpi-card .kpi-value{font-size:36px;font-weight:700;color:var(--text);line-height:1;margin-bottom:4px}
+.kpi-card .kpi-value .unit{font-size:18px;font-weight:400;color:var(--text2)}
+.kpi-card .kpi-status{font-size:10px;color:var(--text2);margin-bottom:6px;display:flex;align-items:center;gap:4px}
+.kpi-card .kpi-status .dot{width:6px;height:6px;border-radius:50%}
+.kpi-card .kpi-detail{font-size:10px;color:var(--text2);margin-bottom:4px}
+.kpi-card .kpi-trend{font-size:10px;margin-bottom:10px}
+.kpi-card .kpi-trend span{display:inline-block;padding:2px 8px;border-radius:4px;font-weight:500}
+.kpi-card .kpi-trend .up{background:rgba(16,185,129,0.1);color:#059669}
+.kpi-card .kpi-trend .down{background:rgba(239,68,68,0.1);color:var(--danger)}
+.kpi-card .kpi-btn{width:100%;padding:6px 0;background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--text2);font-size:10px;cursor:pointer;font-family:inherit}
+.kpi-card .kpi-btn:hover{background:var(--bg);color:var(--text)}
+
+/* Freshness dot + tooltip */
+.kpi-card .lineage{position:absolute;top:12px;right:14px;font-size:8px;color:var(--text2);cursor:help;display:flex;align-items:center;gap:3px}
+.kpi-card .lineage .fresh-dot{width:6px;height:6px;border-radius:50%}
+.kpi-card .lineage .fresh-dot.green{background:var(--safe)}
+.kpi-card .lineage .fresh-dot.amber{background:var(--warn)}
+.kpi-card .lineage .fresh-dot.red{background:var(--danger);animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+.kpi-card .lineage .tooltip{display:none;position:absolute;top:calc(100% + 6px);right:0;background:rgba(15,23,42,0.98);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:10px 12px;min-width:190px;font-size:10px;z-index:50;color:#94a3b8;line-height:1.7;white-space:nowrap}
+.kpi-card .lineage:hover .tooltip{display:block}
+@media(hover:none){.kpi-card .lineage .tooltip{display:none!important}}
+
+/* KPI card with risk background */
+.kpi-card.risk-high{background:rgba(255,152,0,0.08);border-color:rgba(255,152,0,0.25)}
+.kpi-card.risk-high .kpi-status b{font-weight:700;color:#e65100}
+
+/* Data quality card */
+.dq-card{background:#fff;border-radius:12px;padding:16px 18px;box-shadow:0 2px 8px rgba(0,0,0,0.06);margin-bottom:20px}
+.dq-card h4{font-size:12px;font-weight:600;margin:0 0 10px 0;color:var(--text)}
+.dq-row{font-size:10px;color:var(--text2);padding:3px 0;display:flex;justify-content:space-between}
+.dq-row .dq-v{font-weight:600}
+.dq-status{margin-top:8px;font-size:10px;color:var(--safe);font-weight:500}
+
+/* ===== MAIN LAYOUT ===== */
+.main{display:flex;gap:16px;margin-bottom:20px}
+.col-left{flex:6;min-width:0}
+.col-right{flex:4;min-width:0;max-width:460px}
+
+/* ===== ALERT BANNER ===== */
+.alert-banner{background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.2);border-radius:12px;margin-bottom:20px;overflow:hidden}
+.alert-header{display:flex;align-items:center;gap:8px;padding:12px 16px;cursor:pointer;font-size:12px;color:var(--text);font-weight:500}
+.alert-header .alert-count{color:var(--warn)}
+.alert-body{display:none}
+.alert-body.show{display:block}
+.alert-body.show .alert-item{font-weight:600}
+.alert-item{display:flex;gap:10px;padding:10px 16px;font-size:11px}
+.alert-item .alert-bar{width:3px;border-radius:2px;flex-shrink:0}
+.alert-item.critical .alert-bar{background:var(--danger)}
+.alert-item.warning .alert-bar{background:var(--warn)}
+.alert-item.critical .alert-title{color:var(--danger);font-weight:600}
+.alert-item.warning .alert-title{color:var(--warn);font-weight:600}
+#alert-toggle{color:var(--text2);margin-left:auto;transition:transform 0.3s}
+#alert-toggle.open{transform:rotate(180deg)}
+
+/* ===== TABLES ===== */
+.data-table{width:100%;border-collapse:collapse;font-size:11px}
+.data-table th{background:#e8f0f8;color:var(--primary);border-bottom:2px solid var(--primary);padding:8px 10px;text-align:left;font-weight:600;font-size:10px}
+.data-table td{padding:8px 10px;border-bottom:1px solid var(--border);color:var(--text2)}
+.data-table tr:nth-child(even){background:#f8fafc}
+.data-table .td-ok{color:var(--safe);font-weight:600}
+.data-table .td-warn{color:var(--warn);font-weight:600}
+.data-table .td-danger{color:var(--danger);font-weight:600}
+
+.tag{display:inline-block;padding:1px 8px;border-radius:3px;font-size:9px;font-weight:600}
+.tag-gn{background:rgba(16,185,129,0.1);color:#059669}
+.tag-am{background:rgba(245,158,11,0.1);color:#d97706}
+
+/* Status cell backgrounds for tables */
+.status-safe{background:rgba(16,185,129,0.1);color:#059669;font-weight:600}
+.status-warn{background:rgba(245,158,11,0.1);color:#d97706;font-weight:600}
+
+/* Charts */
+.chart-saa{width:100%;height:350px}
+.chart-taa{width:100%;height:200px}
+
+/* TAA Score bars */
+.score-bar{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.score-bar .label{width:40px;font-size:12px;color:#64748b}
+.score-bar .bar{flex:1;height:8px;background:#e2e8f0;border-radius:4px;overflow:hidden}
+.score-bar .fill{height:100%;background:#0F4C81;border-radius:4px}
+.score-bar .value{width:35px;font-size:12px;color:#64748b;text-align:right}
+
+/* Liability notices */
+.notes{font-size:11px;color:var(--text2);line-height:1.9}
+.notes span{font-weight:600}
+
+/* Advice card */
+.advice{margin-top:16px;padding:14px 16px;border-radius:12px;background:rgba(15,76,129,0.06);font-size:11px;line-height:1.7;color:var(--text)}
+.advice .ah{font-size:9px;color:var(--primary);margin-bottom:4px;text-transform:uppercase;font-weight:600;letter-spacing:0.5px}
+
+/* Data quality mini card */
+.quality-mini{position:fixed;top:12px;right:24px;z-index:200;background:#fff;border-radius:8px;padding:8px 14px;box-shadow:0 2px 8px rgba(0,0,0,0.1);font-size:11px;display:flex;align-items:center;gap:8px;cursor:pointer;transition:transform 0.2s}
+.quality-mini:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,0.15)}
+.quality-mini .q-score{font-size:18px;font-weight:700;color:var(--safe)}
+.quality-mini .q-label{color:var(--text2);font-size:10px}
+.quality-mini .q-dot{width:8px;height:8px;border-radius:50%}
+.quality-mini .q-dot.good{background:var(--safe)}
+.quality-mini .q-dot.warn{background:var(--warn)}
+.quality-mini .q-dot.bad{background:var(--danger)}
+/* Lineage button */
+.btn-lineage{padding:4px 12px;background:rgba(15,76,129,0.06);border:1px solid rgba(15,76,129,0.15);border-radius:4px;color:var(--primary);font-size:10px;cursor:pointer;font-family:inherit;margin-left:8px}
+.btn-lineage:hover{background:rgba(15,76,129,0.12)}
+/* Data source badge */
+.src-badge{display:inline-block;padding:1px 6px;border-radius:3px;font-size:8px;font-weight:500;margin-left:4px}
+.src-wind{background:rgba(15,76,129,0.1);color:var(--primary)}
+.src-sqlite{background:rgba(245,158,11,0.1);color:#d97706}
+
+/* Alert History Drawer */
+.drawer-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.4);z-index:1100;display:none}
+.drawer-overlay.show{display:block}
+.drawer{position:fixed;top:0;right:-420px;width:400px;bottom:0;background:#fff;z-index:1200;box-shadow:-4px 0 20px rgba(0,0,0,0.15);transition:right 0.3s ease;display:flex;flex-direction:column}
+.drawer.open{right:0}
+.drawer-header{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid #e2e8f0}
+.drawer-header h3{font-size:14px;color:var(--primary);margin:0}
+.drawer-close{background:none;border:none;font-size:20px;cursor:pointer;color:var(--text2);padding:4px}
+.drawer-stats{display:flex;gap:8px;padding:12px 20px;background:#f8fafc;font-size:10px;flex-wrap:wrap}
+.drawer-stats .stat-item{background:#fff;padding:4px 10px;border-radius:4px;border:1px solid #e2e8f0}
+.drawer-stats .stat-val{font-weight:700;color:var(--primary)}
+.drawer-list{flex:1;overflow-y:auto;padding:12px 20px}
+.drawer-item{padding:10px 12px;border-radius:8px;margin-bottom:8px;font-size:11px;cursor:pointer;transition:background 0.15s}
+.drawer-item:hover{background:#f8fafc}
+.drawer-item.critical{border-left:3px solid var(--danger)}
+.drawer-item.warning{border-left:3px solid var(--warn)}
+.drawer-item.info{border-left:3px solid #3b82f6}
+.drawer-item .di-time{font-size:9px;color:var(--text2);margin-bottom:2px}
+.drawer-item .di-name{font-weight:600;color:var(--text);margin-bottom:2px}
+.drawer-item .di-msg{color:var(--text2);font-size:10px}
+.drawer-item .di-ack{font-size:9px;color:var(--safe);margin-top:4px}
+.drawer-item.unread{background:rgba(245,158,11,0.04)}
+
+/* ===== BOTTOM NAV ===== */
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:rgba(255,255,255,0.98);backdrop-filter:blur(10px);border-top:1px solid var(--border);display:flex;justify-content:space-around;padding:8px 0;z-index:100}
+.nav-item{display:flex;flex-direction:column;align-items:center;color:var(--text2);text-decoration:none;font-size:9px;padding:4px 8px}
+.nav-item:hover{color:var(--text)}
+.nav-item.active{color:var(--primary);font-weight:600}
+.nav-item .icon{font-size:16px;margin-bottom:2px}
+
+/* Footer */
+.ft{text-align:center;font-size:9px;color:#94a3b8;padding:12px 0 16px}
+
+/* Responsive */
+@media(max-width:1200px){.kpi-row{grid-template-columns:repeat(2,1fr) 160px}.main{flex-direction:column}.col-right{max-width:100%}.hero-kpi{flex-direction:column;gap:20px}}
+@media(max-width:800px){.kpi-row{grid-template-columns:repeat(2,1fr)}.hero-kpi .hero-value{font-size:44px}}
+@media(max-width:640px){.container{padding:12px 16px}.kpi-row{grid-template-columns:1fr}.hero-kpi{padding:20px}.hero-kpi .hero-value{font-size:38px}.kpi-card .kpi-value{font-size:28px}}
+/* ===== 风险管理 (P1-2 六维监控 / P2-2 事件冲击) ===== */
+.risk-layout{display:flex;gap:20px;align-items:stretch}
+@media(max-width:900px){.risk-layout{flex-direction:column}}
+.chart-risk{width:360px;height:320px;flex-shrink:0}
+@media(max-width:900px){.chart-risk{width:100%;height:300px}}
+.risk-table .dim-head{background:#e8f0f8;color:var(--primary);font-weight:600}
+.risk-score{font-weight:700}
+.risk-score.good{color:var(--safe)}.risk-score.warn{color:var(--warn)}.risk-score.bad{color:var(--danger)}
+.event-impact{font-weight:600;white-space:nowrap}
+.event-impact.neg{color:var(--danger)}.event-impact.pos{color:var(--safe)}.event-impact.zero{color:var(--text2)}
+.risk-desc{font-size:10px;color:var(--text2)}
+
+/* ===== 决策中心 (P0-4 方案生成 / P0-5 执行设计 / 决策日志) ===== */
+.decision-sec{margin-top:4px}
+.sec-title{font-size:15px;font-weight:700;color:var(--primary);margin:0 0 16px 0;display:flex;align-items:center;gap:8px}
+.sec-title .badge{font-size:10px;font-weight:600;color:#fff;background:var(--primary);border-radius:4px;padding:2px 8px}
+.sec-sub{font-size:13px;font-weight:600;color:var(--text);margin:20px 0 10px}
+.sec-sub:first-of-type{margin-top:0}
+.plan-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:16px}
+@media(max-width:900px){.plan-grid{grid-template-columns:1fr}}
+.plan-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:16px 18px;cursor:pointer;transition:all .18s;position:relative}
+.plan-card:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(0,0,0,.08)}
+.plan-card.sel{border:2px solid var(--primary);box-shadow:0 0 0 3px rgba(15,76,129,.08)}
+.plan-card.sel .plan-rec{background:var(--primary);color:#fff}
+.plan-card .plan-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.plan-card .plan-name{font-size:14px;font-weight:700;color:var(--text)}
+.plan-card .plan-rec{font-size:9px;font-weight:600;padding:2px 8px;border-radius:20px;background:var(--bg);color:var(--text2)}
+.plan-card .plan-logic{font-size:11px;color:var(--text2);margin-bottom:10px;min-height:32px}
+.plan-metric{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px dashed var(--border);font-size:11px}
+.plan-metric:last-child{border-bottom:none}
+.plan-metric .pm-l{color:var(--text2)}
+.plan-metric .pm-v{font-weight:600;color:var(--text)}
+.plan-metric .pm-v.good{color:var(--safe)}.plan-metric .pm-v.warn{color:var(--warn)}.plan-metric .pm-v.bad{color:var(--danger)}
+.plan-conf{display:inline-flex;gap:2px}
+.plan-conf .star{color:var(--warn);font-size:12px}
+.plan-conf .star.off{color:#e2e8f0}
+.compare-table{width:100%;border-collapse:collapse;font-size:11px;margin-top:6px}
+.compare-table th{background:#e8f0f8;color:var(--primary);padding:8px;text-align:left;font-weight:600;font-size:10px;border-bottom:2px solid var(--primary);white-space:nowrap}
+.compare-table td{padding:8px;border-bottom:1px solid var(--border);color:var(--text2)}
+.compare-table td.hl{background:rgba(15,76,129,.05);font-weight:600;color:var(--text)}
+.compare-table .rec-row{background:rgba(16,185,129,.04)}
+.decision-actions{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+.btn{padding:8px 18px;border-radius:8px;border:none;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit}
+.btn-primary{background:var(--primary);color:#fff}.btn-primary:hover{background:#0d4372}
+.btn-ghost{background:transparent;border:1px solid var(--border);color:var(--text2)}.btn-ghost:hover{background:var(--bg)}
+.btn-success{background:var(--safe);color:#fff}.btn-success:hover{background:#0da271}
+.log-table td{font-size:10px}
+.log-compare{font-size:9px;color:var(--text2);line-height:1.6}
+.log-empty{text-align:center;color:#94a3b8;padding:24px 0;font-size:12px}
+
+/* ===== P2 交互模块 (智能预警/情景实验室/时间轴) ===== */
+.alert-level{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:12px}
+@media(max-width:800px){.alert-level{grid-template-columns:1fr}}
+.al-card{border-radius:10px;padding:14px 16px;border:1px solid var(--border);background:#fff}
+.al-card.urgent{border-top:3px solid var(--danger)}
+.al-card.watch{border-top:3px solid var(--warn)}
+.al-card.info{border-top:3px solid #3b82f6}
+.al-card .al-head{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:700;margin-bottom:8px}
+.al-card.urgent .al-head{color:var(--danger)}
+.al-card.watch .al-head{color:var(--warn)}
+.al-card.info .al-head{color:#3b82f6}
+.al-item{display:flex;justify-content:space-between;font-size:10px;padding:5px 0;border-bottom:1px dashed var(--border)}
+.al-item:last-child{border-bottom:none}
+.al-item .k{color:var(--text2)}
+.al-item .v{font-weight:600;text-align:right}
+.al-item .v.hit{color:var(--danger)}.al-item .v.near{color:var(--warn)}.al-item .v.ok{color:var(--safe)}
+.scenario-btns{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.sc-btn{padding:8px 16px;border-radius:8px;border:1px solid var(--border);background:#fff;font-size:12px;cursor:pointer;font-family:inherit;color:var(--text);transition:all .15s}
+.sc-btn:hover{border-color:var(--primary);color:var(--primary)}
+.sc-btn.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+.sc-result{display:none;padding:12px 16px;border-radius:8px;background:var(--bg);font-size:11px;line-height:1.9;margin-top:10px}
+.sc-result.show{display:block}
+.sc-slider{display:flex;gap:16px;align-items:center;flex-wrap:wrap;font-size:11px;margin:10px 0;padding:12px;background:var(--bg);border-radius:8px}
+.sc-slider input[type=range]{width:120px}
+.sc-slider b{font-size:13px;color:var(--primary)}
+.chart-timeline{width:100%;height:300px}
+</style>
+</head>
+<body>
+
+<!-- PAGE HEADER -->
+<div class="page-header">
+  <h1>保险资金投资决策驾驶舱</h1>
+  <div class="hdr-meta">数据更新: <span id="update-time">加载中...</span> <span>|</span> 数据质量: <span id="hdr-quality">--</span> <span id="hdr-status">⏳</span></div>
+</div>
+
+<!-- Data Quality Mini Card -->
+<div class="quality-mini" id="quality-mini" onclick="alert(document.getElementById('quality-report').textContent)" title="点击查看详细质量报告">
+  <div class="q-dot good" id="q-dot"></div>
+  <span class="q-score" id="q-score">--</span>
+  <span class="q-label">数据质量</span>
+</div>
+
+<div class="container">
+
+<!-- ALERT BANNER -->
+<div class="alert-banner" id="alert-banner">
+  <div class="alert-header" onclick="toggleAlerts()">
+    <span>⚠️</span>
+    <span class="alert-count">2项预警需要关注</span>
+    <span id="alert-toggle">▼</span>
+  </div>
+  <div id="alert-body" class="alert-body">
+    <div class="alert-item critical">
+      <div class="alert-bar"></div>
+      <div><div class="alert-title">🔴 数据过时</div><div>SQLite日度数据已9小时未更新</div></div>
+    </div>
+    <div class="alert-item warning">
+      <div class="alert-bar"></div>
+      <div><div class="alert-title">🟡 久期缺口</div><div>−3.2年超目标±1.5年（资产3.8 &lt; 负债7.0）</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== HERO: 偿付能力 ===== -->
+<div class="hero-kpi">
+  <div class="hero-lineage"><span class="fresh-dot"></span>Wind · 15:30 · 高置信度<div class="tooltip">系统: Wind<br>表: solvency_report<br>字段: core_ratio<br>更新时间: 2026-08-10 15:30<br>置信度: 高 (DB计算)</div></div>
+  <div class="hero-left">
+    <div class="hero-label"><span class="hero-icon">🛡️</span>偿付能力充足率</div>
+    <div class="hero-value">132<span class="unit">%</span></div>
+    <div class="hero-detail"><span>核心: 118%</span><span style="color:rgba(255,255,255,0.3)">|</span><span>综合: 132%</span><span style="margin-left:8px">安全运行 (≥120%)</span></div>
+    <div class="hero-trend"><span>↑ 2%</span> 较上月</div>
+    <button class="hero-btn" onclick="alert('偿付能力模拟: 增配权益1%→偿付下降2.3pp')">模拟影响</button>
+  </div>
+</div>
+
+<!-- ===== KPI ROW: 3 cards + DQ ===== -->
+<div class="kpi-row">
+
+  <!-- KPI 2: 久期缺口 (risk highlight) -->
+  <div class="kpi-card attn risk-high">
+    <div class="lineage"><span class="fresh-dot red"></span>SQLite · 06:25 · 准实时<div class="tooltip">系统: SQLite<br>表: index_kline<br>字段: duration_gap<br>更新时间: 2026-08-10 06:25<br>置信度: 中 (本地计算)</div></div>
+    <div class="kpi-label"><span class="icon">⏱️</span>资产负债久期缺口</div>
+    <div class="kpi-value" style="color:var(--warn)">−3.2<span class="unit">年</span></div>
+    <div class="kpi-status"><div class="dot" style="background:var(--warn);box-shadow:0 0 4px rgba(245,158,11,0.4)"></div><b style="color:var(--warn)">关注</b> (目标±1.5年)</div>
+    <div class="kpi-detail">资产: 3.8年 | 负债: 7.0年</div>
+    <div class="kpi-trend"><span class="up">↗ 收窄0.3年</span> 较上月</div>
+    <button class="kpi-btn" onclick="alert('久期策略: 建议增配10Y+国债3-5pp')">模拟影响</button>
+  </div>
+
+  <!-- KPI 3: 利差 -->
+  <div class="kpi-card safe">
+    <div class="lineage"><span class="fresh-dot green"></span>Wind · 15:30 · 高置信度<div class="tooltip">系统: Wind<br>表: bond_yields<br>字段: spread<br>更新时间: 2026-08-10 15:30<br>置信度: 高 (DB计算)</div></div>
+    <div class="kpi-label"><span class="icon">💹</span>利差</div>
+    <div class="kpi-value">+70<span class="unit">bp</span></div>
+    <div class="kpi-status"><div class="dot" style="background:var(--safe);box-shadow:0 0 4px rgba(16,185,129,0.4)"></div>利差益 (≥0bp)</div>
+    <div class="kpi-detail">负债成本: 3.50% | 收益率: 4.20%</div>
+    <div class="kpi-trend"><span class="up">↑ 15bp</span> 较上月</div>
+    <button class="kpi-btn" onclick="alert('利率敏感性: 10Y上行10bp→利差扩大8bp')">模拟影响</button>
+  </div>
+
+  <!-- KPI 4: 综合收益率 -->
+  <div class="kpi-card safe">
+    <div class="lineage"><span class="fresh-dot red"></span>SQLite · 06:25 · 准实时<div class="tooltip">系统: SQLite<br>表: perf_metrics<br>字段: ytd_return<br>更新时间: 2026-08-10 06:25<br>置信度: 中 (本地计算)</div></div>
+    <div class="kpi-label"><span class="icon">📈</span>综合投资收益率</div>
+    <div class="kpi-value">4.20<span class="unit">%</span></div>
+    <div class="kpi-status"><div class="dot" style="background:var(--safe);box-shadow:0 0 4px rgba(16,185,129,0.4)"></div>达标 (≥3.5%)</div>
+    <div class="kpi-detail">YTD: +1.4% | 1年: +4.2%</div>
+    <div class="kpi-trend"><span class="up">↑ 0.3%</span> 较上月</div>
+    <button class="kpi-btn" onclick="alert('收益归因: 固收60% | 权益30% | 另类10%')">模拟影响</button>
+  </div>
+
+  <!-- DATA QUALITY -->
+  <div class="dq-card">
+    <h4>📊 数据质量</h4>
+    <div class="dq-row"><span>实时指标</span><span class="dq-v" style="color:var(--safe)">2/4</span></div>
+    <div class="dq-row"><span>DB计算</span><span class="dq-v" style="color:var(--warn)">2/4</span></div>
+    <div class="dq-row"><span>人工估算</span><span class="dq-v" style="color:var(--text2)">0/4</span></div>
+    <div class="dq-status">🟢 状态: 正常</div>
+  </div>
+</div>
+
+<!-- ===== MAIN: SAA + TAA ===== -->
+<div class="main">
+  <div class="col-left">
+    <div class="card">
+      <h3 style="font-size:14px;font-weight:600;color:var(--primary);margin:0 0 16px 0">📊 SAA 战略配置中枢</h3>
+      <div class="chart-saa" id="chartSAA"></div>
+      <table class="data-table">
+        <tr><th>约束项</th><th>当前</th><th>上限/下限</th><th>余量</th><th>状态</th></tr>
+        <tr><td>权益类</td><td>18%</td><td>≤45%</td><td class="td-ok">27%</td><td><span class="tag tag-gn">充足</span></td></tr>
+        <tr><td>单一集中度</td><td>8%</td><td>≤10%</td><td class="td-ok">2%</td><td><span class="tag tag-gn">合规</span></td></tr>
+        <tr><td>境外投资</td><td>12%</td><td>≤15%</td><td class="td-ok">3%</td><td><span class="tag tag-gn">合规</span></td></tr>
+        <tr><td>不动产</td><td>8%</td><td>≤30%</td><td class="td-ok">22%</td><td><span class="tag tag-gn">充足</span></td></tr>
+        <tr><td>流动性</td><td>5%</td><td>≥5%</td><td class="td-warn">0%</td><td class="status-warn">⚠ 临界</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="col-right">
+    <div class="card">
+      <h3 style="font-size:14px;font-weight:600;color:var(--primary);margin:0 0 16px 0">🎯 TAA 战术评分卡<span style="font-size:10px;font-weight:400;color:var(--text2);margin-left:6px">五维评估</span></h3>
+      <div class="chart-taa" id="chartTAA"></div>
+      <div class="score-bar"><span class="label">宏观</span><div class="bar"><div class="fill" style="width:60%"></div></div><span class="value">60%</span></div>
+      <div class="score-bar"><span class="label">估值</span><div class="bar"><div class="fill" style="width:55%"></div></div><span class="value">55%</span></div>
+      <div class="score-bar"><span class="label">政策</span><div class="bar"><div class="fill" style="width:50%"></div></div><span class="value">50%</span></div>
+      <div class="score-bar"><span class="label">资金</span><div class="bar"><div class="fill" style="width:45%"></div></div><span class="value">45%</span></div>
+      <div class="score-bar"><span class="label">技术</span><div class="bar"><div class="fill" style="width:52%"></div></div><span class="value">52%</span></div>
+    </div>
+
+    <div class="card">
+      <h3 style="font-size:14px;font-weight:600;color:var(--primary);margin:0 0 12px 0">📋 负债约束</h3>
+      <div class="notes">
+        <span style="color:var(--warn)">⚠</span> 久期缺口−3.2年，超±1.5年目标（资产久期不足）<br>
+        <span style="color:var(--warn)">⚠</span> 流动性5%处于监管红线<br>
+        <span style="color:var(--safe)">✓</span> 利差+70bp覆盖负债成本3.50%
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 style="font-size:14px;font-weight:600;color:var(--primary);margin:0 0 12px 0">💰 负债端核心指标</h3>
+      <table class="data-table">
+        <tr><th>指标</th><th>当前值</th><th>目标/阈值</th><th>状态</th></tr>
+        <tr><td>负债成本</td><td>3.50%</td><td>≤4.0%</td><td class="status-safe">✅ 可控</td></tr>
+        <tr><td>负债久期</td><td>6.1年</td><td>—</td><td style="color:var(--text2)">—</td></tr>
+        <tr><td>新单成本</td><td>3.2%</td><td>跟踪</td><td class="status-warn">🟡 下行</td></tr>
+        <tr><td>退保率</td><td>2.1%</td><td>&lt;5%</td><td class="status-safe">✅ 健康</td></tr>
+        <tr><td>保费增长率</td><td>+8.5%</td><td>正增长</td><td class="status-safe">✅ 良好</td></tr>
+      </table>
+    </div>
+
+    <div class="advice">
+      <div class="ah">💡 今日建议</div>
+      <b>久期缺口−3.2年（资产3.8年 &lt; 负债7.0年），优先拉长资产久期。</b>
+      在10Y国债利率上行至1.8%以上时增配30Y国债3-5pp，可将久期缺口缩窄至−2.5年以内。信用债以短久期AAA为主，警惕利差反弹。
+      <br><button class="btn-lineage" style="margin-top:8px;padding:6px 14px;font-size:11px" onclick="window.open('report-generator/report-manager.html','_blank')">📄 生成今日日报</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 风险管理: 六维监控 + 事件冲击模拟 (P1-2 #42 / P2-2 #45) ===== -->
+<div class="card">
+  <h3 class="sec-title">🛡️ 风险六维监控<span class="badge">P1</span></h3>
+  <div class="risk-layout">
+    <div class="chart-risk" id="chartRisk"></div>
+    <div style="flex:1;min-width:0;overflow-x:auto">
+      <table class="data-table risk-table" id="riskTable"></table>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <h3 class="sec-title">💥 事件冲击模拟 · 关键事件假设分析<span class="badge">P2</span></h3>
+  <div style="overflow-x:auto">
+    <table class="data-table" id="eventTable"></table>
+  </div>
+  <div class="notes" id="eventNote" style="margin-top:8px"></div>
+</div>
+
+<!-- ===== 决策中心 (P0-4 方案生成 / P0-5 执行设计 / 决策日志) ===== -->
+<div class="card decision-sec">
+  <h3 class="sec-title">🎯 决策中心<span class="badge">P0</span></h3>
+
+  <!-- P0-4 决策方案生成 -->
+  <div class="sec-sub">① 决策方案生成 · 三方案对比</div>
+  <div class="plan-grid" id="planGrid"></div>
+  <div style="overflow-x:auto">
+    <table class="compare-table" id="compareTable"></table>
+  </div>
+  <div class="decision-actions">
+    <button class="btn btn-ghost" onclick="generatePlans()">🔄 重新生成方案</button>
+    <button class="btn btn-success" onclick="commitDecision()" id="btnCommit">✅ 提交决策（写入决策日志）</button>
+  </div>
+
+  <!-- P0-5 执行方案设计 -->
+  <div class="sec-sub">② 执行方案设计 · 分批与成本</div>
+  <div style="overflow-x:auto">
+    <table class="data-table" id="execTable"></table>
+  </div>
+  <div class="notes" id="execNote" style="margin-top:8px"></div>
+
+  <!-- 决策日志方案对比 -->
+  <div class="sec-sub" style="display:flex;align-items:center;justify-content:space-between"><span>③ 决策日志 · 方案对比</span><button class="btn btn-ghost" style="padding:3px 10px;font-size:10px" onclick="clearDecisionLog()">清空</button></div>
+  <div style="overflow-x:auto">
+    <table class="data-table log-table">
+      <thead><tr><th>时间</th><th>TAA</th><th>选定方案</th><th>方案对比（收益/波动/偿付/缺口/置信度）</th><th>决策依据</th></tr></thead>
+      <tbody id="logBody"></tbody>
+    </table>
+  </div>
+  <div class="log-empty" id="logEmpty" style="display:none">暂无决策记录，提交后自动写入本地日志</div>
+</div>
+
+<!-- ===== P2 交互模块: 智能预警 / 情景实验室 / 时间轴 ===== -->
+<div class="card">
+  <h3 class="sec-title">🚨 智能预警 · 三级分级<span class="badge">P2</span></h3>
+  <div class="alert-level" id="alertLevel"></div>
+</div>
+
+<div class="card">
+  <h3 class="sec-title">🧪 情景实验室 · 预设 + 自定义<span class="badge">P2</span></h3>
+  <div class="scenario-btns" id="scenarioBtns"></div>
+  <div class="chart-timeline" id="chartScenario"></div>
+  <div class="sc-slider">
+    <span>自定义：权益Δ</span> <input type="range" id="eq_slider" min="-30" max="30" value="0" oninput="updateScenarioCustom()"> <b id="eq_val">0%</b>
+    <span>利率Δ</span> <input type="range" id="ir_slider" min="-100" max="100" value="0" oninput="updateScenarioCustom()"> <b id="ir_val">0bp</b>
+    <span>→ 偿付</span> <b id="custom_sol">132%</b> <span>· 收益</span> <b id="custom_ret">4.2%</b>
+  </div>
+  <div class="sc-result" id="scenarioResult"></div>
+</div>
+
+<div class="card">
+  <h3 class="sec-title">📅 时间轴 · 30天历史与对比<span class="badge">P2</span></h3>
+  <div class="chart-timeline" id="chartTimeline"></div>
+  <div class="notes" id="timelineNote" style="margin-top:8px"></div>
+</div>
+
+<div class="ft">保险资金投资决策驾驶舱 v2.1 · Wind / SQLite / westock-data · 以上不构成投资建议<br>
+<span style="font-size:8px">数据管道: etl-core.js v1.0 | 血缘追踪: lineage.js v1.0 | 质量检查: quality.js v1.0</span>
+</div>
+<div id="quality-report" style="display:none"></div>
+</div>
+
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav">
+  <a href="#" class="nav-item" onclick="event.preventDefault();alert('跳转：负债仪表盘')"><span class="icon">💰</span><span>负债仪表盘</span></a>
+  <a href="#" class="nav-item" onclick="event.preventDefault();alert('跳转：SAA工作台')"><span class="icon">📊</span><span>SAA工作台</span></a>
+  <a href="#" class="nav-item active" onclick="event.preventDefault();alert('跳转：TAA评分卡')"><span class="icon">🎯</span><span>TAA评分卡</span></a>
+  <a href="#" class="nav-item" onclick="event.preventDefault();alert('跳转：交易指令')"><span class="icon">⚡</span><span>交易指令</span></a>
+  <a href="#" class="nav-item" onclick="event.preventDefault();openDrawer()"><span class="icon">🛡️</span><span>预警历史</span></a>
+  <a href="#" class="nav-item" onclick="event.preventDefault();alert('跳转：绩效归因')"><span class="icon">📈</span><span>绩效归因</span></a>
+  <a href="#" class="nav-item" onclick="event.preventDefault();window.open('report-generator/report-manager.html','_blank')"><span class="icon">📄</span><span>报告</span></a>
+  <a href="#" class="nav-item" onclick="event.preventDefault();window.open('lineage-graph.html','_blank')"><span class="icon">🔗</span><span>数据血缘</span></a>
+  <a href="#" class="nav-item" onclick="event.preventDefault();document.querySelector('.decision-sec').scrollIntoView({behavior:'smooth'})"><span class="icon">📝</span><span>决策日志</span></a>
+</nav>
+
+<!-- Alert History Drawer -->
+<div class="drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
+<div class="drawer" id="alert-drawer">
+  <div class="drawer-header">
+    <h3>📋 预警历史</h3>
+    <button class="drawer-close" onclick="closeDrawer()">✕</button>
+  </div>
+  <div class="drawer-stats" id="drawer-stats">
+    <span class="stat-item">今日: <span class="stat-val" id="stat-today">0</span></span>
+    <span class="stat-item">本周: <span class="stat-val" id="stat-week">0</span></span>
+    <span class="stat-item">未读: <span class="stat-val" id="stat-unread">0</span></span>
+    <span class="stat-item" style="color:#ef4444">严重: <span class="stat-val" style="color:#ef4444" id="stat-critical">0</span></span>
+  </div>
+  <div class="drawer-list" id="drawer-list">
+    <div style="text-align:center;color:#94a3b8;padding:40px 0;font-size:12px">暂无预警记录</div>
+  </div>
+</div>
+
+<script>
+// ============ Alert Toggle ============
+function toggleAlerts(){
+  var body=document.getElementById('alert-body');
+  var toggle=document.getElementById('alert-toggle');
+  var isOpen=body.classList.contains('show');
+  body.classList.toggle('show',!isOpen);
+  toggle.classList.toggle('open',!isOpen);
+}
+
+// ============ ECharts 初始化 ============
+var cSAA=echarts.init(document.getElementById('chartSAA'));
+var cTAA=echarts.init(document.getElementById('chartTAA'));
+
+// ============ 数据管线加载 ============
+async function loadPipelineData() {
+  var headerTime = document.getElementById('update-time');
+  var headerQuality = document.getElementById('hdr-quality');
+  var headerStatus = document.getElementById('hdr-status');
+
+  try {
+    // 运行完整 ETL 流水线
+    var result = await DataPipeline.run();
+    var data = result.data;
+
+    // 数据质量检查
+    var qualityReport = QualityChecker.runAll(data);
+    updateQualityUI(qualityReport);
+
+    // 更新血缘时间戳
+    LineageTracker.batchTouch([
+      'solvency_ratio','core_ratio','duration_gap','spread',
+      'yield_portfolio','asset_allocation','liquidity_ratio',
+      'macro_data','nav_data','saa_compliance','taa_scores',
+      'liability_cost','data_quality_score','timestamp'
+    ]);
+
+    // 更新页面 KPI
+    updateKPI(data);
+    updateCharts(data);
+    updateTables(data);
+
+    // 供决策中心、风险模块与P2模块读取当前快照
+    window.__cockpitData = data;
+    if (typeof generatePlans === 'function') generatePlans();
+    if (typeof initRiskCenter === 'function') initRiskCenter();
+    if (typeof initP2Modules === 'function') initP2Modules();
+
+    // 更新 header
+    headerTime.textContent = new Date().toLocaleString('zh-CN');
+    headerQuality.textContent = qualityReport.score + '/100';
+    headerStatus.innerHTML = qualityReport.score >= 90 ? '✅' : qualityReport.score >= 70 ? '⚠️' : '❌';
+
+    console.log('[Pipeline] 数据加载完成, 质量评分:', qualityReport.score);
+    console.log('[Pipeline] 数据源:', result.data._meta.sources_used.join(', '));
+    if (result.errors.length > 0) {
+      console.warn('[Pipeline] 抽取错误:', result.errors);
+    }
+
+  } catch (err) {
+    console.error('[Pipeline] 数据加载失败:', err);
+    headerTime.textContent = '加载失败';
+    headerStatus.innerHTML = '❌';
+    // 降级使用静态数据
+    useFallbackData();
+  }
+}
+
+function updateQualityUI(report) {
+  var scoreEl = document.getElementById('q-score');
+  var dotEl = document.getElementById('q-dot');
+  var reportEl = document.getElementById('quality-report');
+
+  scoreEl.textContent = report.score;
+  dotEl.className = 'q-dot ' + (report.score >= 90 ? 'good' : report.score >= 70 ? 'warn' : 'bad');
+
+  reportEl.textContent = JSON.stringify({
+    timestamp: report.timestamp,
+    score: report.score,
+    status: report.status,
+    passed: report.passed + '/' + report.total_checks,
+    warnings: report.warnings,
+    failures: report.failures.map(function(f) { return f.rule_id + ': ' + f.name + ' - ' + f.reason; })
+  }, null, 2);
+}
+
+// ============ KPI 更新 ============
+function updateKPI(data) {
+  // 偿付能力 (hero)
+  var solvency = data.solvency;
+  var heroValue = document.querySelector('.hero-value');
+  heroValue.innerHTML = solvency.comprehensive_ratio + '<span class="unit">%</span>';
+
+  var heroDetail = document.querySelector('.hero-detail');
+  heroDetail.innerHTML = '<span>核心: ' + solvency.core_ratio + '%</span><span style="color:rgba(255,255,255,0.3)">|</span><span>综合: ' + solvency.comprehensive_ratio + '%</span><span style="margin-left:8px;color:rgba(255,255,255,0.8)">' + solvency.status + ' (≥120%)</span>';
+
+  var heroTrend = document.querySelector('.hero-trend');
+  var trendDir = solvency.change_monthly >= 0 ? '↑' : '↓';
+  heroTrend.innerHTML = '<span>' + trendDir + ' ' + Math.abs(solvency.change_monthly) + '%</span> 较上月';
+
+  // 久期缺口（符号：资产久期 − 负债久期，负值=资产久期不足）
+  var dur = data.duration;
+  document.querySelector('.kpi-card.attn .kpi-value').innerHTML = '<span style="color:var(--warn)">' + (dur.gap >= 0 ? '+' : '') + dur.gap.toFixed(1) + '</span><span class="unit">年</span>';
+  var durTrend = document.querySelector('.kpi-card.attn .kpi-trend');
+  var durImproving = dur.change_monthly > 0;
+  durTrend.innerHTML = '<span class="' + (durImproving ? 'up' : 'down') + '">' + (durImproving ? '↗ 收窄' : '↘ 扩大') + ' ' + Math.abs(dur.change_monthly).toFixed(1) + '年</span> 较上月';
+  var durDetail = document.querySelector('.kpi-card.attn .kpi-detail');
+  if (durDetail) durDetail.textContent = '资产: ' + dur.asset.toFixed(1) + '年 | 负债: ' + dur.liability.toFixed(1) + '年';
+
+  // 利差
+  var spread = data.spread;
+  document.querySelectorAll('.kpi-card.safe')[0].querySelector('.kpi-value').innerHTML = '+' + spread.value.toFixed(0) + '<span class="unit">bp</span>';
+  var spTrend = document.querySelectorAll('.kpi-card.safe')[0].querySelector('.kpi-trend');
+  spTrend.innerHTML = '<span class="up">↑ ' + spread.change_monthly + 'bp</span> 较上月';
+
+  // 综合收益率
+  var ret = data.portfolio_return;
+  document.querySelectorAll('.kpi-card.safe')[1].querySelector('.kpi-value').innerHTML = ret.value.toFixed(2) + '<span class="unit">%</span>';
+  var retTrend = document.querySelectorAll('.kpi-card.safe')[1].querySelector('.kpi-trend');
+  retTrend.innerHTML = '<span class="up">↑ ' + ret.change_monthly.toFixed(1) + '%</span> 较上月';
+}
+
+// ============ 图表更新 ============
+function updateCharts(data) {
+  // SAA 饼图
+  var alloc = data.saa.allocation;
+  cSAA.setOption({
+    tooltip:{trigger:'item',formatter:'{b}: {c}%'},
+    series:[{
+      type:'pie',radius:['50%','78%'],center:['50%','48%'],
+      label:{color:'#64748b',fontSize:11,formatter:'{b}\n{d}%'},
+      data:[
+        {value:Math.round(alloc.bond*100),name:'固收',itemStyle:{color:'#2196F3'}},
+        {value:Math.round(alloc.equity*100),name:'权益',itemStyle:{color:'#10b981'}},
+        {value:Math.round(alloc.alternative*100),name:'另类',itemStyle:{color:'#f59e0b'}},
+        {value:Math.round(alloc.cash*100),name:'流动性',itemStyle:{color:'#94a3b8'}}
+      ]
+    }]
+  });
+
+  // TAA 仪表盘
+  cTAA.setOption({
+    series:[{
+      type:'gauge',center:['50%','62%'],radius:'90%',
+      startAngle:210,endAngle:-30,min:-1,max:1,
+      axisLine:{lineStyle:{width:14,color:[[0.3,'#ef4444'],[0.45,'#f59e0b'],[0.6,'#2196F3'],[1,'#0F4C81']]}},
+      pointer:{length:'60%',width:4,itemStyle:{color:'#1e293b'}},
+      axisTick:{distance:-16,length:4},splitLine:{distance:-20,length:14},
+      axisLabel:{color:'#64748b',fontSize:9,distance:26},
+      detail:{formatter:'+{value}',fontSize:22,fontWeight:700,color:'#1e293b',offsetCenter:[0,'58%']},
+      data:[{value:0.24}]
+    }]
+  });
+
+  // 更新 TAA 分数条
+  var scores = data.taa_scores;
+  document.querySelectorAll('.score-bar .fill').forEach(function(bar, i) {
+    var keys = ['macro_score','valuation_score','policy_score','fund_flow_score','technical_score'];
+    var pct = scores[keys[i]] || 50;
+    bar.style.width = pct + '%';
+  });
+}
+
+// ============ 表格更新 ============
+function updateTables(data) {
+  var risk = data.risk;
+  var liability = data.liability;
+
+  // 更新负债约束表的数值
+  var liabilityRows = document.querySelectorAll('.card:nth-child(4) .data-table tr');
+  if (liabilityRows.length >= 5) {
+    // 负债成本
+    var cells1 = liabilityRows[1].querySelectorAll('td');
+    if (cells1.length >= 1) cells1[1].textContent = liability.cost.toFixed(2) + '%';
+    // 新单成本
+    var cells3 = liabilityRows[3].querySelectorAll('td');
+    if (cells3.length >= 1) cells3[1].textContent = liability.new_biz_cost.toFixed(1) + '%';
+    // 保费增长率
+    var cells5 = liabilityRows[5].querySelectorAll('td');
+    if (cells5.length >= 1) cells5[1].textContent = '+' + liability.premium_growth.toFixed(1) + '%';
+  }
+
+  // 更新 SAA 约束表
+  updateSAATable(data);
+}
+
+function updateSAATable(data) {
+  var saaRows = document.querySelectorAll('.col-left .data-table tr');
+  if (saaRows.length >= 6) {
+    var alloc = data.saa.allocation;
+    var violations = data.saa.constraints.violations.map(function(v) { return v.name; });
+
+    // 权益类
+    var cells1 = saaRows[1].querySelectorAll('td');
+    if (cells1.length >= 4) {
+      cells1[1].textContent = Math.round(alloc.equity * 100) + '%';
+      cells1[3].textContent = (45 - Math.round(alloc.equity * 100)) + '%';
+    }
+    // 流动性
+    var cells5 = saaRows[5].querySelectorAll('td');
+    if (cells5.length >= 4) {
+      cells5[1].textContent = Math.round(alloc.cash * 100) + '%';
+      cells5[3].textContent = (Math.round(alloc.cash * 100) - 5) + '%';
+    }
+  }
+}
+
+// ============ 降级方案 ============
+function useFallbackData() {
+  // 使用页面中已有的静态数据
+  console.log('[Pipeline] 使用静态降级数据');
+}
+
+// ============ 启动 ============
+window.addEventListener('DOMContentLoaded', function() {
+  console.log('[Pipeline] 启动数据管道...');
+  loadPipelineData();
+
+  // 启动预警引擎（数据加载后延迟启动，确保依赖就绪）
+  setTimeout(function() {
+    console.log('[Alert] 启动预警调度器...');
+    AlertScheduler.start();
+  }, 2000);
+});
+
+// ============ 预警抽屉 ============
+function openDrawer() {
+  document.getElementById('alert-drawer').classList.add('open');
+  document.getElementById('drawer-overlay').classList.add('show');
+  refreshDrawer();
+}
+function closeDrawer() {
+  document.getElementById('alert-drawer').classList.remove('open');
+  document.getElementById('drawer-overlay').classList.remove('show');
+}
+function refreshDrawer() {
+  var stats = AlertHistory.statistics();
+  document.getElementById('stat-today').textContent = stats.today;
+  document.getElementById('stat-week').textContent = stats.week;
+  document.getElementById('stat-unread').textContent = stats.unread;
+  document.getElementById('stat-critical').textContent = stats.critical;
+
+  var alerts = AlertHistory.getRecent(30);
+  var listEl = document.getElementById('drawer-list');
+
+  if (alerts.length === 0) {
+    listEl.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:40px 0;font-size:12px">暂无预警记录</div>';
+    return;
+  }
+
+  listEl.innerHTML = alerts.map(function(a) {
+    var time = new Date(a.timestamp).toLocaleString('zh-CN');
+    return '<div class="drawer-item ' + a.severity + (a.status === 'unread' ? ' unread' : '') + '" onclick="acknowledgeAlert(\'' + a.id + '\')">' +
+      '<div class="di-time">' + time + '</div>' +
+      '<div class="di-name">' + (a.severity === 'critical' ? '🔴 ' : a.severity === 'warning' ? '🟡 ' : '🔵 ') + a.name + '</div>' +
+      '<div class="di-msg">' + a.message + '</div>' +
+      (a.status === 'acknowledged' ? '<div class="di-ack">✓ 已确认 ' + new Date(a.acknowledged_at).toLocaleString('zh-CN') + '</div>' : '') +
+      '</div>';
+  }).join('');
+}
+function acknowledgeAlert(id) {
+  AlertHistory.acknowledge(id);
+  AlertNotifier.resetBadge();
+  refreshDrawer();
+}
+
+window.addEventListener('resize',function(){cSAA.resize();cTAA.resize();if(window.__riskChart)window.__riskChart.resize();if(window.__scChart)window.__scChart.resize();if(window.__tlChart)window.__tlChart.resize();});
+</script>
+
+<script>
+// ============ 决策中心 (P0-4 方案生成 / P0-5 执行设计 / 决策日志) ============
+var DECISION_LOG_KEY = 'cockpit_decision_log';
+var selectedPlanId = 'A';
+
+function getBaseSnapshot() {
+  var d = window.__cockpitData;
+  var base = { solvency:132, equity:18, bond:65, alt:12, cash:5, durationGap:-3.2, assetDur:3.8, liabDur:7.0, yieldVal:4.2, vol:6.3, taa:0.24 };
+  if (!d) return base;
+  if (d.solvency) base.solvency = d.solvency.comprehensive_ratio || 132;
+  if (d.saa && d.saa.allocation) {
+    base.equity = Math.round((d.saa.allocation.equity||0.18)*100);
+    base.bond = Math.round((d.saa.allocation.bond||0.65)*100);
+    base.alt = Math.round((d.saa.allocation.alternative||0.12)*100);
+    base.cash = Math.round((d.saa.allocation.cash||0.05)*100);
+  }
+  if (d.duration) { base.durationGap = d.duration.gap || -3.2; base.assetDur = d.duration.asset || 3.8; base.liabDur = d.duration.liability || 7.0; }
+  if (d.portfolio_return) base.yieldVal = d.portfolio_return.value || 4.2;
+  return base;
+}
+
+function buildPlans() {
+  var b = getBaseSnapshot();
+  return [
+    { id:'A', name:'稳健 · 缩缺口', logic:'增配30Y国债拉长资产久期，优先压缩久期缺口',
+      bond:b.bond+5, equity:b.equity-3, alt:b.alt, cash:b.cash-2, ret:4.0, vol:5.9, solvency:b.solvency+3, gap:-2.4, conf:90, rec:'首选推荐' },
+    { id:'B', name:'均衡 · 维持SAA', logic:'维持当前配置，等待信号进一步确认',
+      bond:b.bond, equity:b.equity, alt:b.alt, cash:b.cash, ret:4.2, vol:6.3, solvency:b.solvency, gap:b.durationGap, conf:75, rec:'中性' },
+    { id:'C', name:'进取 · 博弹性', logic:'增配权益博取超额，久期缺口进一步走阔',
+      bond:b.bond-5, equity:b.equity+5, alt:b.alt, cash:b.cash, ret:4.8, vol:7.1, solvency:b.solvency-8, gap:b.durationGap-0.4, conf:55, rec:'需高层审批' }
+  ];
+}
+
+function confStars(conf) {
+  var n = conf >= 85 ? 5 : conf >= 65 ? 4 : conf >= 45 ? 3 : 2;
+  var s = '';
+  for (var i=0;i<5;i++) s += '<span class="star'+(i<n?'':' off')+'">★</span>';
+  return s;
+}
+function gapCls(g) { return Math.abs(g) <= 1.5 ? 'good' : Math.abs(g) <= 2.5 ? 'warn' : 'bad'; }
+function fmtGap(g) { return (g>=0?'+':'') + g.toFixed(1) + '年'; }
+
+function generatePlans() {
+  var plans = buildPlans();
+  var grid = document.getElementById('planGrid');
+  var cmp = document.getElementById('compareTable');
+  if (!grid || !cmp) return;
+
+  grid.innerHTML = plans.map(function(p){
+    var sel = p.id === selectedPlanId ? ' sel' : '';
+    return '<div class="plan-card'+sel+'" id="plan-'+p.id+'" onclick="selectPlan(\''+p.id+'\')">'+
+      '<div class="plan-head"><span class="plan-name">'+p.name+'</span><span class="plan-rec">'+p.rec+'</span></div>'+
+      '<div class="plan-logic">'+p.logic+'</div>'+
+      '<div class="plan-metric"><span class="pm-l">固收/权益/另类/现金</span><span class="pm-v">'+p.bond+'% / '+p.equity+'% / '+p.alt+'% / '+p.cash+'%</span></div>'+
+      '<div class="plan-metric"><span class="pm-l">预期收益</span><span class="pm-v">'+p.ret.toFixed(1)+'%</span></div>'+
+      '<div class="plan-metric"><span class="pm-l">波动率</span><span class="pm-v">'+p.vol.toFixed(1)+'%</span></div>'+
+      '<div class="plan-metric"><span class="pm-l">偿付能力</span><span class="pm-v">'+p.solvency+'%</span></div>'+
+      '<div class="plan-metric"><span class="pm-l">久期缺口</span><span class="pm-v '+gapCls(p.gap)+'">'+fmtGap(p.gap)+'</span></div>'+
+      '<div class="plan-metric"><span class="pm-l">置信度</span><span class="pm-v"><span class="plan-conf">'+confStars(p.conf)+'</span></span></div>'+
+      '</div>';
+  }).join('');
+
+  var head = '<thead><tr><th>维度</th>' + plans.map(function(p){return '<th>'+p.name+'</th>';}).join('') + '</tr></thead>';
+  var rows = [
+    ['核心逻辑', plans.map(function(p){return p.logic;})],
+    ['配置（固收/权益/另类/现金）', plans.map(function(p){return p.bond+'% / '+p.equity+'% / '+p.alt+'% / '+p.cash+'%';})],
+    ['预期收益', plans.map(function(p){return p.ret.toFixed(1)+'%';})],
+    ['年化波动', plans.map(function(p){return p.vol.toFixed(1)+'%';})],
+    ['偿付能力', plans.map(function(p){return p.solvency+'%';})],
+    ['久期缺口', plans.map(function(p){return '<span style="color:'+(Math.abs(p.gap)<=2.5?'#059669':'#d97706')+'">'+fmtGap(p.gap)+'</span>';})],
+    ['置信度', plans.map(function(p){return confStars(p.conf);})],
+    ['推荐', plans.map(function(p){return p.id==='A'?'<b style="color:#059669">首选</b>':p.rec;})]
+  ];
+  var body = rows.map(function(r){
+    return '<tr><td style="font-weight:600;color:#1e293b">'+r[0]+'</td>'+r[1].map(function(c){return '<td>'+c+'</td>';}).join('')+'</tr>';
+  }).join('');
+  cmp.innerHTML = head + '<tbody>'+body+'</tbody>';
+
+  renderExec();
+}
+
+function selectPlan(id) {
+  selectedPlanId = id;
+  generatePlans();
+}
+
+// P0-5 执行方案设计
+function renderExec() {
+  var plans = buildPlans();
+  var p = null;
+  for (var i=0;i<plans.length;i++) if (plans[i].id === selectedPlanId) p = plans[i];
+  var tbl = document.getElementById('execTable');
+  var note = document.getElementById('execNote');
+  if (!p || !tbl) return;
+
+  var exec = getExecPlan(p);
+  tbl.innerHTML = '<thead><tr><th>标的</th><th>方向</th><th>目标仓位</th><th>当前</th><th>批次</th><th>单批规模</th><th>预计成本</th></tr></thead><tbody>' +
+    exec.rows.map(function(r){
+      var dirCls = r.dir==='增配' ? 'td-ok' : r.dir==='减持' ? 'td-danger' : '';
+      return '<tr><td><b>'+r.name+'</b></td><td class="'+dirCls+'">'+r.dir+'</td><td>'+r.target+'</td><td>'+r.cur+'</td><td>'+r.batches+'</td><td>'+r.size+'</td><td>'+r.cost+'</td></tr>';
+    }).join('') + '</tbody>';
+  note.innerHTML = '<b>执行窗口：</b>'+exec.window+' · 每批次间隔≥2周观察市场 · <b>总交易成本约 '+exec.totalCost+'</b> · 分批建仓/减仓降低冲击成本';
+}
+
+function getExecPlan(p) {
+  var base = getBaseSnapshot();
+  if (p.id === 'A') {
+    return {
+      window: '8月14日 - 9月30日', totalCost: '0.15%',
+      rows: [
+        { name:'30Y国债 (230023)', dir:'增配', target:'+5%', cur:'0%', batches:'4批 × 1.25%', size:'每批约 6.25亿', cost:'0.05bp' },
+        { name:'沪深300 ETF', dir:'减持', target:'−3%', cur:base.equity+'%', batches:'3批 × 1.0%', size:'每批约 3.75亿', cost:'0.10%' },
+        { name:'货币基金（现金）', dir:'减持', target:'−2%', cur:base.cash+'%', batches:'1批', size:'约 2.5亿', cost:'0' }
+      ]
+    };
+  }
+  if (p.id === 'C') {
+    return {
+      window: '8月14日 - 10月15日', totalCost: '0.20%',
+      rows: [
+        { name:'创业板/沪深300 ETF', dir:'增配', target:'+5%', cur:base.equity+'%', batches:'5批 × 1.0%', size:'每批约 6.25亿', cost:'0.15%' },
+        { name:'30Y国债 (230023)', dir:'减持', target:'−5%', cur:'0%', batches:'3批 × 1.67%', size:'每批约 8.3亿', cost:'0.05bp' }
+      ]
+    };
+  }
+  return {
+    window: '维持现状，无需交易', totalCost: '0',
+    rows: [
+      { name:'当前组合', dir:'维持', target:'不变', cur:'—', batches:'—', size:'—', cost:'0' }
+    ]
+  };
+}
+
+// 决策日志 (P0-2)
+function loadLog() {
+  try { return JSON.parse(localStorage.getItem(DECISION_LOG_KEY) || '[]'); } catch(e) { return []; }
+}
+function saveLog(log) {
+  try { localStorage.setItem(DECISION_LOG_KEY, JSON.stringify(log)); } catch(e) {}
+}
+function commitDecision() {
+  var plans = buildPlans();
+  var p = null;
+  for (var i=0;i<plans.length;i++) if (plans[i].id === selectedPlanId) p = plans[i];
+  var b = getBaseSnapshot();
+
+  var compare = plans.map(function(x){ return x.name.split(' ')[0]+' ' + x.ret.toFixed(1)+'%/'+x.vol.toFixed(1)+'%/'+x.solvency+'%/'+fmtGap(x.gap)+'/'+x.conf+'%'; }).join('；');
+
+  var log = loadLog();
+  log.unshift({
+    time: new Date().toLocaleString('zh-CN'),
+    taa: (b.taa>=0?'+':'') + b.taa.toFixed(2),
+    plan: p.name,
+    compare: compare,
+    reason: p.logic + '（久期缺口 ' + fmtGap(b.durationGap) + '，资产' + b.assetDur.toFixed(1) + '年/负债' + b.liabDur.toFixed(1) + '年）'
+  });
+  saveLog(log.slice(0, 50));
+  renderLog();
+  showToast('✅ 决策已写入日志', '');
+}
+function renderLog() {
+  var log = loadLog();
+  var body = document.getElementById('logBody');
+  var empty = document.getElementById('logEmpty');
+  if (!body) return;
+  if (log.length === 0) {
+    body.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+  body.innerHTML = log.map(function(e){
+    return '<tr><td style="white-space:nowrap">'+e.time+'</td><td>'+e.taa+'</td><td><b>'+e.plan+'</b></td><td><div class="log-compare">'+e.compare+'</div></td><td>'+e.reason+'</td></tr>';
+  }).join('');
+}
+function clearDecisionLog() {
+  saveLog([]);
+  renderLog();
+  showToast('决策日志已清空', 'warning');
+}
+
+// ============ 风险六维监控 (P1-2 #42) ============
+function buildRiskSix() {
+  var d = window.__cockpitData;
+  var solvency = (d && d.solvency) ? d.solvency.comprehensive_ratio : 132;
+  var coreRatio = (d && d.solvency) ? d.solvency.core_ratio : 118;
+  var gap = (d && d.duration) ? d.duration.gap : -3.2;
+  var liq = (d && d.saa && d.saa.allocation) ? Math.round((d.saa.allocation.cash||0.05)*100) : 5;
+
+  return [
+    { key:'市场风险', score:85, cls:'good', items:[
+      {m:'组合波动率', v:'6.3%', th:'≤20%', st:'安全', c:'good'},
+      {m:'VaR(99%,10日)', v:'2.5%', th:'≤8%', st:'安全', c:'good'},
+      {m:'最大回撤(估)', v:'~8%', th:'≤30%', st:'安全', c:'good'}
+    ]},
+    { key:'利率风险', score:40, cls:'bad', items:[
+      {m:'久期缺口', v:fmtGap(gap), th:'±1.5年', st:'超限', c:'bad'},
+      {m:'10Y国债收益率', v:'1.72%', th:'跟踪', st:'低位', c:'warn'}
+    ]},
+    { key:'信用风险', score:80, cls:'good', items:[
+      {m:'信用利差', v:'+70bp', th:'≥0', st:'利差益', c:'good'},
+      {m:'信用债评级', v:'AAA为主', th:'≥AA', st:'良好', c:'good'}
+    ]},
+    { key:'流动性风险', score:50, cls:'warn', items:[
+      {m:'流动性资产占比', v:liq+'%', th:'≥5%', st:'临界', c:'warn'},
+      {m:'高流动性覆盖', v:'42%', th:'≥15%', st:'安全', c:'good'}
+    ]},
+    { key:'集中度风险', score:72, cls:'good', items:[
+      {m:'单一最大持仓', v:'8%', th:'≤10%', st:'合规', c:'good'},
+      {m:'前五大持仓', v:'42%', th:'跟踪', st:'关注', c:'warn'}
+    ]},
+    { key:'偿付能力风险', score:70, cls:'good', items:[
+      {m:'综合偿付充足率', v:solvency+'%', th:'≥120%', st:'安全', c:'good'},
+      {m:'核心偿付充足率', v:coreRatio+'%', th:'≥50%', st:'安全', c:'good'}
+    ]}
+  ];
+}
+
+function renderRiskSix() {
+  var dims = buildRiskSix();
+  var tbl = document.getElementById('riskTable');
+  if (!tbl) return;
+
+  var rows = '';
+  dims.forEach(function(dim){
+    dim.items.forEach(function(it, i){
+      if (i === 0) {
+        rows += '<tr><td class="dim-head" rowspan="'+dim.items.length+'" style="vertical-align:middle">'+dim.key+'<div class="risk-score '+dim.cls+'" style="font-size:20px">'+dim.score+'</div><div class="risk-desc">/100</div></td>';
+      } else {
+        rows += '<tr>';
+      }
+      rows += '<td>'+it.m+'</td><td>'+it.v+'</td><td>'+it.th+'</td><td><span class="risk-score '+it.c+'">'+it.st+'</span></td></tr>';
+    });
+  });
+  tbl.innerHTML = '<thead><tr><th>维度</th><th>指标</th><th>当前值</th><th>阈值/限额</th><th>状态</th></tr></thead><tbody>'+rows+'</tbody>';
+
+  var el = document.getElementById('chartRisk');
+  if (el && window.echarts) {
+    if (window.__riskChart) { window.__riskChart.dispose(); }
+    var c = echarts.init(el);
+    window.__riskChart = c;
+    c.setOption({
+      tooltip:{},
+      radar:{
+        center:['50%','52%'],radius:'62%',
+        indicator: dims.map(function(x){ return {name:x.key, max:100}; }),
+        axisName:{fontSize:11,color:'#64748b'},
+        splitArea:{areaStyle:{color:['rgba(15,76,129,0.01)','rgba(15,76,129,0.02)','rgba(15,76,129,0.01)','rgba(15,76,129,0.02)']}},
+        splitLine:{lineStyle:{color:'rgba(15,76,129,0.08)'}}
+      },
+      series:[
+        {type:'radar',name:'目标(70分)',data:[{value:[70,70,70,70,70,70]}],lineStyle:{type:'dashed',color:'rgba(0,0,0,0.15)',width:1},symbol:'none',areaStyle:{color:'transparent'}},
+        {type:'radar',name:'当前',data:[{value:dims.map(function(x){return x.score;})}],lineStyle:{color:'#0F4C81',width:2},symbol:'circle',symbolSize:5,itemStyle:{color:'#0F4C81'},areaStyle:{color:'rgba(15,76,129,0.08)'}}
+      ]
+    });
+  }
+}
+
+// ============ 事件冲击模拟 (P2-2 #45) ============
+function buildEventImpacts() {
+  var d = window.__cockpitData;
+  var baseSolvency = (d && d.solvency) ? d.solvency.comprehensive_ratio : 132;
+  return [
+    { name:'🇺🇸 关税升级', cond:'美对华关税 +25%', sol:baseSolvency-18, gapDelta:'±0', ret:'−2.5%', resp:'增配利率债 · 降权益至8%' },
+    { name:'📉 美股暴跌', cond:'标普500 −30%', sol:baseSolvency-12, gapDelta:'±0', ret:'−1.5%', resp:'QDII减仓 · 增配国债' },
+    { name:'🏦 央行降息50bp', cond:'LPR + 准备金双降', sol:baseSolvency-8, gapDelta:'缩窄0.3年', ret:'+1.2%', resp:'浮盈实现 · 加配长久期' },
+    { name:'🏠 房地产硬着陆', cond:'房价 −20%', sol:baseSolvency-15, gapDelta:'扩大0.5年', ret:'−1.0%', resp:'REITs减持 · 增配现金' },
+    { name:'💴 人民币贬值10%', cond:'CNY 至7.5+', sol:baseSolvency-5, gapDelta:'±0', ret:'+0.5%', resp:'QDII受益 · 对冲汇率' },
+    { name:'🦢 黑天鹅', cond:'极端尾部事件', sol:baseSolvency-35, gapDelta:'扩大1.0年', ret:'−5.0%', resp:'应急预案 · 流动性储备' }
+  ];
+}
+
+function renderEventImpact() {
+  var events = buildEventImpacts();
+  var tbl = document.getElementById('eventTable');
+  var note = document.getElementById('eventNote');
+  if (!tbl) return;
+
+  var rows = events.map(function(e){
+    var solCls = e.sol >= 120 ? 'good' : e.sol >= 100 ? 'warn' : 'bad';
+    var retCls = e.ret.indexOf('+') === 0 ? 'pos' : 'neg';
+    var gapCls = e.gapDelta.indexOf('扩大') === 0 ? 'neg' : (e.gapDelta.indexOf('缩窄') === 0 ? 'pos' : 'zero');
+    return '<tr>'+
+      '<td><b>'+e.name+'</b></td>'+
+      '<td class="risk-desc">'+e.cond+'</td>'+
+      '<td><span class="risk-score '+solCls+'">'+e.sol+'%</span>'+(e.sol<100?' <span class="tag tag-am">触发预案</span>':'')+'</td>'+
+      '<td class="event-impact '+gapCls+'">'+e.gapDelta+'</td>'+
+      '<td class="event-impact '+retCls+'">'+e.ret+'</td>'+
+      '<td class="risk-desc">'+e.resp+'</td>'+
+      '</tr>';
+  }).join('');
+
+  tbl.innerHTML = '<thead><tr><th>事件</th><th>触发条件</th><th>偿付能力</th><th>久期缺口</th><th>组合收益</th><th>应对措施</th></tr></thead><tbody>'+rows+'</tbody>';
+  note.innerHTML = '基于资产负债模型的情景模拟 · 偿付底线 100% · <b style="color:var(--danger)">黑天鹅情景偿付降至 '+ (window.__cockpitData && window.__cockpitData.solvency ? window.__cockpitData.solvency.comprehensive_ratio - 35 : 97) +'% 触发应急预案</b> · 其余情景均守住 100% 底线';
+}
+
+function initRiskCenter() {
+  renderRiskSix();
+  renderEventImpact();
+}
+
+// ============ 智能预警 · 三级分级 (P2-2 #51) ============
+function buildAlerts() {
+  var d = window.__cockpitData;
+  var solvency = (d && d.solvency) ? d.solvency.comprehensive_ratio : 132;
+  var gap = (d && d.duration) ? d.duration.gap : -3.2;
+  var liq = (d && d.saa && d.saa.allocation) ? Math.round((d.saa.allocation.cash||0.05)*100) : 5;
+  var overseas = (d && d.saa && d.saa.allocation) ? 12 : 12;
+  var single = 8;
+
+  return [
+    { lvl:'紧急', icon:'🔴', cls:'urgent', rules:[
+      { k:'偿付能力 < 120%', v:solvency+'%', st: solvency>=120?'安全':'触发', c: solvency>=120?'ok':'hit' },
+      { k:'流动性资产 < 5%', v:liq+'%', st: liq>5?'安全':(liq===5?'临界':'触发'), c: liq>5?'ok':(liq===5?'near':'hit') }
+    ]},
+    { lvl:'关注', icon:'🟡', cls:'watch', rules:[
+      { k:'久期缺口 > ±1.5年', v:fmtGap(gap), st: Math.abs(gap)>1.5?'触发':'正常', c: Math.abs(gap)>1.5?'hit':'ok' },
+      { k:'10Y国债 < 1.5%', v:'1.72%', st:'正常', c:'ok' }
+    ]},
+    { lvl:'提示', icon:'🟢', cls:'info', rules:[
+      { k:'境外投资 > 15%', v:overseas+'%', st:'正常', c:'ok' },
+      { k:'单一集中度 > 10%', v:single+'%', st:'正常', c:'ok' }
+    ]}
+  ];
+}
+
+function renderAlerts() {
+  var levels = buildAlerts();
+  var el = document.getElementById('alertLevel');
+  if (!el) return;
+  el.innerHTML = levels.map(function(L){
+    var hit = L.rules.filter(function(r){ return r.c !== 'ok'; }).length;
+    var rows = L.rules.map(function(r){
+      return '<div class="al-item"><span class="k">'+r.k+'</span><span class="v '+r.c+'">'+r.v+' · '+r.st+'</span></div>';
+    }).join('');
+    return '<div class="al-card '+L.cls+'"><div class="al-head">'+L.icon+' '+L.lvl+' <span style="font-weight:400;font-size:10px;color:var(--text2)">'+hit+'项'+(hit>0?'触发':'正常')+'</span></div>'+rows+'</div>';
+  }).join('');
+}
+
+// ============ 情景实验室 (P2-1 #50) ============
+var SCENARIOS = {
+  bull: { icon:'🐂', name:'牛市', desc:'权益+20% · 黄金+5% · 固收−5%', sol:145, ret:6.5, advice:'增配权益至15% · 锁定长期国债浮盈' },
+  bear: { icon:'🐻', name:'熊市', desc:'权益−20% · 固收浮盈+3% · 黄金避险+5%', sol:118, ret:2.5, advice:'减仓QDII · 增配国债至65% · 启用流动性储备' },
+  stag: { icon:'📉', name:'滞胀', desc:'高通胀CPI>3% · 低增长GDP<3%', sol:120, ret:2.0, advice:'防御配置 · 缩短久期 · 增配短债 · 减配权益至8%' },
+  gldx: { icon:'✨', name:'金发女孩', desc:'温和增长5% · 低通胀1.5% · 宽货币', sol:138, ret:5.5, advice:'权益增配至15% · 长债久期拉长 · 黄金减配' }
+};
+var activeScenario = null;
+
+function scenarioCalc(eqDelta, irDelta) {
+  var sol = 132 - eqDelta * 0.65 - irDelta * 0.15;
+  var ret = 4.2 + eqDelta * 0.12 - irDelta * 0.03;
+  return { sol: Math.round(sol), ret: parseFloat(ret.toFixed(1)) };
+}
+
+function renderScenarioButtons() {
+  var el = document.getElementById('scenarioBtns');
+  if (!el) return;
+  el.innerHTML = Object.keys(SCENARIOS).map(function(k){
+    return '<button class="sc-btn" id="sc-'+k+'" onclick="pickScenario(\''+k+'\')">'+SCENARIOS[k].icon+' '+SCENARIOS[k].name+'</button>';
+  }).join('') + '<button class="sc-btn" onclick="resetScenario()">↺ 重置</button>';
+}
+
+function pickScenario(key) {
+  activeScenario = key;
+  document.querySelectorAll('.sc-btn').forEach(function(b){ b.classList.remove('active'); });
+  var btn = document.getElementById('sc-'+key);
+  if (btn) btn.classList.add('active');
+  var s = SCENARIOS[key];
+  var res = document.getElementById('scenarioResult');
+  res.classList.add('show');
+  res.innerHTML = '<b>'+s.icon+' '+s.name+'情景</b>：组合收益 <b style="color:'+(s.ret>=4.2?'#059669':'#d97706')+'">'+s.ret+'%</b> · 偿付 <b style="color:'+(s.sol>=120?'#059669':'#d97706')+'">'+s.sol+'%</b>'+
+    '<br>配置调整：'+s.desc+'<br>操作建议：'+s.advice;
+  renderScenarioChart();
+}
+
+function resetScenario() {
+  activeScenario = null;
+  document.querySelectorAll('.sc-btn').forEach(function(b){ b.classList.remove('active'); });
+  document.getElementById('scenarioResult').classList.remove('show');
+  document.getElementById('eq_slider').value = 0;
+  document.getElementById('ir_slider').value = 0;
+  updateScenarioCustom();
+  renderScenarioChart();
+}
+
+function updateScenarioCustom() {
+  var eq = parseInt(document.getElementById('eq_slider').value) || 0;
+  var ir = parseInt(document.getElementById('ir_slider').value) || 0;
+  document.getElementById('eq_val').textContent = (eq>=0?'+':'') + eq + '%';
+  document.getElementById('ir_val').textContent = (ir>=0?'+':'') + ir + 'bp';
+  var c = scenarioCalc(eq, ir);
+  document.getElementById('custom_sol').textContent = c.sol + '%';
+  document.getElementById('custom_ret').textContent = c.ret + '%';
+  if (activeScenario === null) renderScenarioChart();
+}
+
+function renderScenarioChart() {
+  var el = document.getElementById('chartScenario');
+  if (!el || !window.echarts) return;
+  var c = scenarioCalc(parseInt(document.getElementById('eq_slider').value)||0, parseInt(document.getElementById('ir_slider').value)||0);
+  var cats = ['基线','牛市','熊市','滞胀','金发女孩','自定义'];
+  var rets = [4.2, SCENARIOS.bull.ret, SCENARIOS.bear.ret, SCENARIOS.stag.ret, SCENARIOS.gldx.ret, c.ret];
+  var sols = [132, SCENARIOS.bull.sol, SCENARIOS.bear.sol, SCENARIOS.stag.sol, SCENARIOS.gldx.sol, c.sol];
+  if (window.__scChart) window.__scChart.dispose();
+  var chart = echarts.init(el);
+  window.__scChart = chart;
+  chart.setOption({
+    tooltip:{trigger:'axis'},
+    legend:{data:['组合收益%','偿付能力%'],bottom:0,textStyle:{fontSize:10},itemWidth:10,itemHeight:10},
+    grid:{left:55,right:50,top:30,bottom:45},
+    xAxis:{type:'category',data:cats,axisLabel:{fontSize:10,color:'#64748b'}},
+    yAxis:[
+      {type:'value',name:'收益%',axisLabel:{fontSize:9},splitLine:{lineStyle:{color:'rgba(0,0,0,0.05)'}}},
+      {type:'value',name:'偿付%',axisLabel:{fontSize:9},splitLine:{show:false}}
+    ],
+    series:[
+      {name:'组合收益%',type:'bar',data:rets,barWidth:'35%',itemStyle:{borderRadius:[4,4,0,0],color:'#0F4C81'}},
+      {name:'偿付能力%',type:'line',yAxisIndex:1,data:sols,lineStyle:{width:2.5,color:'#10b981'},symbol:'circle',symbolSize:7,itemStyle:{color:'#10b981'},
+       markLine:{silent:true,symbol:'none',data:[{yAxis:120,lineStyle:{color:'#ef4444',type:'dashed'},label:{formatter:'底线120%',fontSize:9,color:'#ef4444'}}]}}
+    ]
+  });
+}
+
+// ============ 时间轴 · 30天历史与对比 (P2-3 #52) ============
+function renderTimeline() {
+  var el = document.getElementById('chartTimeline');
+  if (!el || !window.echarts) return;
+
+  var dates = [], gaps = [], solv = [];
+  try {
+    if (window.MockDataGenerator) {
+      var hist = window.MockDataGenerator.getHistory(30);
+      dates = hist.map(function(d){ return d.date.slice(5); });
+      gaps = hist.map(function(d){ return d.duration_gap; });
+      solv = hist.map(function(d){ return d.solvency_ratio; });
+    }
+  } catch(e) {}
+  if (dates.length === 0) {
+    for (var i=0;i<30;i++){ dates.push('D-'+(30-i)); }
+    gaps = [-3.4,-3.4,-3.3,-3.3,-3.3,-3.2,-3.2,-3.1,-3.2,-3.2,-3.3,-3.3,-3.4,-3.4,-3.5,-3.4,-3.4,-3.3,-3.2,-3.2,-3.1,-3.1,-3.0,-3.1,-3.2,-3.2,-3.3,-3.3,-3.2,-3.2];
+    solv = [130,131,131,132,133,132,132,133,134,133,132,132,131,131,130,130,131,131,132,133,133,134,134,135,134,133,133,132,132,132];
+  }
+
+  if (window.__tlChart) window.__tlChart.dispose();
+  var chart = echarts.init(el);
+  window.__tlChart = chart;
+  chart.setOption({
+    tooltip:{trigger:'axis'},
+    legend:{data:['久期缺口(年)','偿付能力(%)'],bottom:0,textStyle:{fontSize:10},itemWidth:10,itemHeight:10},
+    grid:{left:50,right:50,top:30,bottom:45},
+    xAxis:{type:'category',data:dates,axisLabel:{fontSize:8,color:'#94a3b8',interval:4}},
+    yAxis:[
+      {type:'value',name:'缺口(年)',axisLabel:{fontSize:9},splitLine:{lineStyle:{color:'rgba(0,0,0,0.05)'}}},
+      {type:'value',name:'偿付(%)',axisLabel:{fontSize:9},splitLine:{show:false}}
+    ],
+    series:[
+      {name:'久期缺口(年)',type:'line',data:gaps,lineStyle:{width:2.5,color:'#f59e0b'},symbol:'none',areaStyle:{color:'rgba(245,158,11,0.06)'},
+       markLine:{silent:true,symbol:'none',data:[{yAxis:-1.5,lineStyle:{color:'#ef4444',type:'dashed'},label:{formatter:'目标-1.5',fontSize:9,color:'#ef4444'}},{yAxis:1.5,lineStyle:{color:'#ef4444',type:'dashed'},label:{formatter:'目标+1.5',fontSize:9,color:'#ef4444'}}]}},
+      {name:'偿付能力(%)',type:'line',yAxisIndex:1,data:solv,lineStyle:{width:2,color:'#10b981'},symbol:'none'}
+    ]
+  });
+
+  var note = document.getElementById('timelineNote');
+  if (note) note.innerHTML = '近30日 <b style="color:var(--warn)">久期缺口持续位于−3.0~−3.5年区间</b>，未显著改善 · 偿付能力稳定在 130%~135% · 建议按方案A增配长久期债以缩窄缺口';
+}
+
+function initP2Modules() {
+  renderAlerts();
+  renderScenarioButtons();
+  updateScenarioCustom();
+  renderScenarioChart();
+  renderTimeline();
+}
+
+// 初始化
+renderLog();
+generatePlans();
+initRiskCenter();
+initP2Modules();
+</script>
+</body>
+</html>

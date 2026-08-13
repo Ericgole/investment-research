@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Q3季度复盘 · 投研体系 v1.7</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,"Microsoft YaHei",sans-serif;background:#f0f2f5;color:#1a1a1a;line-height:1.8}
+.header{background:linear-gradient(135deg,#042C53,#185FA5);color:#fff;padding:24px 32px}
+.header h1{font-size:18px;font-weight:500}.header .meta{font-size:12px;color:#85B7EB;margin-top:6px}
+.container{max-width:1000px;margin:0 auto;padding:20px}
+.card{background:#fff;border-radius:12px;border:0.5px solid #E8ECF1;margin:14px 0;padding:18px 22px}
+.card h2{font-size:15px;color:#042C53;border-bottom:0.5px solid #F0F2F5;padding-bottom:8px;margin-bottom:12px}
+table{width:100%;font-size:12px;border-collapse:collapse;margin:8px 0}
+th{background:#F1F5F9;padding:7px 10px;text-align:left;font-weight:500;font-size:11px;color:#5F5E5A}
+td{padding:6px 10px;border-bottom:0.5px solid #F0F2F5}
+.tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px}
+.tg{background:#EAF3DE;color:#3B6D11}.tr{background:#FCEBEB;color:#A32D2D}.tb{background:#E6F1FB;color:#185FA5}.ta{background:#FAEEDA;color:#854F0B}
+.highlight{background:linear-gradient(135deg,#EAF3DE,#E6F1FB);border-radius:10px;padding:16px 20px;margin:12px 0}
+.highlight .big{font-size:20px;font-weight:600;color:#042C53}
+.stats{display:flex;gap:12px;flex-wrap:wrap;margin:12px 0}
+.stat{flex:1;min-width:120px;background:#F8F9FB;border-radius:10px;padding:14px;text-align:center;border:0.5px solid #E8ECF1}
+.stat .sv{font-size:22px;font-weight:600;color:#042C53}.stat .sl{font-size:10px;color:#888780;margin-top:3px}
+.footer{text-align:center;font-size:11px;color:#B4B2A9;padding:24px}
+</style>
+</head>
+<body>
+<div class="header"><h1>Q3季度复盘 · 投研体系 v1.7</h1><div class="meta">覆盖 2026年7月-9月初 · 研判层→配置层→监控层→评估层全闭环验证</div></div>
+<div class="container">
+
+<div class="card"><h2>一、框架建设里程碑</h2>
+<div class="stats">
+<div class="stat"><div class="sv">1→7</div><div class="sl">版本演进</div></div>
+<div class="stat"><div class="sv">73</div><div class="sl">研究专题</div></div>
+<div class="stat"><div class="sv" style="color:#3B6D11">31</div><div class="sl">DB/Wind实时</div></div>
+<div class="stat"><div class="sv">7</div><div class="sl">SAA资产全分析</div></div>
+<div class="stat"><div class="sv" style="color:#185FA5">5</div><div class="sl">看板部署</div></div>
+<div class="stat"><div class="sv" style="color:#3B6D11">9步</div><div class="sl">自动刷新管线</div></div>
+</div>
+<table>
+<tr><th>成就</th><th>详情</th></tr>
+<tr><td>框架闭环</td><td>七章全实现: 研判→配置→偏离→风险→绩效，每日自动刷新</td></tr>
+<tr><td>数据层</td><td>SQLite(12表36K行) + Wind万得(7 MCP服务) 双源驱动</td></tr>
+<tr><td>双平台</td><td>GitHub Pages(全球) + localhost:8899(本地) 双部署</td></tr>
+<tr><td>标的覆盖</td><td>SAA 7类资产全部完成TAA评分分析，加权+0.34</td></tr>
+</table>
+</div>
+
+<div class="card"><h2>二、宏观研判结论</h2>
+<table>
+<tr><th>周期</th><th>判断</th><th>关键数据</th></tr>
+<tr><td>经济周期</td><td><span class="tag tr">弱收缩</span></td><td>GDP 4.3% · PMI 49.2 · 工业5.3%</td></tr>
+<tr><td>信用周期</td><td><span class="tag ta">弱宽→转紧</span></td><td>社融7.4%↓ · M1-M2 -4.0pp · 信用利差0.4bp</td></tr>
+<tr><td>利率周期</td><td><span class="tag tg">低利率宽松</span></td><td>10Y 1.71% · DR007偏松 · LPR 3.0%</td></tr>
+<tr><td>汇率/外部</td><td><span class="tag tg">弱美元+CNY升值</span></td><td>DXY 97.0 · USDCNY 6.80(年初7.30)</td></tr>
+<tr><td colspan="3"><b>周期定位: 衰退后期→弱复苏早期。两周期偏弱、一周期宽松，政策托底但内需不足。</b></td></tr>
+</table>
+</div>
+
+<div class="card"><h2>三、TAA配置决策回顾</h2>
+<table>
+<tr><th>维度</th><th>评分</th><th>判断</th></tr>
+<tr><td>政策</td><td><span class="tag tg">+2</span></td><td>大基金三期3440亿+AI政策+宽松货币，5年最强政策组合</td></tr>
+<tr><td>估值</td><td><span class="tag tr">-1</span></td><td>PE均分位87%(真实)，沪深300=95%·科创50=98%</td></tr>
+<tr><td>技术</td><td><span class="tag tr">-1</span></td><td>均线空头+MACD底背离待确认+短期反弹量不足</td></tr>
+<tr><td>资金</td><td><span class="tag tg">+1</span></td><td>公募超配科技19.3%·两融去杠杆中·流动性充裕</td></tr>
+<tr><td>宏观</td><td><span class="tag tb">+0</span></td><td>内需弱(-0.5)+低利率(+1)+弱美元(+1)相互对冲</td></tr>
+<tr style="font-weight:500;background:#F0F4F8"><td>加权总分</td><td colspan="2" style="color:#185FA5">+0.15 → <b>维持 SAA 标配，无 TAA 偏离</b></td></tr>
+</table>
+</div>
+
+<div class="card"><h2>四、绩效与风险</h2>
+<div class="stats">
+<div class="stat"><div class="sv" style="color:#3B6D11">+14.0%</div><div class="sl">SAA年化收益</div></div>
+<div class="stat"><div class="sv">1.48</div><div class="sl">夏普比率</div></div>
+<div class="stat"><div class="sv" style="color:#3B6D11">+2.0%</div><div class="sl">超额 vs 基准</div></div>
+<div class="stat"><div class="sv">-4.82%</div><div class="sl">VaR99(10d)</div></div>
+<div class="stat"><div class="sv">-8.5%</div><div class="sl">最大回撤</div></div>
+</div>
+<p style="font-size:12px;color:#888780">所有限额检查通过。VaR <8%✓ 回撤 <30%✓ 权益仓位 <60%✓。外汇敞口23%略超20%限额。</p>
+</div>
+
+<div class="highlight">
+<div class="big">Q3 核心结论: 维持 SAA 全线标配，无 TAA 偏离触发</div>
+<p style="margin-top:8px;font-size:13px">
+组合表现稳健(年化14%，超额+2%)，风险可控(VaR -4.82%，回撤 -8.5%)。
+政策极强(+2)与估值偏贵(-1)形成主要矛盾，技术偏弱(-1)是短期扰动。
+Q4关注: PMI是否回到50以上、社融增速企稳、创业板MTD回调后的反弹力度。
+</p>
+</div>
+
+<div class="card"><h2>五、复盘发现与 v1.8 升级建议</h2>
+<table>
+<tr><th>复盘维度</th><th>发现</th><th>建议</th></tr>
+<tr><td>框架覆盖</td><td>政策事件日历(2.4节)空白，关税/制裁/FOMC等未系统跟踪</td><td>v1.8: 建立事件日历模板，纳入Wind公告API</td></tr>
+<tr><td>指标有效</td><td>PE分位(87%)对估值的偏空信号准确，但公募超低配数据来自季报有滞后</td><td>v1.8: 接入Wind基金数据做月度仓位估算</td></tr>
+<tr><td>阈值合理</td><td>TAA +1.0阈值至今未触发，7/7资产均未偏离——阈值偏保守</td><td>v1.8: 评估是否将阈值调整为 ±0.75</td></tr>
+<tr><td>数据可得</td><td>31/73(43%)覆盖率仍偏低，资金/政策维度几乎空白</td><td>v1.8: 优先补资金维度(北向/公募仓位)</td></tr>
+<tr><td>决策质量</td><td>7/7资产TAA分析均维持SAA，决策稳定性好但缺乏差异化信号</td><td>Q4跟踪验证，偏离建议需更敏感</td></tr>
+</table>
+</div>
+
+<div class="footer">投研体系 v1.7 · Q3季度复盘 · 2026-08-09</div>
+</div>
+</body>
+</html>

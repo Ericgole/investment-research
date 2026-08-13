@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>投研体系看板 v1.4</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,"Microsoft YaHei",sans-serif;background:#f0f2f5;color:#1a1a1a}
+.header{background:#042C53;color:#fff;padding:16px 32px;display:flex;justify-content:space-between;align-items:center}
+.header h1{font-size:18px;font-weight:500}
+.header .meta{font-size:12px;color:#85B7EB}
+.dashboard{max-width:1460px;margin:0 auto;padding:20px 24px}
+.row{display:flex;gap:16px;margin-bottom:16px}
+.col{flex:1;min-width:0}
+.col2{flex:2;min-width:0}
+.col15{flex:1.5;min-width:0}
+.card{background:#fff;border-radius:10px;padding:20px;border:0.5px solid #E8ECF1;height:100%}
+.card h3{font-size:14px;font-weight:500;color:#042C53;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #F0F2F5}
+.interpret{font-size:12px;color:#5F5E5A;line-height:1.8;margin-top:8px;padding:8px 10px;background:#F8F9FB;border-radius:6px}
+.interpret b{color:#042C53}
+.chart{width:100%;height:260px}
+.chart-sm{width:100%;height:220px}
+.chart-lg{width:100%;height:340px}
+.tag{display:inline-block;padding:1px 8px;border-radius:3px;font-size:11px}
+.tag-up{background:#FCEBEB;color:#A32D2D}
+.tag-down{background:#EAF3DE;color:#3B6D11}
+.tag-warn{background:#FAEEDA;color:#854F0B}
+.tag-info{background:#E6F1FB;color:#185FA5}
+.metric-row{display:flex;gap:12px;flex-wrap:wrap}
+.metric{flex:1;min-width:90px;text-align:center;padding:10px 8px;background:#F8F9FB;border-radius:8px}
+.metric .val{font-size:20px;font-weight:500;color:#042C53}
+.metric .lbl{font-size:11px;color:#888780;margin-top:2px}
+.status-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.status-item{font-size:12px;padding:6px 8px;background:#F8F9FB;border-radius:6px;display:flex;justify-content:space-between}
+.alloc-bar{height:20px;border-radius:10px;overflow:hidden;display:flex;margin:8px 0}
+.alloc-legend{display:flex;flex-wrap:wrap;gap:8px;font-size:11px;margin-top:6px}
+.alloc-legend span{display:flex;align-items:center;gap:4px}
+.alloc-legend .dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+.table-sm{width:100%;border-collapse:collapse;font-size:11px}
+.table-sm th{background:#F8F9FB;padding:6px 8px;text-align:left;font-weight:500;color:#5F5E5A}
+.table-sm td{padding:5px 8px;border-bottom:1px solid #F0F2F5}
+.footer{text-align:center;font-size:11px;color:#B4B2A9;padding:16px;border-top:1px solid #E8ECF1;margin-top:8px}
+@media(max-width:900px){.row{flex-direction:column}}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div><h1>投研体系看板</h1><span style="font-size:12px;color:#85B7EB">v1.4 · 全天候平衡型 · 稳健偏积极</span></div>
+  <div class="meta">2026-08-08 · 数据截止 2026-08-07 收盘<br>数据源: westock-data / neodata / SQLite 研究库</div>
+</div>
+
+<div class="dashboard">
+
+<!-- Layer 1: 宏观研判 -->
+<div class="row">
+  <div class="col15">
+    <div class="card">
+      <h3>第一层：宏观周期定位</h3>
+      <div class="metric-row">
+        <div class="metric"><div class="lbl">GDP (Q2)</div><div class="val">4.3%</div><span class="tag tag-down">减速</span></div>
+        <div class="metric"><div class="lbl">制造业 PMI</div><div class="val">49.2</div><span class="tag tag-warn">收缩</span></div>
+        <div class="metric"><div class="lbl">高技术 PMI</div><div class="val">53.3</div><span class="tag tag-up">扩张</span></div>
+        <div class="metric"><div class="lbl">M2 增速</div><div class="val">8.0%</div><span class="tag tag-info">偏松</span></div>
+        <div class="metric"><div class="lbl">10Y 国债</div><div class="val">1.71%</div><span class="tag tag-info">低位</span></div>
+      </div>
+      <div class="chart" id="chart-macro"></div>
+      <div class="interpret">
+        <b>研判：</b>经济处于"分化型弱复苏"。传统内需疲弱（社零+1%、固投-5.7%、地产-18%），但出口强劲（+27%）和高技术制造（PMI 53.3）支撑结构转型。货币政策宽松（M2 8%、LPR 3.0% 14个月不变），但信用传导受阻（M2-M1剪刀差4pp、居民信贷腰斩）。周期定位：衰退后期→弱复苏早期，权益>信用债>利率债。
+      </div>
+    </div>
+  </div>
+  <div class="col">
+    <div class="card">
+      <h3>TAA 五维评分卡</h3>
+      <div class="chart" id="chart-taa"></div>
+      <div class="interpret" style="text-align:center">
+        加权综合: <b style="color:#3B6D11">+0.40</b> (未触发 ±1.0 调整线)<br>
+        政策(+2)与技术(-1)极端分化 → <b style="color:#854F0B">触发单维度警报</b>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Layer 2: CMA + SAA 配置 -->
+<div class="row">
+  <div class="col">
+    <div class="card">
+      <h3>第二层：CMA 资本市场假设</h3>
+      <div class="chart" id="chart-cma"></div>
+      <div class="interpret">
+        <b>关键发现：</b>标普500 (13.0%收/17.1%波/夏普0.58) 和金ETF (16.7%收) 是境内可投范围内最优资产。<br>
+        沪深300近16年年化仅4.1%，恒生仅2.1%。10%目标不能单靠A股beta。
+      </div>
+    </div>
+  </div>
+  <div class="col">
+    <div class="card">
+      <h3>SAA 配置中枢 (MVO求解)</h3>
+      <div class="chart" id="chart-saa"></div>
+      <div class="status-grid">
+        <div class="status-item"><span>目标收益</span><b>10.2%</b></div>
+        <div class="status-item"><span>年化波动</span><b style="color:#3B6D11">7.8%</b></div>
+        <div class="status-item"><span>夏普比率</span><b style="color:#185FA5">0.92</b></div>
+        <div class="status-item"><span>权益占比</span><b>58%</b></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Layer 2b: 有效前沿 -->
+<div class="row">
+  <div class="col">
+    <div class="card">
+      <h3>有效前沿</h3>
+      <div class="chart-lg" id="chart-frontier"></div>
+      <div class="interpret">
+        每个点代表一个可能的配置组合。红点是当前选定的 SAA 配置（收益10.2%/波动7.8%）。<br>
+        <b>策略含义：</b>向左=更保守（降低波动但牺牲收益），向右=更激进（提高收益但增加波动）。当前点在有效前沿上，且远低于20%波动上限，留足安全垫。
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Layer 3: 标的选品 -->
+<div class="card" style="margin-bottom:16px">
+  <h3>第三层：标的选品 → 一键建仓清单</h3>
+  <div class="alloc-bar" style="height:24px">
+    <div style="width:27%;background:#639922;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px">信用债27%</div>
+    <div style="width:23%;background:#185FA5;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px">标普500 23%</div>
+    <div style="width:21%;background:#EF9F27;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px">黄金 21%</div>
+    <div style="width:9%;background:#D85A30;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px">创业板</div>
+    <div style="width:9%;background:#7F77DD;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px">利率债</div>
+    <div style="width:11%;background:#B4B2A9;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px">现金+其他</div>
+  </div>
+  <table class="table-sm" style="margin-top:12px">
+    <tr><th>资产</th><th>产品</th><th>代码</th><th>权重</th><th>费率</th><th>每百万</th><th>备注</th></tr>
+    <tr><td>信用债</td><td>公司债ETF易方达</td><td>sh511110</td><td><b>27%</b></td><td>0.3%</td><td>27.0万</td><td>AAA票息底仓</td></tr>
+    <tr><td>标普500</td><td>标普500ETF博时</td><td>sh513500</td><td><b>23%</b></td><td>0.8%</td><td>23.0万</td><td>QDII, 3Y+76%</td></tr>
+    <tr><td>黄金</td><td>黄金ETF华安</td><td>sh518880</td><td><b>21%</b></td><td>0.6%</td><td>21.0万</td><td>千亿规模, 3Y+101%</td></tr>
+    <tr><td>创业板</td><td>创业板ETF易方达</td><td>sz159915</td><td>9%</td><td>0.2%</td><td>9.0万</td><td>A股成长弹性</td></tr>
+    <tr><td>利率债</td><td>国债ETF国泰</td><td>sh511010</td><td>9%</td><td>0.2%</td><td>9.0万</td><td>5-10Y久期</td></tr>
+    <tr><td>沪深300</td><td>沪深300ETF易方达</td><td>sh510310</td><td>3%</td><td>0.2%</td><td>3.0万</td><td>大盘底仓</td></tr>
+    <tr><td>科创50</td><td>科创50ETF易方达</td><td>sh588080</td><td>2%</td><td>0.2%</td><td>2.0万</td><td>科技增强</td></tr>
+    <tr><td>现金</td><td>短融ETF海富通</td><td>sh511360</td><td>6%</td><td>0.2%</td><td>6.0万</td><td>货基增强+50bp</td></tr>
+  </table>
+</div>
+
+<!-- Layer 4: 风险监控 -->
+<div class="row">
+  <div class="col">
+    <div class="card">
+      <h3>第四层：风险限额监控</h3>
+      <div class="status-grid">
+        <div class="status-item"><span>权益总仓位</span><b>58%</b> <span class="tag tag-info">上限60%</span></div>
+        <div class="status-item"><span>组合波动率</span><b style="color:#3B6D11">7.8%</b> <span class="tag tag-info">上限20%</span></div>
+        <div class="status-item"><span>最大回撤估</span><b>~15%</b> <span class="tag tag-info">上限30%</span></div>
+        <div class="status-item"><span>单一标的上限</span><b>27%</b> <span class="tag tag-info">上限35%</span></div>
+        <div class="status-item"><span>高流动性占比</span><b style="color:#3B6D11">42%</b> <span class="tag tag-info">≥15%</span></div>
+        <div class="status-item"><span>境外敞口</span><b>23%</b> <span class="tag tag-info">(QDII)</span></div>
+      </div>
+      <div class="interpret" style="margin-top:12px">
+        <b>风控结论：</b>所有指标均在限额内。波动率仅7.8%，距20%上限有12.2pp安全垫。权益58%距上限60%仅差2pp，如需TAA增配权益需调高上限。高流动性（货基+利率债+国债ETF）占比42%，远超15%最低要求，极端情况下可快速变现。
+      </div>
+    </div>
+  </div>
+  <div class="col">
+    <div class="card">
+      <h3>资产相关性热力</h3>
+      <div class="chart" id="chart-corr"></div>
+      <div class="interpret">
+        <b>分散化评估：</b>核心配置中三大多元化引擎——标普500与A股相关仅~0.14（几乎独立），黄金更是负相关或零相关，信用债与权益相关0.05。有效做到了"不同来源的收益"，这解释了为什么组合波动只有7.8%。
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="footer">
+  投研体系 v1.4 · 数据驱动 · 持续迭代 · 以上内容仅供参考，不构成投资建议
+</div>
+
+</div>
+
+<script>
+function initChart(id, option) {
+    var dom = document.getElementById(id);
+    if (!dom) return;
+    var chart = echarts.init(dom);
+    chart.setOption(option);
+    window.addEventListener('resize', function(){chart.resize();});
+}
+
+// GDP quarterly trend
+initChart('chart-macro', {
+    tooltip:{trigger:'axis'},
+    grid:{left:50,right:20,top:20,bottom:30},
+    xAxis:{data:['2020','2021','2022','2023','2024','2025','2026'],axisLabel:{fontSize:10}},
+    yAxis:[
+        {type:'value',name:'%',min:-10,max:20,axisLabel:{fontSize:10}},
+        {type:'value',name:'PMI',min:45,max:55,axisLabel:{fontSize:10}}
+    ],
+    series:[
+        {name:'GDP同比',type:'bar',data:[2.2,8.4,3.0,5.2,5.0,5.0,4.7],itemStyle:{color:'#185FA5'},barWidth:'50%'},
+        {name:'制造业PMI(右)',type:'line',yAxisIndex:1,data:[51.9,50.3,47.0,49.0,50.3,50.4,49.2],lineStyle:{color:'#D85A30',width:2},symbol:'circle',symbolSize:6}
+    ]
+});
+
+// TAA Radar
+initChart('chart-taa', {
+    radar:{
+        center:['50%','55%'],
+        radius:'65%',
+        indicator:[
+            {name:'宏观(25%)',max:2},{name:'估值(25%)',max:2},
+            {name:'技术(15%)',max:2},{name:'资金(15%)',max:2},{name:'政策(20%)',max:2}
+        ],
+        axisName:{fontSize:10}
+    },
+    series:[{type:'radar',data:[{value:[1,-1,-1,1,2],name:'当前评分',areaStyle:{color:'rgba(24,95,165,0.15)'},lineStyle:{color:'#185FA5',width:2},itemStyle:{color:'#185FA5'}}],symbol:'circle',symbolSize:5}]
+});
+
+// CMA bubble
+initChart('chart-cma', {
+    tooltip:{formatter:function(p){return p.name+'<br>收益: '+p.data[0]+'%<br>波动: '+p.data[1]+'%<br>夏普: '+p.data[2];}},
+    grid:{left:50,right:100,top:20,bottom:30},
+    xAxis:{name:'年化波动率(%)',nameLocation:'center',nameGap:28,axisLabel:{fontSize:10}},
+    yAxis:{name:'年化收益(%)',nameLocation:'center',nameGap:35,axisLabel:{fontSize:10}},
+    visualMap:{min:0,max:1,inRange:{color:['#E8ECF1','#85B7EB','#185FA5']},show:false},
+    series:[{type:'scatter',symbolSize:function(v){return 6+Math.abs(v[2])*40;},data:[
+        [0.5,3.0,0,'现金'],[3.6,1.9,0,'利率债'],[4.7,2.5,0,'信用债'],
+        [21.5,4.1,0.05,'沪深300'],[25.1,6.7,0.15,'中证500'],
+        [30.9,13.0,0.32,'创业板'],[33.8,14.1,0.33,'科创50'],
+        [20.8,2.1,0,'恒生'],[16.5,16.6,0.7,'标普QDII'],[16.0,16.7,0.8,'黄金ETF']
+    ],label:{show:true,position:'right',fontSize:10,formatter:function(p){return p.data[3];}}}]
+});
+
+// SAA Pie
+initChart('chart-saa', {
+    tooltip:{trigger:'item',formatter:'{b}: {c}%'},
+    series:[{type:'pie',radius:['45%','75%'],center:['50%','55%'],label:{fontSize:10},emphasis:{label:{fontSize:14,fontWeight:'bold'}},
+        data:[
+            {value:27,name:'信用债',itemStyle:{color:'#639922'}},
+            {value:23,name:'标普500QDII',itemStyle:{color:'#185FA5'}},
+            {value:21,name:'黄金ETF',itemStyle:{color:'#EF9F27'}},
+            {value:9,name:'创业板',itemStyle:{color:'#D85A30'}},
+            {value:9,name:'利率债',itemStyle:{color:'#7F77DD'}},
+            {value:3,name:'沪深300',itemStyle:{color:'#378ADD'}},
+            {value:2,name:'科创50',itemStyle:{color:'#1D9E75'}},
+            {value:6,name:'现金',itemStyle:{color:'#B4B2A9'}}
+        ]
+    }]
+});
+
+// Efficient frontier
+initChart('chart-frontier', {
+    tooltip:{trigger:'axis'},
+    grid:{left:55,right:30,top:20,bottom:30},
+    xAxis:{name:'波动率(%)',axisLabel:{fontSize:10}},
+    yAxis:{name:'收益(%)',axisLabel:{fontSize:10}},
+    series:[{
+        type:'scatter',symbolSize:4,
+        data:[[4.1,3.4],[4.9,3.9],[6.1,4.5],[7.3,5.1],[8.5,5.8],[9.7,6.4],
+              [10.9,7.0],[12.1,7.5],[13.3,8.0],[14.5,8.6],[15.7,8.9],
+              [16.9,9.3],[18.1,9.8],[19.3,10.2]],
+        itemStyle:{color:'#85B7EB'}
+    },{
+        type:'line',smooth:true,showSymbol:false,lineStyle:{color:'#85B7EB',width:2},
+        data:[[4.1,3.4],[4.9,3.9],[6.1,4.5],[7.3,5.1],[8.5,5.8],[9.7,6.4],
+              [10.9,7.0],[12.1,7.5],[13.3,8.0],[14.5,8.6],[15.7,8.9],
+              [16.9,9.3],[18.1,9.8],[19.3,10.2]]
+    },{
+        type:'scatter',symbolSize:16,
+        data:[[7.8,10.2]],
+        itemStyle:{color:'#D85A30'},
+        label:{show:true,position:'top',fontSize:11,formatter:'当前SAA\n10.2% / 7.8%',color:'#D85A30'}
+    }]
+});
+
+// Correlation heatmap
+initChart('chart-corr', {
+    tooltip:{},
+    grid:{left:90,right:20,top:10,bottom:50},
+    xAxis:{type:'category',data:['沪深300','创业板','恒生','标普500','黄金','信用债'],axisLabel:{fontSize:9,rotate:30}},
+    yAxis:{type:'category',data:['信用债','黄金','标普500','恒生','创业板','沪深300'],axisLabel:{fontSize:9}},
+    visualMap:{min:-0.1,max:1,inRange:{color:['#E6F1FB','#B5D4F4','#378ADD','#042C53']},show:false},
+    series:[{type:'heatmap',data:[
+        [0,5,0.05],[1,5,0.02],[2,5,0.56],[3,5,0.14],[4,5,0.75],[5,5,1.0],
+        [0,4,0.02],[1,4,0.02],[2,4,0.39],[3,4,0.11],[4,4,1.0],[5,4,0.75],
+        [0,3,0.02],[1,3,0.02],[2,3,1.0],[3,3,0.19],[4,3,0.39],[5,3,0.56],
+        [0,2,0.02],[1,2,0.02],[2,2,0.19],[3,2,1.0],[4,2,0.11],[5,2,0.14],
+        [0,1,0.02],[1,1,1.0],[2,1,0.02],[3,1,0.02],[4,1,0.02],[5,1,0.02],
+        [0,0,1.0],[1,0,0.02],[2,0,0.02],[3,0,0.02],[4,0,0.02],[5,0,0.05],
+    ],label:{show:true,fontSize:9}}]
+});
+</script>
+</body>
+</html>

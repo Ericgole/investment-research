@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>数据血缘图谱 - 保险资金投研系统</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<style>
+:root{--bg:#f5f7fa;--card:#fff;--primary:#0F4C81;--safe:#10b981;--warn:#f59e0b;--danger:#ef4444;--text:#1e293b;--text2:#64748b}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,"Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:20px}
+.header{text-align:center;margin-bottom:24px}
+.header h1{font-size:20px;color:var(--primary);margin-bottom:4px}
+.header p{font-size:12px;color:var(--text2)}
+.controls{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:16px}
+.controls button{padding:8px 16px;border:1px solid #e2e8f0;border-radius:6px;background:#fff;font-size:11px;cursor:pointer;font-family:inherit;color:var(--text2);transition:all 0.2s}
+.controls button:hover{background:var(--primary);color:#fff;border-color:var(--primary)}
+.controls button.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+.container{max-width:1400px;margin:0 auto}
+.chart-container{background:var(--card);border-radius:12px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,0.06);margin-bottom:16px}
+#lineage-chart{width:100%;height:600px}
+.info-panel{display:flex;gap:16px}
+.info-card{flex:1;background:var(--card);border-radius:12px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,0.06)}
+.info-card h3{font-size:14px;color:var(--primary);margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid #e8f0f8}
+.info-card .info-row{font-size:11px;color:var(--text2);padding:4px 0;display:flex;justify-content:space-between}
+.info-card .info-row .label{font-weight:500}
+.category-tag{display:inline-block;padding:2px 8px;border-radius:3px;font-size:9px;font-weight:600;margin:2px}
+.cat-偿付能力{background:rgba(16,185,129,0.1);color:#059669}
+.cat-利率风险{background:rgba(245,158,11,0.1);color:#d97706}
+.cat-利差分析{background:rgba(15,76,129,0.1);color:var(--primary)}
+.cat-组合管理{background:rgba(33,150,243,0.1);color:#1976D2}
+.cat-收益分析{background:rgba(156,39,176,0.1);color:#7B1FA2}
+.cat-市场数据{background:rgba(0,188,212,0.1);color:#0097A7}
+.cat-宏观研究{background:rgba(121,85,72,0.1);color:#5D4037}
+.cat-流动性风险{background:rgba(255,87,34,0.1);color:#E64A19}
+.cat-风险计量{background:rgba(239,68,68,0.1);color:var(--danger)}
+.cat-合规管理{background:rgba(76,175,80,0.1);color:#388E3C}
+.cat-战术配置{background:rgba(63,81,181,0.1);color:#303F9F}
+.cat-负债管理{background:rgba(96,125,139,0.1);color:#455A64}
+.cat-系统{background:rgba(158,158,158,0.1);color:#616161}
+.legend{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-top:8px}
+.legend-item{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text2)}
+.legend-dot{width:10px;height:10px;border-radius:50%}
+.back-link{text-align:center;margin-top:16px}
+.back-link a{color:var(--primary);text-decoration:none;font-size:12px}
+.back-link a:hover{text-decoration:underline}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>数据血缘图谱</h1>
+  <p>保险资金投研系统 · 字段级数据溯源</p>
+</div>
+
+<div class="container">
+  <div class="controls">
+    <button class="active" onclick="switchView('full')">全量视图</button>
+    <button onclick="switchView('solvency')">偿付能力链路</button>
+    <button onclick="switchView('duration')">久期缺口链路</button>
+    <button onclick="switchView('yield')">收益率链路</button>
+    <button onclick="switchView('macro')">宏观数据链路</button>
+  </div>
+
+  <div class="chart-container">
+    <div id="lineage-chart"></div>
+    <div class="legend" id="legend"></div>
+  </div>
+
+  <div class="info-panel">
+    <div class="info-card" id="lineage-info">
+      <h3>字段血缘查询</h3>
+      <div id="lineage-detail">点击图表中的节点查看详细血缘信息</div>
+    </div>
+    <div class="info-card">
+      <h3>影响分析</h3>
+      <div id="impact-detail">点击Source节点查看影响范围</div>
+    </div>
+  </div>
+
+  <div class="back-link">
+    <a href="insurance-cockpit.html">← 返回驾驶舱</a>
+  </div>
+</div>
+
+<script src="data-pipeline/lineage.js"></script>
+<script>
+// 类别配色
+const categoryColors = {
+  '偿付能力': '#10b981',
+  '利率风险': '#f59e0b',
+  '利差分析': '#0F4C81',
+  '组合管理': '#2196F3',
+  '收益分析': '#9C27B0',
+  '市场数据': '#00BCD4',
+  '宏观研究': '#795548',
+  '流动性风险': '#FF5722',
+  '风险计量': '#ef4444',
+  '合规管理': '#4CAF50',
+  '战术配置': '#3F51B5',
+  '负债管理': '#607D8B',
+  '系统': '#9E9E9E'
+};
+
+const chart = echarts.init(document.getElementById('lineage-chart'));
+
+function buildGraph(categoryFilter) {
+  const fullGraph = LineageTracker.getFullGraph();
+  let nodes = fullGraph.nodes;
+  let edges = fullGraph.edges;
+
+  if (categoryFilter && categoryFilter !== 'full') {
+    // 筛选特定类别相关节点
+    const relevantFields = new Set();
+    nodes.forEach(n => {
+      if (n.category === categoryFilter) {
+        relevantFields.add(n.id);
+        // 添加上下游
+        edges.forEach(e => {
+          if (e.from === n.id) relevantFields.add(e.to);
+          if (e.to === n.id) relevantFields.add(e.from);
+        });
+      }
+    });
+    nodes = nodes.filter(n => relevantFields.has(n.id));
+    edges = edges.filter(e => relevantFields.has(e.from) && relevantFields.has(e.to));
+  }
+
+  const dataNodes = nodes.map(n => ({
+    id: n.id,
+    name: n.id,
+    symbolSize: Math.min(40, 15 + n.id.length * 2),
+    category: n.category,
+    itemStyle: { color: categoryColors[n.category] || '#94a3b8' },
+    label: { show: true, fontSize: 10, color: '#1e293b' },
+    tooltip: { formatter: `<b>${n.id}</b><br/>${n.description || ''}` }
+  }));
+
+  const dataEdges = edges.map(e => ({
+    source: e.from,
+    target: e.to,
+    lineStyle: {
+      width: 1.5,
+      curveness: 0.2,
+      color: e.type === 'dependent' ? '#94a3b8' : '#0F4C81'
+    }
+  }));
+
+  const categories = [...new Set(nodes.map(n => n.category))].map(c => ({
+    name: c,
+    itemStyle: { color: categoryColors[c] || '#94a3b8' }
+  }));
+
+  return { dataNodes, dataEdges, categories };
+}
+
+function renderGraph(categoryFilter) {
+  const { dataNodes, dataEdges, categories } = buildGraph(categoryFilter);
+
+  chart.setOption({
+    tooltip: {
+      trigger: 'item',
+      formatter: function(p) {
+        if (p.dataType === 'node') {
+          return `<b>${p.data.name}</b><br/>${p.data.tooltip ? p.data.tooltip.formatter : ''}`;
+        }
+        return '';
+      }
+    },
+    legend: [{
+      data: categories.map(c => c.name),
+      orient: 'horizontal',
+      bottom: 0,
+      textStyle: { fontSize: 10, color: '#64748b' }
+    }],
+    series: [{
+      type: 'graph',
+      layout: 'force',
+      force: { repulsion: 300, edgeLength: [80, 200], gravity: 0.1 },
+      roam: true,
+      draggable: true,
+      categories: categories,
+      data: dataNodes,
+      edges: dataEdges,
+      label: { show: true, fontSize: 10, color: '#1e293b', position: 'right' },
+      emphasis: { focus: 'adjacency', lineStyle: { width: 4 } }
+    }]
+  }, true);
+
+  // 点击节点显示详情
+  chart.off('click');
+  chart.on('click', function(params) {
+    if (params.dataType === 'node') {
+      showLineageDetail(params.data.name);
+    }
+  });
+
+  // 更新图例
+  updateLegend(categories);
+}
+
+function updateLegend(categories) {
+  const legendEl = document.getElementById('legend');
+  legendEl.innerHTML = categories.map(c =>
+    `<span class="legend-item"><span class="legend-dot" style="background:${categoryColors[c.name]}"></span>${c.name}</span>`
+  ).join('');
+}
+
+function showLineageDetail(fieldName) {
+  const info = LineageTracker.getLineage(fieldName);
+  if (!info.found) {
+    document.getElementById('lineage-detail').innerHTML = '未找到该字段的血缘信息';
+    return;
+  }
+
+  const upstreamHTML = info.upstream_chain.map(u =>
+    `<div class="info-row"><span class="label">↑ ${u.depth === 0 ? '直接上游' : `上游+${u.depth}`}</span><span>${u.source.join(', ')} <span class="category-tag cat-${u.category}">${u.category}</span></span></div>`
+  ).join('') || '<div class="info-row">无上游</div>';
+
+  const downstreamHTML = info.downstream_chain.map(d =>
+    `<div class="info-row"><span class="label">↓ ${d.depth === 1 ? '直接下游' : `下游+${d.depth}`}</span><span>${d.field} <span class="category-tag cat-${d.category}">${d.category}</span></span></div>`
+  ).join('') || '<div class="info-row">无下游</div>';
+
+  document.getElementById('lineage-detail').innerHTML = `
+    <div class="info-row"><span class="label">字段</span><span><b>${info.field}</b></span></div>
+    <div class="info-row"><span class="label">描述</span><span>${info.description}</span></div>
+    <div class="info-row"><span class="label">类别</span><span><span class="category-tag cat-${info.category}">${info.category}</span></span></div>
+    <div class="info-row"><span class="label">数据源</span><span>${info.source.join(', ')}</span></div>
+    <div class="info-row"><span class="label">转换</span><span>${info.transform}</span></div>
+    <div class="info-row"><span class="label">更新时间</span><span>${info.last_updated ? new Date(info.last_updated).toLocaleString('zh-CN') : '未更新'}</span></div>
+    <h4 style="margin-top:12px;font-size:12px;color:#0F4C81">上游链路 (${info.upstream_count})</h4>
+    ${upstreamHTML}
+    <h4 style="margin-top:12px;font-size:12px;color:#0F4C81">下游影响 (${info.downstream_count})</h4>
+    ${downstreamHTML}
+  `;
+
+  // 影响分析
+  const impact = LineageTracker.getImpact(fieldName);
+  document.getElementById('impact-detail').innerHTML = `
+    <div class="info-row"><span class="label">影响范围</span><span><b>${impact.total_impacted} 个字段</b></span></div>
+    <div class="info-row"><span class="label">严重程度</span><span><b style="color:${impact.severity === 'high' ? '#ef4444' : impact.severity === 'medium' ? '#f59e0b' : '#10b981'}">${impact.severity === 'high' ? '高' : impact.severity === 'medium' ? '中' : '低'}</b></span></div>
+    <h4 style="margin-top:8px;font-size:12px;color:#0F4C81">受影响字段</h4>
+    ${impact.impacted_fields.map(f =>
+      `<div class="info-row"><span>${f.field}</span><span><span class="category-tag cat-${f.category}">${f.category}</span></span></div>`
+    ).join('')}
+  `;
+}
+
+function switchView(view) {
+  document.querySelectorAll('.controls button').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+
+  const filterMap = {
+    'full': null,
+    'solvency': '偿付能力',
+    'duration': '利率风险',
+    'yield': '收益分析',
+    'macro': '宏观研究'
+  };
+
+  renderGraph(filterMap[view]);
+}
+
+// 初始渲染
+renderGraph(null);
+
+window.addEventListener('resize', () => chart.resize());
+</script>
+</body>
+</html>
